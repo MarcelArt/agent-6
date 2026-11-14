@@ -2,6 +2,7 @@
 
 Agent that provide support for users of applications by reading code, logs, and databases, which can guide users using the app or if the issue is in need of a code fix or data fix, agent can create github issue.
 This app targeted to be self-hosted by organization, so no need multi-tenancy like organization or workspace scope.
+Make sure this project has proper routing, navigating through pages shouldn't changing state only and reloading the browser should reload to the page the user currently is.
 ## Main Features
 ### Admin Interface
 - Repository Management
