@@ -42,9 +42,17 @@ The server validates its configuration at start and stops with a message naming 
 
 Admins create Applications at `/admin/applications` with a name, a description for Clients and plain-text notes for the agent. Open an Application and use **Add Repository** under Attachments to put connected Repositories in scope. Attachment changes take effect immediately, and a Repository can be attached to several Applications.
 
-Deleting an Application removes its Attachments and keeps its Repositories. Removing a Repository lists its Applications in the confirmation and removes all its Attachments. Tags describe a resource; they never grant scope.
+Deleting an Application removes its Attachments and keeps its Repositories. An Application with saved Conversations cannot be removed. Removing a Repository lists its Applications in the confirmation and removes all its Attachments. Tags describe a resource; they never grant scope.
 
 Agent tools must resolve resources through `getApplicationScope` in `src/server/applications.functions.ts`. It accepts an Application id, requires a logged-in user and returns only explicitly attached resources. Attachment tables have foreign keys for each resource kind; steps 08 and 09 can add sibling connection tables and extend the `Attachment` union in `src/lib/applications.ts`.
+
+## Chat
+
+Set `OPENAI_API_KEY` and `OPENAI_MODEL` to enable answers. Optionally set `OPENAI_BASE_URL` to an OpenAI-compatible API endpoint, including its prefix (for example `http://localhost:8000/v1`). Agent 6 uses the Chat Completions API and stores run history locally; it does not require the Responses API. SDK tracing is disabled.
+
+At `/chat`, choose an Application with at least one ready Repository and ask a question. The Application stays fixed for that Conversation. Answers stream as plain prose; messages and the SDK's tool history are saved so a reload or follow-up keeps context. Only the owner can open or continue a Conversation, including when the other user is an Admin.
+
+Before the first reply, Agent 6 refreshes attached clones older than three minutes. If syncing fails it can still read the existing clone. Its tools only list, search, and read attached code; symlinks, `.git`, and paths outside a clone are refused. Reads return at most 200 lines / 24 KB, searches return at most 50 results with a bounded scan, and oversized or binary files are skipped. Replies stop after 12 model turns or 90 seconds and offer **Try again** when they fail. Browsing past Conversations arrives in step 14; save a Conversation's URL to reopen it meanwhile.
 
 ## Scripts
 

@@ -9,6 +9,27 @@ const AUTH = {
 }
 
 describe("parseConfig", () => {
+  it("accepts a compatible model endpoint and names an invalid one", () => {
+    const env = { DATA_DIR: "./data", ENCRYPTION_KEY: KEY, ...AUTH }
+    expect(
+      parseConfig({
+        ...env,
+        OPENAI_API_KEY: "key",
+        OPENAI_MODEL: "local-model",
+        OPENAI_BASE_URL: "http://localhost:8000/v1",
+      })
+    ).toMatchObject({
+      openaiApiKey: "key",
+      openaiModel: "local-model",
+      openaiBaseUrl: "http://localhost:8000/v1",
+    })
+    expect(
+      parseConfig({ ...env, OPENAI_BASE_URL: "" }).openaiBaseUrl
+    ).toBeUndefined()
+    expect(() =>
+      parseConfig({ ...env, OPENAI_BASE_URL: "file:///tmp/model" })
+    ).toThrow(/OPENAI_BASE_URL/)
+  })
   it("returns the validated configuration", () => {
     const config = parseConfig({
       DATA_DIR: "./data",

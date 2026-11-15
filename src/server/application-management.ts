@@ -112,6 +112,10 @@ export function createApplicationManagement(
     },
     async remove(headers: Headers, applicationId: string) {
       await requireAdmin({ auth, headers })
+      if (applications.hasConversations(applicationId))
+        throw new ApplicationError(
+          "This Application has saved Conversations and cannot be removed."
+        )
       applications.delete(applicationId)
     },
     async availableRepositories(

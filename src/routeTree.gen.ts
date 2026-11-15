@@ -21,6 +21,7 @@ import { Route as AdminRepositoriesRouteRouteImport } from './routes/admin/repos
 import { Route as AdminSettingsRouteImport } from './routes/admin/settings'
 import { Route as AdminUsersRouteRouteImport } from './routes/admin/users/route'
 import { Route as ChatIndexRouteImport } from './routes/chat/index'
+import { Route as ChatConversationIdRouteImport } from './routes/chat/$conversationId'
 import { Route as ChatAccountRouteImport } from './routes/chat/account'
 import { Route as ChatHistoryRouteImport } from './routes/chat/history'
 import { Route as AdminApplicationsIndexRouteImport } from './routes/admin/applications/index'
@@ -33,6 +34,7 @@ import { Route as AdminUsersIndexRouteImport } from './routes/admin/users/index'
 import { Route as AdminUsersUserIdRouteImport } from './routes/admin/users/$userId'
 import { Route as AdminUsersNewRouteImport } from './routes/admin/users/new'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
+import { Route as ApiChatConversationIdRouteImport } from './routes/api/chat/$conversationId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -93,6 +95,11 @@ const AdminUsersRouteRoute = AdminUsersRouteRouteImport.update({
 const ChatIndexRoute = ChatIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => ChatRouteRoute,
+} as any)
+const ChatConversationIdRoute = ChatConversationIdRouteImport.update({
+  id: '/$conversationId',
+  path: '/$conversationId',
   getParentRoute: () => ChatRouteRoute,
 } as any)
 const ChatAccountRoute = ChatAccountRouteImport.update({
@@ -157,6 +164,11 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   path: '/api/auth/$',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiChatConversationIdRoute = ApiChatConversationIdRouteImport.update({
+  id: '/api/chat/$conversationId',
+  path: '/api/chat/$conversationId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -169,6 +181,7 @@ export interface FileRoutesByFullPath {
   '/admin/database-connections': typeof AdminDatabaseConnectionsRoute
   '/admin/log-connections': typeof AdminLogConnectionsRoute
   '/admin/settings': typeof AdminSettingsRoute
+  '/chat/$conversationId': typeof ChatConversationIdRoute
   '/chat/account': typeof ChatAccountRoute
   '/chat/history': typeof ChatHistoryRoute
   '/admin/': typeof AdminIndexRoute
@@ -180,6 +193,7 @@ export interface FileRoutesByFullPath {
   '/admin/users/$userId': typeof AdminUsersUserIdRoute
   '/admin/users/new': typeof AdminUsersNewRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/chat/$conversationId': typeof ApiChatConversationIdRoute
   '/admin/applications/': typeof AdminApplicationsIndexRoute
   '/admin/repositories/': typeof AdminRepositoriesIndexRoute
   '/admin/users/': typeof AdminUsersIndexRoute
@@ -190,6 +204,7 @@ export interface FileRoutesByTo {
   '/admin/database-connections': typeof AdminDatabaseConnectionsRoute
   '/admin/log-connections': typeof AdminLogConnectionsRoute
   '/admin/settings': typeof AdminSettingsRoute
+  '/chat/$conversationId': typeof ChatConversationIdRoute
   '/chat/account': typeof ChatAccountRoute
   '/chat/history': typeof ChatHistoryRoute
   '/admin': typeof AdminIndexRoute
@@ -201,6 +216,7 @@ export interface FileRoutesByTo {
   '/admin/users/$userId': typeof AdminUsersUserIdRoute
   '/admin/users/new': typeof AdminUsersNewRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/chat/$conversationId': typeof ApiChatConversationIdRoute
   '/admin/applications': typeof AdminApplicationsIndexRoute
   '/admin/repositories': typeof AdminRepositoriesIndexRoute
   '/admin/users': typeof AdminUsersIndexRoute
@@ -217,6 +233,7 @@ export interface FileRoutesById {
   '/admin/database-connections': typeof AdminDatabaseConnectionsRoute
   '/admin/log-connections': typeof AdminLogConnectionsRoute
   '/admin/settings': typeof AdminSettingsRoute
+  '/chat/$conversationId': typeof ChatConversationIdRoute
   '/chat/account': typeof ChatAccountRoute
   '/chat/history': typeof ChatHistoryRoute
   '/admin/': typeof AdminIndexRoute
@@ -228,6 +245,7 @@ export interface FileRoutesById {
   '/admin/users/$userId': typeof AdminUsersUserIdRoute
   '/admin/users/new': typeof AdminUsersNewRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/chat/$conversationId': typeof ApiChatConversationIdRoute
   '/admin/applications/': typeof AdminApplicationsIndexRoute
   '/admin/repositories/': typeof AdminRepositoriesIndexRoute
   '/admin/users/': typeof AdminUsersIndexRoute
@@ -245,6 +263,7 @@ export interface FileRouteTypes {
     | '/admin/database-connections'
     | '/admin/log-connections'
     | '/admin/settings'
+    | '/chat/$conversationId'
     | '/chat/account'
     | '/chat/history'
     | '/admin/'
@@ -256,6 +275,7 @@ export interface FileRouteTypes {
     | '/admin/users/$userId'
     | '/admin/users/new'
     | '/api/auth/$'
+    | '/api/chat/$conversationId'
     | '/admin/applications/'
     | '/admin/repositories/'
     | '/admin/users/'
@@ -266,6 +286,7 @@ export interface FileRouteTypes {
     | '/admin/database-connections'
     | '/admin/log-connections'
     | '/admin/settings'
+    | '/chat/$conversationId'
     | '/chat/account'
     | '/chat/history'
     | '/admin'
@@ -277,6 +298,7 @@ export interface FileRouteTypes {
     | '/admin/users/$userId'
     | '/admin/users/new'
     | '/api/auth/$'
+    | '/api/chat/$conversationId'
     | '/admin/applications'
     | '/admin/repositories'
     | '/admin/users'
@@ -292,6 +314,7 @@ export interface FileRouteTypes {
     | '/admin/database-connections'
     | '/admin/log-connections'
     | '/admin/settings'
+    | '/chat/$conversationId'
     | '/chat/account'
     | '/chat/history'
     | '/admin/'
@@ -303,6 +326,7 @@ export interface FileRouteTypes {
     | '/admin/users/$userId'
     | '/admin/users/new'
     | '/api/auth/$'
+    | '/api/chat/$conversationId'
     | '/admin/applications/'
     | '/admin/repositories/'
     | '/admin/users/'
@@ -314,6 +338,7 @@ export interface RootRouteChildren {
   ChatRouteRoute: typeof ChatRouteRouteWithChildren
   LoginRoute: typeof LoginRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
+  ApiChatConversationIdRoute: typeof ApiChatConversationIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -402,6 +427,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ChatIndexRouteImport
       parentRoute: typeof ChatRouteRoute
     }
+    '/chat/$conversationId': {
+      id: '/chat/$conversationId'
+      path: '/$conversationId'
+      fullPath: '/chat/$conversationId'
+      preLoaderRoute: typeof ChatConversationIdRouteImport
+      parentRoute: typeof ChatRouteRoute
+    }
     '/chat/account': {
       id: '/chat/account'
       path: '/account'
@@ -486,6 +518,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAuthSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/chat/$conversationId': {
+      id: '/api/chat/$conversationId'
+      path: '/api/chat/$conversationId'
+      fullPath: '/api/chat/$conversationId'
+      preLoaderRoute: typeof ApiChatConversationIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -566,12 +605,14 @@ const AdminRouteRouteWithChildren = AdminRouteRoute._addFileChildren(
 )
 
 interface ChatRouteRouteChildren {
+  ChatConversationIdRoute: typeof ChatConversationIdRoute
   ChatAccountRoute: typeof ChatAccountRoute
   ChatHistoryRoute: typeof ChatHistoryRoute
   ChatIndexRoute: typeof ChatIndexRoute
 }
 
 const ChatRouteRouteChildren: ChatRouteRouteChildren = {
+  ChatConversationIdRoute: ChatConversationIdRoute,
   ChatAccountRoute: ChatAccountRoute,
   ChatHistoryRoute: ChatHistoryRoute,
   ChatIndexRoute: ChatIndexRoute,
@@ -587,6 +628,7 @@ const rootRouteChildren: RootRouteChildren = {
   ChatRouteRoute: ChatRouteRouteWithChildren,
   LoginRoute: LoginRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
+  ApiChatConversationIdRoute: ApiChatConversationIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

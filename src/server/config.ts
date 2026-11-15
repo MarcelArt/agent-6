@@ -52,6 +52,12 @@ const schema = z.object({
   ADMIN_PASSWORD: z.string().optional(),
   // Optional so the app still starts without it; see `startup.ts`.
   GITHUB_TOKEN: z.string().trim().optional(),
+  OPENAI_API_KEY: z.string().trim().optional(),
+  OPENAI_MODEL: z.string().trim().optional(),
+  OPENAI_BASE_URL: z.preprocess(
+    (value) => (value === "" ? undefined : value),
+    z.url({ protocol: /^https?$/ }).optional()
+  ),
 })
 
 export type Config = {
@@ -68,6 +74,9 @@ export type Config = {
   adminPassword?: string
   /** The one GitHub token, for cloning and for filing issues. */
   githubToken?: string
+  openaiApiKey?: string
+  openaiModel?: string
+  openaiBaseUrl?: string
 }
 
 export class ConfigError extends Error {
@@ -101,6 +110,9 @@ export function parseConfig(env: Record<string, string | undefined>): Config {
     adminEmail: result.data.ADMIN_EMAIL || undefined,
     adminPassword: result.data.ADMIN_PASSWORD || undefined,
     githubToken: result.data.GITHUB_TOKEN || undefined,
+    openaiApiKey: result.data.OPENAI_API_KEY || undefined,
+    openaiModel: result.data.OPENAI_MODEL || undefined,
+    openaiBaseUrl: result.data.OPENAI_BASE_URL,
   }
 }
 

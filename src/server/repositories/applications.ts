@@ -3,7 +3,12 @@ import "@tanstack/react-start/server-only"
 import { randomUUID } from "node:crypto"
 import { and, asc, count, eq, notExists, sql } from "drizzle-orm"
 import { getDb } from "./db"
-import { application, repository, repositoryAttachment } from "./schema"
+import {
+  application,
+  conversation,
+  repository,
+  repositoryAttachment,
+} from "./schema"
 import { createRepositoriesRepository } from "./repositories"
 import type { Db } from "./db"
 import type {
@@ -75,6 +80,16 @@ export function createApplicationsRepository(db: Db = getDb()) {
     delete(id: string) {
       // Foreign keys remove only this Application's Attachments, atomically.
       db.delete(application).where(eq(application.id, id)).run()
+    },
+    hasConversations(id: string) {
+      return (
+        db
+          .select({ id: conversation.id })
+          .from(conversation)
+          .where(eq(conversation.applicationId, id))
+          .limit(1)
+          .all().length > 0
+      )
     },
     attachRepository(applicationId: string, repositoryId: string) {
       db.insert(repositoryAttachment)

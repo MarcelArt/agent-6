@@ -146,3 +146,44 @@ export const repositoryAttachment = sqliteTable(
     index("repository_attachment_repository_idx").on(table.repositoryId),
   ]
 )
+
+/** History contains SDK run items, including tool calls/results; never sent to the browser. */
+export const conversation = sqliteTable(
+  "conversation",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    applicationId: text("application_id")
+      .notNull()
+      .references(() => application.id, { onDelete: "restrict" }),
+    title: text("title").notNull(),
+    history: text("history").notNull().default("[]"),
+    refreshedAt: timestamp("refreshed_at"),
+    runningUntil: timestamp("running_until"),
+    createdAt: timestamp("created_at").notNull(),
+    updatedAt: timestamp("updated_at").notNull(),
+  },
+  (table) => [
+    index("conversation_user_idx").on(table.userId),
+    index("conversation_application_idx").on(table.applicationId),
+  ]
+)
+
+export const message = sqliteTable(
+  "message",
+  {
+    id: text("id").primaryKey(),
+    conversationId: text("conversation_id")
+      .notNull()
+      .references(() => conversation.id, { onDelete: "cascade" }),
+    role: text("role").notNull(),
+    content: text("content").notNull(),
+    status: text("status").notNull(),
+    createdAt: timestamp("created_at").notNull(),
+  },
+  (table) => [
+    index("message_conversation_idx").on(table.conversationId, table.createdAt),
+  ]
+)
