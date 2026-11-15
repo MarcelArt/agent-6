@@ -126,9 +126,45 @@ export const application = sqliteTable("application", {
   updatedAt: timestamp("updated_at").notNull(),
 })
 
+export const databaseConnection = sqliteTable("database_connection", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  host: text("host").notNull(),
+  port: integer("port").notNull(),
+  database: text("database").notNull(),
+  user: text("user").notNull(),
+  encryptedPassword: text("encrypted_password").notNull(),
+  sslMode: text("ssl_mode").notNull(),
+  tags: text("tags").notNull().default("[]"),
+  description: text("description").notNull().default(""),
+  testOk: integer("test_ok", { mode: "boolean" }).notNull(),
+  testMessage: text("test_message").notNull(),
+  writable: integer("writable", { mode: "boolean" }),
+  createdAt: timestamp("created_at").notNull(),
+  updatedAt: timestamp("updated_at").notNull(),
+})
+
+export const databaseConnectionAttachment = sqliteTable(
+  "database_connection_attachment",
+  {
+    applicationId: text("application_id")
+      .notNull()
+      .references(() => application.id, { onDelete: "cascade" }),
+    databaseConnectionId: text("database_connection_id")
+      .notNull()
+      .references(() => databaseConnection.id, { onDelete: "cascade" }),
+  },
+  (table) => [
+    primaryKey({ columns: [table.applicationId, table.databaseConnectionId] }),
+    index("database_connection_attachment_connection_idx").on(
+      table.databaseConnectionId
+    ),
+  ]
+)
+
 /**
- * Typed Attachment tables keep real foreign keys. Steps 08/09 add sibling
- * tables for Database/Log Connections (including the Log Base Selector).
+ * Typed Attachment tables keep real foreign keys. Step 09 adds a sibling
+ * table for Log Connections (including the Log Base Selector).
  * The service exposes them together as a discriminated Attachment union.
  */
 export const repositoryAttachment = sqliteTable(

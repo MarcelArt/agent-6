@@ -1,4 +1,5 @@
 import type { Repository } from "./repositories"
+import type { DatabaseConnection } from "./database-connections"
 
 export type ApplicationInput = {
   name: string
@@ -8,8 +9,10 @@ export type ApplicationInput = {
 export type Application = ApplicationInput & { id: string }
 export type ApplicationSummary = Application & { repositoryCount: number }
 
-/** Extend this union with the connection kinds in steps 08 and 09. */
-export type Attachment = { kind: "repository"; resource: Repository }
+/** Step 09 adds Log Connections to this Attachment union. */
+export type Attachment =
+  | { kind: "repository"; resource: Repository }
+  | { kind: "database-connection"; resource: DatabaseConnection }
 export type ApplicationScope = {
   application: Application
   /** Only explicit Attachments grant scope. Resource Tags are hints only. */

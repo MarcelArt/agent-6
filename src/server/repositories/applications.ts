@@ -9,6 +9,7 @@ import {
   repository,
   repositoryAttachment,
 } from "./schema"
+import { createDatabaseConnectionsRepository } from "./database-connections"
 import { createRepositoriesRepository } from "./repositories"
 import type { Db } from "./db"
 import type {
@@ -123,10 +124,18 @@ export function createApplicationsRepository(db: Db = getDb()) {
         .all()
       return {
         application: found,
-        attachments: ids.map(({ id }) => ({
-          kind: "repository",
-          resource: repositories.findById(id)!,
-        })),
+        attachments: [
+          ...ids.map(({ id }) => ({
+            kind: "repository" as const,
+            resource: repositories.findById(id)!,
+          })),
+          ...createDatabaseConnectionsRepository(db)
+            .attached(applicationId)
+            .map((resource) => ({
+              kind: "database-connection" as const,
+              resource,
+            })),
+        ],
       }
     },
     availableRepositories(

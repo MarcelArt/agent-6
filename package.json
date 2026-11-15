@@ -13,7 +13,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "tsx src/server/migrate.ts"
+    "db:migrate": "tsx src/server/migrate.ts",
+    "test:postgres": "RUN_POSTGRES_TESTS=1 vitest run src/server/postgres.integration.test.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",
@@ -32,6 +33,7 @@
     "drizzle-orm": "^0.45.4",
     "lucide-react": "^1.73.0",
     "openai": "^7.57.0",
+    "pg": "^8.23.1",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "shadcn": "^4.23.0",
@@ -45,6 +47,7 @@
     "@tanstack/router-cli": "^1.167.45",
     "@types/better-sqlite3": "^9.6.0",
     "@types/node": "^22",
+    "@types/pg": "^8.23.1",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@vitejs/plugin-react": "^6",

@@ -124,9 +124,11 @@ export function createChatManagement(
                     throw new Error("Application unavailable")
                   if (!claim.conversation.refreshedAt) {
                     await Promise.allSettled(
-                      applicationScope.attachments.map(({ resource }) =>
-                        (deps.fresh ?? ensureFresh)(resource.id, 3 * 60_000)
-                      )
+                      applicationScope.attachments
+                        .filter((item) => item.kind === "repository")
+                        .map(({ resource }) =>
+                          (deps.fresh ?? ensureFresh)(resource.id, 3 * 60_000)
+                        )
                     )
                     abort.signal.throwIfAborted()
                     conversations.markRefreshed(id)

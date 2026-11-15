@@ -44,7 +44,7 @@ Admins create Applications at `/admin/applications` with a name, a description f
 
 Deleting an Application removes its Attachments and keeps its Repositories. An Application with saved Conversations cannot be removed. Removing a Repository lists its Applications in the confirmation and removes all its Attachments. Tags describe a resource; they never grant scope.
 
-Agent tools must resolve resources through `getApplicationScope` in `src/server/applications.functions.ts`. It accepts an Application id, requires a logged-in user and returns only explicitly attached resources. Attachment tables have foreign keys for each resource kind; steps 08 and 09 can add sibling connection tables and extend the `Attachment` union in `src/lib/applications.ts`.
+Agent tools must resolve resources through `getApplicationScope` in `src/server/applications.functions.ts`. It accepts an Application id, requires a logged-in user and returns only explicitly attached resources. Attachment tables have foreign keys for each resource kind; step 09 can add a sibling Log Connection table and extend the `Attachment` union in `src/lib/applications.ts`.
 
 ## Chat
 
@@ -52,7 +52,69 @@ Set `OPENAI_API_KEY` and `OPENAI_MODEL` to enable answers. Optionally set `OPENA
 
 At `/chat`, choose an Application with at least one ready Repository and ask a question. The Application stays fixed for that Conversation. Answers stream as plain prose; messages and the SDK's tool history are saved so a reload or follow-up keeps context. Only the owner can open or continue a Conversation, including when the other user is an Admin.
 
-Before the first reply, Agent 6 refreshes attached clones older than three minutes. If syncing fails it can still read the existing clone. Its tools only list, search, and read attached code; symlinks, `.git`, and paths outside a clone are refused. Reads return at most 200 lines / 24 KB, searches return at most 50 results with a bounded scan, and oversized or binary files are skipped. Replies stop after 12 model turns or 90 seconds and offer **Try again** when they fail. Browsing past Conversations arrives in step 14; save a Conversation's URL to reopen it meanwhile.
+Before the first reply, Agent 6 refreshes attached clones older than three minutes. If syncing fails it can still read the existing clone. Its code tools list, search, and read attached code; symlinks, `.git`, and paths outside a clone are refused. Reads return at most 200 lines / 24 KB, searches return at most 50 results with a bounded scan, and oversized or binary files are skipped. Replies stop after 12 model turns or 90 seconds and offer **Try again** when they fail. Browsing past Conversations arrives in step 14; save a Conversation's URL to reopen it meanwhile.
+
+## Database Connections
+
+Admins add Postgres databases at `/admin/database-connections` and attach them under **Attachments → Add Database Connection** on an Application. Name, description and Tags help the agent choose the right connection. Passwords are encrypted with `ENCRYPTION_KEY` and never returned to the browser. Leave the edit password blank to keep it unchanged.
+
+Saving always tests the connection and checks the role’s write/create privileges; a failed test still saves the settings. **Test connection** retests the saved settings. A writable role displays a warning: supply a dedicated read-only Postgres role. SSL modes are Disable, Require (encrypted without certificate verification), and Verify certificate and hostname (the default).
+
+The agent can list tables/views and their columns, or run one read-only query. Each call rechecks the Application’s Attachment, opens a fresh connection, starts a read-only transaction and always rolls it back. A Postgres cursor and the extended query protocol refuse transaction commands and multiple statements. Queries have a 3-second statement timeout, a 500-ms lock timeout, an 8-second total deadline, and results capped at 200 rows / 48 KB with a truncation flag. Driver errors are mapped to safe messages. The agent is instructed to explain findings in plain words and never repeat raw rows, ids, column names or secrets.
+
+Run `npm run test:postgres` with Docker available for the real-Postgres acceptance suite. It starts an isolated `postgres:17` container on a random local port, checks write attempts even as a superuser, privilege warnings, timeouts, result caps and cleanup, and removes the container afterward. These tests are skipped in the default unit suite.
+
+### Create a read-only Postgres user
+
+Use a separate login for Agent 6. In the examples below, replace `appdb` with your Application's database, `app_owner` with the role that creates its tables (often the migration role), and `public` with the schema the agent should read.
+
+Connect to that database with `psql` as a database administrator who can create roles, grant access to the tables, and change `app_owner`'s default privileges:
+
+```bash
+psql --host db.example.com --port 5432 --dbname appdb --username db_admin --password
+```
+
+Create the login and set its password at the prompt. The `\password` command keeps the plaintext password out of SQL and shell history.
+
+```sql
+CREATE ROLE agent6_reader WITH LOGIN
+  NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS;
+\password agent6_reader
+
+-- Access to the database, schema, and existing tables/views.
+GRANT CONNECT ON DATABASE appdb TO agent6_reader;
+GRANT USAGE ON SCHEMA public TO agent6_reader;
+GRANT SELECT ON ALL TABLES IN SCHEMA public TO agent6_reader;
+
+-- Access to future tables/views created by the Application's migration role.
+ALTER DEFAULT PRIVILEGES FOR ROLE app_owner IN SCHEMA public
+  GRANT SELECT ON TABLES TO agent6_reader;
+
+-- An additional default for new connections; grants still control access.
+ALTER ROLE agent6_reader SET default_transaction_read_only = on;
+```
+
+Repeat the schema grants for each schema the agent needs. Repeat `ALTER DEFAULT PRIVILEGES` for every role that creates tables; it applies only to future objects created by the named role in this database. To expose only selected tables, replace the broad existing-table grant with `GRANT SELECT ON TABLE public.orders TO agent6_reader;`, omit the default-privileges statement, and grant future tables individually. See PostgreSQL's [GRANT](https://www.postgresql.org/docs/current/sql-grant.html) and [default privileges](https://www.postgresql.org/docs/current/sql-alterdefaultprivileges.html) documentation.
+
+Keep this login separate from roles that own objects or have write privileges. Every login also receives privileges granted to `PUBLIC`. On older or customized databases, `PUBLIC` may have schema `CREATE` or table write privileges, so granting only `SELECT` to the new login does not remove those shared permissions. If Agent 6 shows a writable-role warning, ask the database administrator to review those grants. For example, `REVOKE CREATE ON SCHEMA public FROM PUBLIC;` removes schema creation from **every** role relying on that shared grant; grant `CREATE` explicitly to the Application's migration role before making that change. If tables use row-level security, configure the required read policies for `agent6_reader`.
+
+Verify the login with a new connection:
+
+```bash
+psql --host db.example.com --port 5432 --dbname appdb --username agent6_reader --password
+```
+
+For an existing table such as `public.orders`, check that reading is allowed and writing/creation are denied:
+
+```sql
+SELECT
+  has_table_privilege(current_user, 'public.orders', 'SELECT') AS can_read,
+  has_table_privilege(current_user, 'public.orders', 'INSERT,UPDATE,DELETE,TRUNCATE') AS can_write,
+  has_schema_privilege(current_user, 'public', 'CREATE') AS can_create_in_schema,
+  has_database_privilege(current_user, current_database(), 'CREATE') AS can_create_schema;
+```
+
+Expect `can_read` to be `true` and the other values to be `false`. Check each schema and table you intend to expose. In Agent 6, enter `agent6_reader` and its password in the Database Connection, select the appropriate SSL mode, and save. The test should succeed without a writable-role warning; then attach the connection to the Application.
 
 ## Scripts
 
@@ -60,7 +122,8 @@ Before the first reply, Agent 6 refreshes attached clones older than three minut
 |---|---|
 | `npm run dev` | Dev server on port 3000 |
 | `npm run build` | Production build |
-| `npm test` | Vitest |
+| `npm test` | Unit tests |
+| `npm run test:postgres` | Real-Postgres acceptance tests (Docker required) |
 | `npm run typecheck` | TypeScript |
 | `npm run lint` | ESLint |
 | `npm run db:generate` | Write a migration to `drizzle/` after changing `src/server/repositories/schema.ts` |

@@ -15,7 +15,7 @@ import { Route as ChatRouteRouteImport } from './routes/chat/route'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as AdminApplicationsRouteRouteImport } from './routes/admin/applications/route'
-import { Route as AdminDatabaseConnectionsRouteImport } from './routes/admin/database-connections'
+import { Route as AdminDatabaseConnectionsRouteRouteImport } from './routes/admin/database-connections/route'
 import { Route as AdminLogConnectionsRouteImport } from './routes/admin/log-connections'
 import { Route as AdminRepositoriesRouteRouteImport } from './routes/admin/repositories/route'
 import { Route as AdminSettingsRouteImport } from './routes/admin/settings'
@@ -27,6 +27,9 @@ import { Route as ChatHistoryRouteImport } from './routes/chat/history'
 import { Route as AdminApplicationsIndexRouteImport } from './routes/admin/applications/index'
 import { Route as AdminApplicationsApplicationIdRouteImport } from './routes/admin/applications/$applicationId'
 import { Route as AdminApplicationsNewRouteImport } from './routes/admin/applications/new'
+import { Route as AdminDatabaseConnectionsIndexRouteImport } from './routes/admin/database-connections/index'
+import { Route as AdminDatabaseConnectionsDatabaseConnectionIdRouteImport } from './routes/admin/database-connections/$databaseConnectionId'
+import { Route as AdminDatabaseConnectionsNewRouteImport } from './routes/admin/database-connections/new'
 import { Route as AdminRepositoriesIndexRouteImport } from './routes/admin/repositories/index'
 import { Route as AdminRepositoriesRepositoryIdRouteImport } from './routes/admin/repositories/$repositoryId'
 import { Route as AdminRepositoriesNewRouteImport } from './routes/admin/repositories/new'
@@ -66,8 +69,8 @@ const AdminApplicationsRouteRoute = AdminApplicationsRouteRouteImport.update({
   path: '/applications',
   getParentRoute: () => AdminRouteRoute,
 } as any)
-const AdminDatabaseConnectionsRoute =
-  AdminDatabaseConnectionsRouteImport.update({
+const AdminDatabaseConnectionsRouteRoute =
+  AdminDatabaseConnectionsRouteRouteImport.update({
     id: '/database-connections',
     path: '/database-connections',
     getParentRoute: () => AdminRouteRoute,
@@ -128,6 +131,24 @@ const AdminApplicationsNewRoute = AdminApplicationsNewRouteImport.update({
   path: '/new',
   getParentRoute: () => AdminApplicationsRouteRoute,
 } as any)
+const AdminDatabaseConnectionsIndexRoute =
+  AdminDatabaseConnectionsIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AdminDatabaseConnectionsRouteRoute,
+  } as any)
+const AdminDatabaseConnectionsDatabaseConnectionIdRoute =
+  AdminDatabaseConnectionsDatabaseConnectionIdRouteImport.update({
+    id: '/$databaseConnectionId',
+    path: '/$databaseConnectionId',
+    getParentRoute: () => AdminDatabaseConnectionsRouteRoute,
+  } as any)
+const AdminDatabaseConnectionsNewRoute =
+  AdminDatabaseConnectionsNewRouteImport.update({
+    id: '/new',
+    path: '/new',
+    getParentRoute: () => AdminDatabaseConnectionsRouteRoute,
+  } as any)
 const AdminRepositoriesIndexRoute = AdminRepositoriesIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -176,9 +197,9 @@ export interface FileRoutesByFullPath {
   '/chat': typeof ChatRouteRouteWithChildren
   '/login': typeof LoginRoute
   '/admin/applications': typeof AdminApplicationsRouteRouteWithChildren
+  '/admin/database-connections': typeof AdminDatabaseConnectionsRouteRouteWithChildren
   '/admin/repositories': typeof AdminRepositoriesRouteRouteWithChildren
   '/admin/users': typeof AdminUsersRouteRouteWithChildren
-  '/admin/database-connections': typeof AdminDatabaseConnectionsRoute
   '/admin/log-connections': typeof AdminLogConnectionsRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/chat/$conversationId': typeof ChatConversationIdRoute
@@ -188,6 +209,8 @@ export interface FileRoutesByFullPath {
   '/chat/': typeof ChatIndexRoute
   '/admin/applications/$applicationId': typeof AdminApplicationsApplicationIdRoute
   '/admin/applications/new': typeof AdminApplicationsNewRoute
+  '/admin/database-connections/$databaseConnectionId': typeof AdminDatabaseConnectionsDatabaseConnectionIdRoute
+  '/admin/database-connections/new': typeof AdminDatabaseConnectionsNewRoute
   '/admin/repositories/$repositoryId': typeof AdminRepositoriesRepositoryIdRoute
   '/admin/repositories/new': typeof AdminRepositoriesNewRoute
   '/admin/users/$userId': typeof AdminUsersUserIdRoute
@@ -195,13 +218,13 @@ export interface FileRoutesByFullPath {
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/chat/$conversationId': typeof ApiChatConversationIdRoute
   '/admin/applications/': typeof AdminApplicationsIndexRoute
+  '/admin/database-connections/': typeof AdminDatabaseConnectionsIndexRoute
   '/admin/repositories/': typeof AdminRepositoriesIndexRoute
   '/admin/users/': typeof AdminUsersIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
-  '/admin/database-connections': typeof AdminDatabaseConnectionsRoute
   '/admin/log-connections': typeof AdminLogConnectionsRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/chat/$conversationId': typeof ChatConversationIdRoute
@@ -211,6 +234,8 @@ export interface FileRoutesByTo {
   '/chat': typeof ChatIndexRoute
   '/admin/applications/$applicationId': typeof AdminApplicationsApplicationIdRoute
   '/admin/applications/new': typeof AdminApplicationsNewRoute
+  '/admin/database-connections/$databaseConnectionId': typeof AdminDatabaseConnectionsDatabaseConnectionIdRoute
+  '/admin/database-connections/new': typeof AdminDatabaseConnectionsNewRoute
   '/admin/repositories/$repositoryId': typeof AdminRepositoriesRepositoryIdRoute
   '/admin/repositories/new': typeof AdminRepositoriesNewRoute
   '/admin/users/$userId': typeof AdminUsersUserIdRoute
@@ -218,6 +243,7 @@ export interface FileRoutesByTo {
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/chat/$conversationId': typeof ApiChatConversationIdRoute
   '/admin/applications': typeof AdminApplicationsIndexRoute
+  '/admin/database-connections': typeof AdminDatabaseConnectionsIndexRoute
   '/admin/repositories': typeof AdminRepositoriesIndexRoute
   '/admin/users': typeof AdminUsersIndexRoute
 }
@@ -228,9 +254,9 @@ export interface FileRoutesById {
   '/chat': typeof ChatRouteRouteWithChildren
   '/login': typeof LoginRoute
   '/admin/applications': typeof AdminApplicationsRouteRouteWithChildren
+  '/admin/database-connections': typeof AdminDatabaseConnectionsRouteRouteWithChildren
   '/admin/repositories': typeof AdminRepositoriesRouteRouteWithChildren
   '/admin/users': typeof AdminUsersRouteRouteWithChildren
-  '/admin/database-connections': typeof AdminDatabaseConnectionsRoute
   '/admin/log-connections': typeof AdminLogConnectionsRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/chat/$conversationId': typeof ChatConversationIdRoute
@@ -240,6 +266,8 @@ export interface FileRoutesById {
   '/chat/': typeof ChatIndexRoute
   '/admin/applications/$applicationId': typeof AdminApplicationsApplicationIdRoute
   '/admin/applications/new': typeof AdminApplicationsNewRoute
+  '/admin/database-connections/$databaseConnectionId': typeof AdminDatabaseConnectionsDatabaseConnectionIdRoute
+  '/admin/database-connections/new': typeof AdminDatabaseConnectionsNewRoute
   '/admin/repositories/$repositoryId': typeof AdminRepositoriesRepositoryIdRoute
   '/admin/repositories/new': typeof AdminRepositoriesNewRoute
   '/admin/users/$userId': typeof AdminUsersUserIdRoute
@@ -247,6 +275,7 @@ export interface FileRoutesById {
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/chat/$conversationId': typeof ApiChatConversationIdRoute
   '/admin/applications/': typeof AdminApplicationsIndexRoute
+  '/admin/database-connections/': typeof AdminDatabaseConnectionsIndexRoute
   '/admin/repositories/': typeof AdminRepositoriesIndexRoute
   '/admin/users/': typeof AdminUsersIndexRoute
 }
@@ -258,9 +287,9 @@ export interface FileRouteTypes {
     | '/chat'
     | '/login'
     | '/admin/applications'
+    | '/admin/database-connections'
     | '/admin/repositories'
     | '/admin/users'
-    | '/admin/database-connections'
     | '/admin/log-connections'
     | '/admin/settings'
     | '/chat/$conversationId'
@@ -270,6 +299,8 @@ export interface FileRouteTypes {
     | '/chat/'
     | '/admin/applications/$applicationId'
     | '/admin/applications/new'
+    | '/admin/database-connections/$databaseConnectionId'
+    | '/admin/database-connections/new'
     | '/admin/repositories/$repositoryId'
     | '/admin/repositories/new'
     | '/admin/users/$userId'
@@ -277,13 +308,13 @@ export interface FileRouteTypes {
     | '/api/auth/$'
     | '/api/chat/$conversationId'
     | '/admin/applications/'
+    | '/admin/database-connections/'
     | '/admin/repositories/'
     | '/admin/users/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/login'
-    | '/admin/database-connections'
     | '/admin/log-connections'
     | '/admin/settings'
     | '/chat/$conversationId'
@@ -293,6 +324,8 @@ export interface FileRouteTypes {
     | '/chat'
     | '/admin/applications/$applicationId'
     | '/admin/applications/new'
+    | '/admin/database-connections/$databaseConnectionId'
+    | '/admin/database-connections/new'
     | '/admin/repositories/$repositoryId'
     | '/admin/repositories/new'
     | '/admin/users/$userId'
@@ -300,6 +333,7 @@ export interface FileRouteTypes {
     | '/api/auth/$'
     | '/api/chat/$conversationId'
     | '/admin/applications'
+    | '/admin/database-connections'
     | '/admin/repositories'
     | '/admin/users'
   id:
@@ -309,9 +343,9 @@ export interface FileRouteTypes {
     | '/chat'
     | '/login'
     | '/admin/applications'
+    | '/admin/database-connections'
     | '/admin/repositories'
     | '/admin/users'
-    | '/admin/database-connections'
     | '/admin/log-connections'
     | '/admin/settings'
     | '/chat/$conversationId'
@@ -321,6 +355,8 @@ export interface FileRouteTypes {
     | '/chat/'
     | '/admin/applications/$applicationId'
     | '/admin/applications/new'
+    | '/admin/database-connections/$databaseConnectionId'
+    | '/admin/database-connections/new'
     | '/admin/repositories/$repositoryId'
     | '/admin/repositories/new'
     | '/admin/users/$userId'
@@ -328,6 +364,7 @@ export interface FileRouteTypes {
     | '/api/auth/$'
     | '/api/chat/$conversationId'
     | '/admin/applications/'
+    | '/admin/database-connections/'
     | '/admin/repositories/'
     | '/admin/users/'
   fileRoutesById: FileRoutesById
@@ -389,7 +426,7 @@ declare module '@tanstack/react-router' {
       id: '/admin/database-connections'
       path: '/database-connections'
       fullPath: '/admin/database-connections'
-      preLoaderRoute: typeof AdminDatabaseConnectionsRouteImport
+      preLoaderRoute: typeof AdminDatabaseConnectionsRouteRouteImport
       parentRoute: typeof AdminRouteRoute
     }
     '/admin/log-connections': {
@@ -469,6 +506,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminApplicationsNewRouteImport
       parentRoute: typeof AdminApplicationsRouteRoute
     }
+    '/admin/database-connections/': {
+      id: '/admin/database-connections/'
+      path: '/'
+      fullPath: '/admin/database-connections/'
+      preLoaderRoute: typeof AdminDatabaseConnectionsIndexRouteImport
+      parentRoute: typeof AdminDatabaseConnectionsRouteRoute
+    }
+    '/admin/database-connections/$databaseConnectionId': {
+      id: '/admin/database-connections/$databaseConnectionId'
+      path: '/$databaseConnectionId'
+      fullPath: '/admin/database-connections/$databaseConnectionId'
+      preLoaderRoute: typeof AdminDatabaseConnectionsDatabaseConnectionIdRouteImport
+      parentRoute: typeof AdminDatabaseConnectionsRouteRoute
+    }
+    '/admin/database-connections/new': {
+      id: '/admin/database-connections/new'
+      path: '/new'
+      fullPath: '/admin/database-connections/new'
+      preLoaderRoute: typeof AdminDatabaseConnectionsNewRouteImport
+      parentRoute: typeof AdminDatabaseConnectionsRouteRoute
+    }
     '/admin/repositories/': {
       id: '/admin/repositories/'
       path: '/'
@@ -546,6 +604,25 @@ const AdminApplicationsRouteRouteWithChildren =
     AdminApplicationsRouteRouteChildren,
   )
 
+interface AdminDatabaseConnectionsRouteRouteChildren {
+  AdminDatabaseConnectionsDatabaseConnectionIdRoute: typeof AdminDatabaseConnectionsDatabaseConnectionIdRoute
+  AdminDatabaseConnectionsNewRoute: typeof AdminDatabaseConnectionsNewRoute
+  AdminDatabaseConnectionsIndexRoute: typeof AdminDatabaseConnectionsIndexRoute
+}
+
+const AdminDatabaseConnectionsRouteRouteChildren: AdminDatabaseConnectionsRouteRouteChildren =
+  {
+    AdminDatabaseConnectionsDatabaseConnectionIdRoute:
+      AdminDatabaseConnectionsDatabaseConnectionIdRoute,
+    AdminDatabaseConnectionsNewRoute: AdminDatabaseConnectionsNewRoute,
+    AdminDatabaseConnectionsIndexRoute: AdminDatabaseConnectionsIndexRoute,
+  }
+
+const AdminDatabaseConnectionsRouteRouteWithChildren =
+  AdminDatabaseConnectionsRouteRoute._addFileChildren(
+    AdminDatabaseConnectionsRouteRouteChildren,
+  )
+
 interface AdminRepositoriesRouteRouteChildren {
   AdminRepositoriesRepositoryIdRoute: typeof AdminRepositoriesRepositoryIdRoute
   AdminRepositoriesNewRoute: typeof AdminRepositoriesNewRoute
@@ -582,9 +659,9 @@ const AdminUsersRouteRouteWithChildren = AdminUsersRouteRoute._addFileChildren(
 
 interface AdminRouteRouteChildren {
   AdminApplicationsRouteRoute: typeof AdminApplicationsRouteRouteWithChildren
+  AdminDatabaseConnectionsRouteRoute: typeof AdminDatabaseConnectionsRouteRouteWithChildren
   AdminRepositoriesRouteRoute: typeof AdminRepositoriesRouteRouteWithChildren
   AdminUsersRouteRoute: typeof AdminUsersRouteRouteWithChildren
-  AdminDatabaseConnectionsRoute: typeof AdminDatabaseConnectionsRoute
   AdminLogConnectionsRoute: typeof AdminLogConnectionsRoute
   AdminSettingsRoute: typeof AdminSettingsRoute
   AdminIndexRoute: typeof AdminIndexRoute
@@ -592,9 +669,10 @@ interface AdminRouteRouteChildren {
 
 const AdminRouteRouteChildren: AdminRouteRouteChildren = {
   AdminApplicationsRouteRoute: AdminApplicationsRouteRouteWithChildren,
+  AdminDatabaseConnectionsRouteRoute:
+    AdminDatabaseConnectionsRouteRouteWithChildren,
   AdminRepositoriesRouteRoute: AdminRepositoriesRouteRouteWithChildren,
   AdminUsersRouteRoute: AdminUsersRouteRouteWithChildren,
-  AdminDatabaseConnectionsRoute: AdminDatabaseConnectionsRoute,
   AdminLogConnectionsRoute: AdminLogConnectionsRoute,
   AdminSettingsRoute: AdminSettingsRoute,
   AdminIndexRoute: AdminIndexRoute,

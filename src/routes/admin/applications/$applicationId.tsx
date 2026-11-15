@@ -1,7 +1,13 @@
+import {
+  attachDatabaseConnection,
+  detachDatabaseConnection,
+  listAvailableDatabaseConnections,
+} from "@/server/database-connections.functions"
 import { useState } from "react"
 import { Link, createFileRoute, useRouter } from "@tanstack/react-router"
 import {
   BoxesIcon,
+  DatabaseIcon,
   EllipsisIcon,
   FolderGit2Icon,
   PlusIcon,
@@ -36,6 +42,7 @@ import {
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
@@ -51,7 +58,10 @@ import {
 
 export const Route = createFileRoute("/admin/applications/$applicationId")({
   validateSearch: z.object({
-    attach: z.literal("repository").optional().catch(undefined),
+    attach: z
+      .enum(["repository", "database-connection"])
+      .optional()
+      .catch(undefined),
     attachQ: z.string().optional().catch(undefined),
     attachPage: z.number().int().min(1).optional().catch(undefined),
   }),
@@ -62,12 +72,19 @@ export const Route = createFileRoute("/admin/applications/$applicationId")({
   }),
   loader: async ({ params, deps }) => {
     const scope = await getApplication({ data: params })
-    const available = deps.attach
-      ? await listAvailableRepositories({
-          data: { ...params, search: deps.search, page: deps.page },
-        })
-      : null
-    return { ...scope, available }
+    const available =
+      deps.attach === "repository"
+        ? await listAvailableRepositories({
+            data: { ...params, search: deps.search, page: deps.page },
+          })
+        : null
+    const availableConnections =
+      deps.attach === "database-connection"
+        ? await listAvailableDatabaseConnections({
+            data: { ...params, search: deps.search, page: deps.page },
+          })
+        : null
+    return { ...scope, available, availableConnections }
   },
   head: ({ loaderData }) => ({
     meta: [
@@ -89,13 +106,18 @@ export const Route = createFileRoute("/admin/applications/$applicationId")({
 const UNREACHABLE =
   "Agent 6 could not complete this change. Check your connection, then try again."
 function Page() {
-  const { application, attachments, available } = Route.useLoaderData()
+  const { application, attachments, available, availableConnections } =
+    Route.useLoaderData()
   const search = Route.useSearch()
   const router = useRouter()
   const [confirming, setConfirming] = useState(false)
   const [pending, setPending] = useState(false)
   const [problem, setProblem] = useState<{ message: string }>()
   const [attachmentProblem, setAttachmentProblem] = useState<string>()
+  const repositories = attachments.filter((item) => item.kind === "repository")
+  const connections = attachments.filter(
+    (item) => item.kind === "database-connection"
+  )
   const listSearch = { q: search.q, page: search.page }
   async function closePicker() {
     await router.navigate({
@@ -129,6 +151,26 @@ function Page() {
       const result = await (add ? attachRepository : detachRepository)({
         data: { applicationId: application.id, repositoryId },
       })
+      if (result.ok) {
+        if (add) await closePicker()
+        await router.invalidate()
+      } else setAttachmentProblem(result.message)
+    } catch {
+      setAttachmentProblem(UNREACHABLE)
+    } finally {
+      setPending(false)
+    }
+  }
+  async function changeDatabaseAttachment(
+    databaseConnectionId: string,
+    add: boolean
+  ) {
+    setPending(true)
+    setAttachmentProblem(undefined)
+    try {
+      const result = await (
+        add ? attachDatabaseConnection : detachDatabaseConnection
+      )({ data: { applicationId: application.id, databaseConnectionId } })
       if (result.ok) {
         if (add) await closePicker()
         await router.invalidate()
@@ -222,9 +264,9 @@ function Page() {
               Add Repository
             </Link>
           </div>
-          {attachments.length ? (
+          {repositories.length ? (
             <ul className="divide-y rounded-md border">
-              {attachments.map(({ kind, resource }) => (
+              {repositories.map(({ kind, resource }) => (
                 <li
                   key={`${kind}:${resource.id}`}
                   className="flex min-w-0 items-center gap-2 px-3 py-2"
@@ -275,6 +317,80 @@ function Page() {
             <p className="rounded-md border border-dashed p-4 text-xs text-muted-foreground">
               No Repositories attached. Add one so the agent can read its code
               for this Application.
+            </p>
+          )}
+          <div className="flex items-center justify-between gap-2">
+            <h2 className="text-xs font-medium">Database Connections</h2>
+            <Link
+              to="/admin/applications/$applicationId"
+              params={{ applicationId: application.id }}
+              search={{ ...listSearch, attach: "database-connection" }}
+              className={buttonVariants({ variant: "outline", size: "sm" })}
+              onClick={() => setAttachmentProblem(undefined)}
+            >
+              <PlusIcon />
+              Add Database Connection
+            </Link>
+          </div>
+          {connections.length ? (
+            <ul className="divide-y rounded-md border">
+              {connections.map(({ resource }) => (
+                <li
+                  key={resource.id}
+                  className="flex min-w-0 items-center gap-2 px-3 py-2"
+                >
+                  <DatabaseIcon className="size-3.5 shrink-0 text-muted-foreground" />
+                  <div className="flex min-w-0 flex-1 flex-col gap-1">
+                    <Link
+                      to="/admin/database-connections/$databaseConnectionId"
+                      params={{ databaseConnectionId: resource.id }}
+                      className="truncate text-xs font-medium underline-offset-4 hover:underline"
+                    >
+                      {resource.name}
+                    </Link>
+                    <span className="text-xs text-muted-foreground">
+                      {!resource.test.ok
+                        ? "Connection test failed"
+                        : resource.test.writable
+                          ? "Writable role · Supply a read-only role"
+                          : "Read-only role"}
+                    </span>
+                  </div>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger
+                      render={
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon-sm"
+                          aria-label={`Actions for ${resource.name}`}
+                          disabled={pending}
+                        />
+                      }
+                    >
+                      <EllipsisIcon />
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuGroup>
+                        <DropdownMenuItem
+                          variant="destructive"
+                          onClick={() =>
+                            void changeDatabaseAttachment(resource.id, false)
+                          }
+                        >
+                          <Trash2Icon />
+                          Remove Attachment
+                        </DropdownMenuItem>
+                      </DropdownMenuGroup>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="rounded-md border border-dashed p-4 text-xs text-muted-foreground">
+              No Database Connections attached. Add one so the agent can read
+              this Application’s data.
             </p>
           )}
           <FieldDescription>
@@ -368,11 +484,94 @@ function Page() {
           )}
         </DialogContent>
       </Dialog>
+      <Dialog
+        open={search.attach === "database-connection"}
+        onOpenChange={(open) => {
+          if (!open) void closePicker()
+        }}
+      >
+        <DialogContent className="flex max-h-[85svh] flex-col sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Add Database Connection</DialogTitle>
+            <DialogDescription>
+              Choose a Database Connection to attach to {application.name}.
+            </DialogDescription>
+          </DialogHeader>
+          {attachmentProblem && (
+            <FormError title="Attachment unchanged">
+              {attachmentProblem}
+            </FormError>
+          )}
+          <RecordSearch
+            label="Search available Database Connections"
+            value={search.attachQ ?? ""}
+            onSearch={(q) =>
+              void router.navigate({
+                to: ".",
+                search: {
+                  ...search,
+                  attachQ: q || undefined,
+                  attachPage: undefined,
+                },
+                replace: true,
+              })
+            }
+          />
+          {availableConnections && (
+            <>
+              {availableConnections.connections.length ? (
+                <ul className="min-h-0 divide-y overflow-y-auto">
+                  {availableConnections.connections.map((connection) => (
+                    <li
+                      key={connection.id}
+                      className="flex items-center gap-2 py-2"
+                    >
+                      <DatabaseIcon className="size-3.5 shrink-0 text-muted-foreground" />
+                      <div className="flex min-w-0 flex-1 flex-col">
+                        <span className="truncate text-xs font-medium">
+                          {connection.name}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          {connection.description || "No description"}
+                        </span>
+                      </div>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        disabled={pending}
+                        aria-label={`Attach ${connection.name}`}
+                        onClick={() =>
+                          void changeDatabaseAttachment(connection.id, true)
+                        }
+                      >
+                        Add
+                      </Button>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="py-4 text-xs text-muted-foreground">
+                  {search.attachQ
+                    ? "No available Database Connections match this search."
+                    : "All Database Connections are already attached, or none have been added yet."}
+                </p>
+              )}
+              <RecordPagination
+                {...availableConnections}
+                pageLink={(target) => (
+                  <Link to="." search={{ ...search, attachPage: target }} />
+                )}
+              />
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
       <ConfirmDialog
         open={confirming}
         onOpenChange={setConfirming}
         title={`Delete ${application.name}?`}
-        description={`This removes the Application and its ${attachments.length} ${attachments.length === 1 ? "Attachment" : "Attachments"}. The Repositories and their Attachments to other Applications are kept.`}
+        description={`This removes the Application and its ${attachments.length} ${attachments.length === 1 ? "Attachment" : "Attachments"}. The resources and their Attachments to other Applications are kept.`}
         confirmLabel="Delete Application"
         pending={pending}
         onConfirm={() => void remove()}
