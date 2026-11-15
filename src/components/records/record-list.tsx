@@ -145,6 +145,7 @@ export function RecordRow({
   name,
   property,
   detail,
+  detailLines = 1,
   secondary,
 }: {
   link: LinkElement
@@ -154,6 +155,8 @@ export function RecordRow({
   name: React.ReactNode
   property?: React.ReactNode
   detail: React.ReactNode
+  /** 2 lets a long detail, such as an error text, wrap once. */
+  detailLines?: 1 | 2
   secondary?: React.ReactNode
 }) {
   // On a selected row, muted text would fall below 4.5:1 in light theme.
@@ -184,7 +187,15 @@ export function RecordRow({
               )}
             </span>
             <span className="flex items-start gap-2 text-xs leading-4">
-              <span className={cn("min-w-0 truncate", muted)}>{detail}</span>
+              <span
+                className={cn(
+                  "min-w-0",
+                  detailLines === 2 ? "line-clamp-2" : "truncate",
+                  muted
+                )}
+              >
+                {detail}
+              </span>
               {secondary && (
                 <span
                   className={cn(

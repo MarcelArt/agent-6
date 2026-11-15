@@ -50,6 +50,8 @@ const schema = z.object({
   // Only used while no user exists; see `first-admin.ts`, which validates them.
   ADMIN_EMAIL: z.string().trim().optional(),
   ADMIN_PASSWORD: z.string().optional(),
+  // Optional so the app still starts without it; see `startup.ts`.
+  GITHUB_TOKEN: z.string().trim().optional(),
 })
 
 export type Config = {
@@ -64,6 +66,8 @@ export type Config = {
   /** Credentials of the first Admin. Only used while no user exists. */
   adminEmail?: string
   adminPassword?: string
+  /** The one GitHub token, for cloning and for filing issues. */
+  githubToken?: string
 }
 
 export class ConfigError extends Error {
@@ -96,6 +100,7 @@ export function parseConfig(env: Record<string, string | undefined>): Config {
     baseUrl: result.data.BETTER_AUTH_URL,
     adminEmail: result.data.ADMIN_EMAIL || undefined,
     adminPassword: result.data.ADMIN_PASSWORD || undefined,
+    githubToken: result.data.GITHUB_TOKEN || undefined,
   }
 }
 

@@ -5,6 +5,8 @@ import { ConfigError, getConfig } from "./config"
 import { ensureFirstAdmin } from "./first-admin"
 import { getDb } from "./repositories/db"
 import { createUsersRepository } from "./repositories/users"
+import { getRepositorySync } from "./repository-sync"
+import { TOKEN_MISSING_MESSAGE } from "@/lib/repositories"
 
 /** A configuration problem stops the process with a readable message. */
 function exitOnConfigError(error: unknown): never {
@@ -28,7 +30,7 @@ export function startup(): void {
 
 /**
  * Runs once when the server starts: `startup`, then creates the first Admin
- * if no user exists yet.
+ * if no user exists yet, and picks up Repository syncs a restart cut off.
  */
 export async function startServer(): Promise<void> {
   startup()
@@ -44,4 +46,7 @@ export async function startServer(): Promise<void> {
   } catch (error) {
     exitOnConfigError(error)
   }
+  if (!getConfig().githubToken)
+    console.warn(`\nWarning: ${TOKEN_MISSING_MESSAGE}\n`)
+  getRepositorySync().resume()
 }

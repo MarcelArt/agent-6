@@ -88,3 +88,24 @@ export const verification = sqliteTable(
   },
   (table) => [index("verification_identifier_idx").on(table.identifier)]
 )
+
+/** A GitHub repository connected to Agent 6. Its clone is `DATA_DIR/repos/<id>`. */
+export const repository = sqliteTable("repository", {
+  id: text("id").primaryKey(),
+  /** "owner/name", spelled as GitHub spells it. */
+  fullName: text("full_name").notNull().unique(),
+  trackedBranch: text("tracked_branch").notNull(),
+  /** JSON array of Tags. */
+  tags: text("tags").notNull().default("[]"),
+  description: text("description").notNull().default(""),
+  /** "pending", "syncing", "ready" or "failed". */
+  status: text("status").notNull().default("pending"),
+  /** Why the last sync failed. Null unless the status is "failed". */
+  error: text("error"),
+  syncStartedAt: timestamp("sync_started_at"),
+  /** The last sync that succeeded. */
+  lastSyncedAt: timestamp("last_synced_at"),
+  lastSyncedCommit: text("last_synced_commit"),
+  createdAt: timestamp("created_at").notNull(),
+  updatedAt: timestamp("updated_at").notNull(),
+})

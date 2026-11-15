@@ -17,6 +17,23 @@ npm run dev            # http://localhost:3000
 
 In `.env`, set `ENCRYPTION_KEY` and `BETTER_AUTH_SECRET` (each with its own `openssl rand -base64 32`), and `ADMIN_EMAIL` and `ADMIN_PASSWORD` (at least 8 characters) for the first Admin.
 
+Set `GITHUB_TOKEN` to a GitHub token that can read the contents of the repositories you want to connect. Agent 6 starts without it, but then no Repository can be connected or synced. The server also needs the `git` program installed.
+
+**Token permissions.** Create the token under GitHub → Settings → Developer settings → Personal access tokens.
+
+- Fine-grained token (recommended):
+  - Resource owner: the user or organization that owns the repositories. An organization may have to approve the token first.
+  - Repository access: "Only select repositories" with the ones you will connect, or "All repositories".
+  - Repository permissions:
+
+    | Permission | Access | Used for |
+    |---|---|---|
+    | Contents | Read-only | Cloning and syncing, and listing branches |
+    | Metadata | Read-only | Checking that the repository exists (GitHub selects this one itself) |
+    | Issues | Read and write | Filing issues. Not used yet; only needed once issue filing is built (step 10) |
+
+- Classic token: the `repo` scope. If the organization uses SAML single sign-on, also authorize the token for that organization.
+
 The server validates its configuration at start and stops with a message naming any variable that is missing or wrong. It then creates `DATA_DIR/agent6.db` and applies pending migrations.
 
 **First Admin.** If no user exists when the server starts, it creates an Admin from `ADMIN_EMAIL` and `ADMIN_PASSWORD`. Log in with them at `/login`. Once any user exists the two variables are ignored, even if you change them. Nobody can register themselves; Admins create the other users.
