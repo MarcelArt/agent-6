@@ -5,6 +5,11 @@ export const REPLY_FAILED =
   "I couldn’t finish answering just now. Please try again."
 export const REPLY_LIMIT =
   "I couldn’t finish checking in time. Please try again, or ask a smaller question."
+/** Guardrail wording stays here so Preferred Language can translate it. */
+export const GUARDRAIL_REFUSED =
+  "I can help you use this Application, troubleshoot problems, and understand your data in it. Please ask me about that."
+export const GUARDRAIL_FAILED =
+  "I couldn’t check your message just now. Please try again."
 export type ChatApplication = {
   id: string
   name: string
@@ -80,6 +85,8 @@ export type ChatMessage = {
   images: Array<ChatImage>
   /** On an agent answer: the model could not take pictures, so only the text was answered. */
   imagesUnread: boolean
+  /** The Guardrail refused this request or this is its refusal reply. */
+  refused: boolean
   /** On an agent message that is an Interactive Question. */
   question?: InteractiveQuestion
 }

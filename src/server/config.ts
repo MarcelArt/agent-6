@@ -54,6 +54,7 @@ const schema = z.object({
   GITHUB_TOKEN: z.string().trim().optional(),
   OPENAI_API_KEY: z.string().trim().optional(),
   OPENAI_MODEL: z.string().trim().optional(),
+  GUARDRAIL_MODEL: z.string().trim().optional(),
   OPENAI_BASE_URL: z.preprocess(
     (value) => (value === "" ? undefined : value),
     z.url({ protocol: /^https?$/ }).optional()
@@ -76,6 +77,7 @@ export type Config = {
   githubToken?: string
   openaiApiKey?: string
   openaiModel?: string
+  guardrailModel?: string
   openaiBaseUrl?: string
 }
 
@@ -112,6 +114,8 @@ export function parseConfig(env: Record<string, string | undefined>): Config {
     githubToken: result.data.GITHUB_TOKEN || undefined,
     openaiApiKey: result.data.OPENAI_API_KEY || undefined,
     openaiModel: result.data.OPENAI_MODEL || undefined,
+    guardrailModel:
+      result.data.GUARDRAIL_MODEL || result.data.OPENAI_MODEL || undefined,
     openaiBaseUrl: result.data.OPENAI_BASE_URL,
   }
 }

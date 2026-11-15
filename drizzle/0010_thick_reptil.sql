@@ -1,0 +1,1 @@
+ALTER TABLE `message` ADD `refused` integer DEFAULT false NOT NULL;

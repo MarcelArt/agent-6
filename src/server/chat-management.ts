@@ -11,10 +11,12 @@ import {
 } from "./repositories/conversations"
 import { ensureFresh } from "./repository-sync"
 import { createSupportRun } from "./support-agent"
+import { createGuardrailClassifier } from "./guardrail"
 import { createUploads } from "./uploads"
 import type { Auth } from "./auth"
 import type { ConversationsRepository } from "./repositories/conversations"
 import type { SupportRun } from "./support-agent"
+import type { GuardrailClassifier } from "./guardrail"
 import type { Uploads } from "./uploads"
 import type { ApplicationScope } from "@/lib/applications"
 import type { ChatEvent, ReplyInput } from "@/lib/chat"
@@ -26,6 +28,8 @@ import {
   REPLY_FAILED,
   REPLY_LIMIT,
   REPLY_TIME_LIMIT_MS,
+  GUARDRAIL_FAILED,
+  GUARDRAIL_REFUSED,
 } from "@/lib/chat"
 
 /** A message needs text, pictures or both. */
@@ -67,6 +71,7 @@ export function createChatManagement(
     ) => Promise<ApplicationScope | null>
     fresh?: typeof ensureFresh
     run?: SupportRun
+    classify?: GuardrailClassifier
     uploads?: Pick<Uploads, "modelInput">
     timeLimitMs?: number
   } = {}
@@ -148,6 +153,7 @@ export function createChatManagement(
               }, deps.timeLimitMs ?? REPLY_TIME_LIMIT_MS)
             })
             let content = ""
+            const guardrail = { passed: false }
             emit({
               type: "snapshot",
               conversation: current(),
@@ -163,6 +169,23 @@ export function createChatManagement(
                   )
                   if (!applicationScope)
                     throw new Error("Application unavailable")
+                  const allowed = await (
+                    deps.classify ?? createGuardrailClassifier(getConfig())
+                  )(
+                    {
+                      application: {
+                        name: applicationScope.application.name,
+                        description: applicationScope.application.description,
+                      },
+                      recent: claim.guardrailContext,
+                      message: claim.question,
+                      hasImages: claim.images.length > 0,
+                    },
+                    abort.signal
+                  )
+                  abort.signal.throwIfAborted()
+                  if (allowed !== true) return { refused: true as const }
+                  guardrail.passed = true
                   if (!claim.conversation.refreshedAt) {
                     await Promise.allSettled(
                       applicationScope.attachments
@@ -208,22 +231,40 @@ export function createChatManagement(
                   return { ...answer, history: prepared.store(answer.history) }
                 })(),
               ])
-              conversations.finish(
-                id,
-                claim.assistantId,
-                result.text,
-                result.history,
-                result.imagesUnread,
-                result.asked
-              )
+              if ("refused" in result) {
+                conversations.refuse(
+                  id,
+                  claim.assistantId,
+                  claim.userMessageId,
+                  GUARDRAIL_REFUSED
+                )
+              } else {
+                conversations.finish(
+                  id,
+                  claim.assistantId,
+                  result.text,
+                  result.history,
+                  result.imagesUnread,
+                  result.asked
+                )
+              }
             } catch (error) {
-              conversations.finish(
-                id,
-                claim.assistantId,
-                error instanceof MaxTurnsExceededError || abort.signal.aborted
-                  ? REPLY_LIMIT
-                  : REPLY_FAILED
-              )
+              if (!guardrail.passed) {
+                conversations.refuse(
+                  id,
+                  claim.assistantId,
+                  claim.userMessageId,
+                  GUARDRAIL_FAILED
+                )
+              } else {
+                conversations.finish(
+                  id,
+                  claim.assistantId,
+                  error instanceof MaxTurnsExceededError || abort.signal.aborted
+                    ? REPLY_LIMIT
+                    : REPLY_FAILED
+                )
+              }
             } finally {
               clearTimeout(timer)
               emit({

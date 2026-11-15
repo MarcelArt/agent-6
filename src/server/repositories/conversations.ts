@@ -13,6 +13,7 @@ import {
   upload,
 } from "./schema"
 import type { Db } from "./db"
+import { guardrailContext } from "../guardrail"
 import type { AgentInputItem } from "@openai/agents"
 import type {
   AskedQuestion,
@@ -112,6 +113,7 @@ export function createConversationsRepository(db: Db = getDb()) {
         reports: reports.get(row.id) ?? [],
         images: images.get(row.id) ?? [],
         imagesUnread: row.imagesUnread,
+        refused: row.refused,
         ...(row.question
           ? {
               question: {
@@ -209,6 +211,59 @@ export function createConversationsRepository(db: Db = getDb()) {
         )
     })
   }
+  function finish(
+    id: string,
+    assistantId: string,
+    content: string,
+    history?: Array<AgentInputItem>,
+    imagesUnread = false,
+    /** Makes the answer an open Interactive Question. */
+    question?: AskedQuestion,
+    /** Refuses both messages atomically, leaving accepted SDK history intact. */
+    refusedUserId?: string
+  ) {
+    db.transaction(() => {
+      const updated = db
+        .update(message)
+        .set({
+          content,
+          status: history || refusedUserId ? "complete" : "error",
+          refused: !!refusedUserId,
+          imagesUnread,
+          question: history && question ? JSON.stringify(question) : null,
+        })
+        .where(
+          and(
+            eq(message.id, assistantId),
+            eq(message.conversationId, id),
+            eq(message.status, "pending")
+          )
+        )
+        .returning({ id: message.id })
+        .all()
+      if (!updated.length) return
+      if (refusedUserId)
+        db.update(message)
+          .set({ refused: true })
+          .where(
+            and(
+              eq(message.id, refusedUserId),
+              eq(message.conversationId, id),
+              eq(message.role, "user")
+            )
+          )
+          .run()
+      db.update(conversation)
+        .set({
+          runningUntil: null,
+          updatedAt: new Date(),
+          ...(history ? { history: JSON.stringify(history) } : {}),
+        })
+        .where(eq(conversation.id, id))
+        .run()
+    })
+  }
+
   return {
     owned,
     get,
@@ -345,6 +400,8 @@ export function createConversationsRepository(db: Db = getDb()) {
           return {
             conversation: found,
             assistantId,
+            userMessageId: question.id,
+            guardrailContext: guardrailContext(rows.slice(0, -2)),
             questionsInARow,
             question: question.content,
             images: question.images.map((image) => image.id),
@@ -402,39 +459,22 @@ export function createConversationsRepository(db: Db = getDb()) {
         .where(and(eq(message.id, assistantId), eq(message.status, "pending")))
         .run()
     },
-    finish(
+    finish,
+    refuse(
       id: string,
       assistantId: string,
-      content: string,
-      history?: Array<AgentInputItem>,
-      imagesUnread = false,
-      /** Makes the answer an open Interactive Question. */
-      question?: AskedQuestion
+      userMessageId: string,
+      content: string
     ) {
-      db.transaction(() => {
-        const updated = db
-          .update(message)
-          .set({
-            content,
-            status: history ? "complete" : "error",
-            imagesUnread,
-            question: history && question ? JSON.stringify(question) : null,
-          })
-          .where(
-            and(eq(message.id, assistantId), eq(message.status, "pending"))
-          )
-          .returning({ id: message.id })
-          .all()
-        if (!updated.length) return
-        db.update(conversation)
-          .set({
-            runningUntil: null,
-            updatedAt: new Date(),
-            ...(history ? { history: JSON.stringify(history) } : {}),
-          })
-          .where(eq(conversation.id, id))
-          .run()
-      })
+      finish(
+        id,
+        assistantId,
+        content,
+        undefined,
+        false,
+        undefined,
+        userMessageId
+      )
     },
   }
 }

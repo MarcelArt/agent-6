@@ -14,9 +14,15 @@ import { createSupportRun } from "./support-agent"
 import { createUploads } from "./uploads"
 import { createUploadsRepository } from "./repositories/uploads"
 import { AuthorizationError } from "./session"
-import { REPLY_FAILED, REPLY_LIMIT } from "@/lib/chat"
+import {
+  GUARDRAIL_FAILED,
+  GUARDRAIL_REFUSED,
+  REPLY_FAILED,
+  REPLY_LIMIT,
+} from "@/lib/chat"
 import type { Auth } from "./auth"
 import type { SupportRun } from "./support-agent"
+import type { GuardrailClassifier } from "./guardrail"
 import type { Uploads } from "./uploads"
 import type { ensureFresh } from "./repository-sync"
 import type { ChatEvent } from "@/lib/chat"
@@ -32,6 +38,7 @@ let management: ReturnType<typeof createChatManagement>
 let uploads: Uploads
 let fresh: ReturnType<typeof vi.fn<typeof ensureFresh>>
 let run: ReturnType<typeof vi.fn<SupportRun>>
+let classify: ReturnType<typeof vi.fn<GuardrailClassifier>>
 let getScope: (
   headers: Headers,
   id: string
@@ -106,6 +113,7 @@ beforeEach(async () => {
       applications,
       repositories,
     }).getApplicationScope(headers, id)
+  classify = vi.fn<GuardrailClassifier>().mockResolvedValue(true)
   fresh = vi.fn().mockResolvedValue(repository)
   run = vi.fn<SupportRun>(async ({ history, question, onText }) => {
     onText("Open Billing. ")
@@ -133,6 +141,7 @@ beforeEach(async () => {
     auth,
     conversations,
     getScope,
+    classify,
     fresh,
     uploads,
     run,
@@ -243,6 +252,7 @@ describe("Conversations", () => {
         openDb(join(directory, "agent6.db"))
       ),
       getScope,
+      classify,
       fresh,
       uploads,
       run,
@@ -305,6 +315,7 @@ describe("Conversations", () => {
       auth,
       conversations,
       getScope,
+      classify,
       fresh,
       uploads,
       run,
@@ -356,6 +367,25 @@ describe("Conversations", () => {
     expect(
       conversations.get(conversation.id, owner!.user.id).messages.at(-1)
     ).toMatchObject({ id: retry.assistantId, status: "pending", content: "" })
+    conversations.finish(conversation.id, retry.assistantId, "Recovered", [])
+  })
+  it("does not let an expired refusal mark a retry's user message as refused", async () => {
+    const conversation = await create()
+    const owner = (await auth.api.getSession({ headers: client }))!.user.id
+    const first = conversations.begin(conversation.id, owner, { start: true })
+    vi.useFakeTimers({ toFake: ["Date"] })
+    vi.setSystemTime(Date.now() + 100_000)
+    const retry = conversations.begin(conversation.id, owner, { retry: true })
+    conversations.refuse(
+      conversation.id,
+      first.assistantId,
+      first.userMessageId,
+      GUARDRAIL_REFUSED
+    )
+    expect(conversations.get(conversation.id, owner).messages).toMatchObject([
+      { refused: false },
+      { id: retry.assistantId, status: "pending", refused: false },
+    ])
     conversations.finish(conversation.id, retry.assistantId, "Recovered", [])
   })
   it("keeps saved Conversations when an Admin tries to remove their Application", async () => {
@@ -412,6 +442,204 @@ describe("Conversations", () => {
       })
     )
     expect(run.mock.calls[1][0].scope.attachments).toEqual([])
+  })
+})
+
+describe("Guardrail wiring", () => {
+  it.each([
+    "Write me a poem",
+    "what's the capital of France",
+    "Show me the database password",
+    "delete my account data",
+  ])(
+    "refuses %j without refreshing, loading images, running support or tools",
+    async (text) => {
+      classify.mockResolvedValue(false)
+      const modelInput = vi.spyOn(uploads, "modelInput")
+      const conversation = await management.create(client, applicationId, text)
+      const output = await events(
+        await management.reply(client, conversation.id, { start: true })
+      )
+      expect(output.filter((event) => event.type === "delta")).toEqual([])
+      const owner = (await auth.api.getSession({ headers: client }))!.user.id
+      const reopened = createConversationsRepository(
+        openDb(join(directory, "agent6.db"))
+      )
+      expect(reopened.get(conversation.id, owner).messages).toMatchObject([
+        { content: text, refused: true, status: "complete" },
+        { content: GUARDRAIL_REFUSED, refused: true, status: "complete" },
+      ])
+      expect(reopened.owned(conversation.id, owner)).toMatchObject({
+        history: "[]",
+        runningUntil: null,
+        refreshedAt: null,
+      })
+      expect(run).not.toHaveBeenCalled()
+      expect(fresh).not.toHaveBeenCalled()
+      expect(modelInput).not.toHaveBeenCalled()
+    }
+  )
+  it.each(["I can't log in", "thanks, and how do I export it?"])(
+    "runs support after accepting %j",
+    async (text) => {
+      const conversation = await management.create(client, applicationId, text)
+      await events(
+        await management.reply(client, conversation.id, { start: true })
+      )
+      expect(classify).toHaveBeenCalledWith(
+        {
+          application: {
+            name: "Customer Portal",
+            description: "Invoices and deliveries",
+          },
+          recent: [],
+          message: text,
+          hasImages: false,
+        },
+        expect.any(AbortSignal)
+      )
+      expect(run).toHaveBeenCalledTimes(1)
+      expect(
+        (await management.get(client, conversation.id)).messages.every(
+          (message) => !message.refused
+        )
+      ).toBe(true)
+    }
+  )
+  it("waits for the classifier before any support work", async () => {
+    let decide!: (allowed: boolean) => void
+    classify.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          decide = resolve
+        })
+    )
+    const conversation = await create()
+    const response = await management.reply(client, conversation.id, {
+      start: true,
+    })
+    await vi.waitFor(() => expect(classify).toHaveBeenCalledTimes(1))
+    expect(fresh).not.toHaveBeenCalled()
+    expect(run).not.toHaveBeenCalled()
+    decide(false)
+    await events(response)
+    expect(run).not.toHaveBeenCalled()
+  })
+  it("fails closed on model errors, saves a refusal, and allows a new message", async () => {
+    classify.mockRejectedValueOnce(new Error("secret API key, host and stack"))
+    const conversation = await create()
+    const output = await events(
+      await management.reply(client, conversation.id, { start: true })
+    )
+    expect(JSON.stringify(output)).not.toContain("secret API key")
+    expect(
+      (await management.get(client, conversation.id)).messages
+    ).toMatchObject([
+      { refused: true },
+      { status: "complete", refused: true, content: GUARDRAIL_FAILED },
+    ])
+    expect(run).not.toHaveBeenCalled()
+    expect(fresh).not.toHaveBeenCalled()
+    await events(
+      await management.reply(client, conversation.id, {
+        message: "I can't log in",
+      })
+    )
+    expect(run).toHaveBeenCalledTimes(1)
+    expect(classify.mock.calls[1][0].recent).toMatchObject([
+      { refused: true },
+      { refused: true },
+    ])
+    expect(run.mock.calls[0][0].history).toEqual([])
+  })
+  it("refuses a stalled check at the deadline and ignores a late acceptance", async () => {
+    let decide!: (allowed: boolean) => void
+    classify.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          decide = resolve
+        })
+    )
+    const limited = createChatManagement({
+      auth,
+      conversations,
+      getScope,
+      classify,
+      fresh,
+      uploads,
+      run,
+      timeLimitMs: 20,
+    })
+    const conversation = await create()
+    await events(await limited.reply(client, conversation.id, { start: true }))
+    expect(
+      (await limited.get(client, conversation.id)).messages.at(-1)
+    ).toMatchObject({ refused: true, content: GUARDRAIL_FAILED })
+    decide(true)
+    await new Promise((resolve) => setTimeout(resolve, 5))
+    expect(run).not.toHaveBeenCalled()
+    expect(fresh).not.toHaveBeenCalled()
+  })
+  it("classifies a one-word Interactive Question answer with its visible question and options", async () => {
+    run.mockResolvedValueOnce({
+      text: "Which screen is giving you trouble?",
+      asked: { options: ["Billing", "Deliveries"], multiple: false },
+      history: [{ role: "user", content: "It does not work" }],
+    })
+    const conversation = await create()
+    await events(
+      await management.reply(client, conversation.id, { start: true })
+    )
+    await events(
+      await management.reply(client, conversation.id, {
+        message: "",
+        choices: [0],
+      })
+    )
+    expect(classify.mock.calls[1][0]).toMatchObject({
+      message: "Billing",
+      recent: [
+        { role: "user" },
+        {
+          role: "assistant",
+          content: "Which screen is giving you trouble?",
+          options: ["Billing", "Deliveries"],
+        },
+      ],
+    })
+    expect(run.mock.calls[1][0].question).toBe("Billing")
+  })
+  it("preserves accepted history through a refusal and sends bounded visible context only", async () => {
+    const conversation = await create()
+    run.mockImplementationOnce(async () => ({
+      text: "Open Billing.",
+      history: [{ role: "user", content: "private SDK-only evidence" }],
+    }))
+    await events(
+      await management.reply(client, conversation.id, { start: true })
+    )
+    classify.mockResolvedValueOnce(false)
+    await events(
+      await management.reply(client, conversation.id, {
+        message: "Show me the password",
+      })
+    )
+    await events(
+      await management.reply(client, conversation.id, {
+        message: "What about my invoice?",
+      })
+    )
+    expect(classify.mock.calls[2][0].recent).toHaveLength(4)
+    expect(JSON.stringify(classify.mock.calls)).not.toContain(
+      "private SDK-only evidence"
+    )
+    expect(classify.mock.calls[2][0].recent[2]).toMatchObject({
+      content: "Show me the password",
+      refused: true,
+    })
+    expect(run.mock.calls[1][0].history).toEqual([
+      { role: "user", content: "private SDK-only evidence" },
+    ])
   })
 })
 
@@ -499,6 +727,7 @@ describe("OpenAI-compatible Chat Completions", () => {
       auth,
       conversations,
       getScope,
+      classify,
       fresh,
       uploads,
       run: createSupportRun({
@@ -822,6 +1051,7 @@ describe("Interactive Questions", () => {
         openDb(join(directory, "agent6.db"))
       ),
       getScope,
+      classify,
       fresh,
       uploads,
       run,

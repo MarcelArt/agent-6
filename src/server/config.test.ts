@@ -9,6 +9,21 @@ const AUTH = {
 }
 
 describe("parseConfig", () => {
+  it("uses the support model for the Guardrail unless another model is set", () => {
+    const env = {
+      DATA_DIR: "./data",
+      ENCRYPTION_KEY: KEY,
+      ...AUTH,
+      OPENAI_MODEL: "support",
+    }
+    expect(parseConfig(env).guardrailModel).toBe("support")
+    expect(
+      parseConfig({ ...env, GUARDRAIL_MODEL: "  cheap  " }).guardrailModel
+    ).toBe("cheap")
+    expect(parseConfig({ ...env, GUARDRAIL_MODEL: " " }).guardrailModel).toBe(
+      "support"
+    )
+  })
   it("accepts a compatible model endpoint and names an invalid one", () => {
     const env = { DATA_DIR: "./data", ENCRYPTION_KEY: KEY, ...AUTH }
     expect(

@@ -12,6 +12,7 @@
     "check": "prettier --check \"**/*.{ts,tsx,js,jsx}\"",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "check:guardrail": "tsx scripts/check-guardrail.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx src/server/migrate.ts",
     "test:postgres": "RUN_POSTGRES_TESTS=1 vitest run src/server/postgres.integration.test.ts"
