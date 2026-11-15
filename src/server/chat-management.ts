@@ -21,6 +21,8 @@ import type { ChatEvent, ReplyInput } from "@/lib/chat"
 import {
   MAX_IMAGES_PER_MESSAGE,
   MAX_MESSAGE_LENGTH,
+  MAX_QUESTIONS_IN_A_ROW,
+  MAX_QUESTION_OPTIONS,
   REPLY_FAILED,
   REPLY_LIMIT,
   REPLY_TIME_LIMIT_MS,
@@ -34,9 +36,21 @@ export const chatMessageInput = z
       .array(z.string().min(1).max(64))
       .max(MAX_IMAGES_PER_MESSAGE)
       .optional(),
+    choices: z
+      .array(
+        z
+          .number()
+          .int()
+          .min(0)
+          .max(MAX_QUESTION_OPTIONS - 1)
+      )
+      .max(MAX_QUESTION_OPTIONS)
+      .optional(),
   })
   .strict()
-  .refine((input) => input.message || input.images?.length)
+  .refine(
+    (input) => input.message || input.images?.length || input.choices?.length
+  )
 export const replyInput = z.union([
   chatMessageInput,
   z.object({ retry: z.literal(true) }).strict(),
@@ -174,6 +188,7 @@ export function createChatManagement(
                     history: prepared.history,
                     question: claim.question,
                     images: prepared.images,
+                    mayAsk: claim.questionsInARow < MAX_QUESTIONS_IN_A_ROW,
                     signal: abort.signal,
                     onText(text) {
                       if (abort.signal.aborted) return
@@ -198,7 +213,8 @@ export function createChatManagement(
                 claim.assistantId,
                 result.text,
                 result.history,
-                result.imagesUnread
+                result.imagesUnread,
+                result.asked
               )
             } catch (error) {
               conversations.finish(

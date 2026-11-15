@@ -10,6 +10,7 @@ import {
 } from "lucide-react"
 import { ChatSidebar } from "./chat-sidebar"
 import { Composer } from "./composer"
+import { InteractiveQuestionCard, NO_PICKS } from "./interactive-question"
 import { DetailPane, PaneTitle } from "@/components/shell/panes"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
@@ -34,6 +35,7 @@ import {
 import { Spinner } from "@/components/ui/spinner"
 import { getConversation } from "@/server/chat.functions"
 import { imageUrl } from "@/lib/chat"
+import { cn } from "@/lib/utils"
 import type { ChatEvent, Conversation, ReplyInput, Report } from "@/lib/chat"
 
 /** The Filed Issue notice under an agent answer. Only Admins receive `issue` and failures. */
@@ -88,12 +90,19 @@ export function ConversationView({
   const [conversation, setConversation] = useState(initial)
   const [busy, setBusy] = useState(false)
   const [networkError, setNetworkError] = useState<string>()
+  // What is ticked on the open Interactive Question; gone once it is sent.
+  const [picks, setPicks] = useState(NO_PICKS)
+  const composer = useRef<HTMLTextAreaElement>(null)
   const sending = useRef(false)
   const mounted = useRef(true)
   const started = useRef(false)
   const id = initial.id
   const last = conversation.messages.at(-1)
   const pending = last?.status === "pending" || last?.status === "queued"
+  const openQuestion =
+    last?.status === "complete" && last.question && !last.question.answer
+      ? last.question
+      : undefined
   const enlarged = conversation.messages
     .flatMap((message) => message.images)
     .find((image) => image.id === openImage)
@@ -161,6 +170,7 @@ export function ConversationView({
           reader.releaseLock()
         }
         if (!done) throw new Error("Reply interrupted")
+        setPicks(NO_PICKS)
         return true
       } catch {
         try {
@@ -255,7 +265,12 @@ export function ConversationView({
                         align={message.role === "user" ? "end" : "start"}
                       >
                         <MessageContent>
-                          <MessageHeader className="gap-1.5 text-xs">
+                          <MessageHeader
+                            className={cn(
+                              "gap-1.5 text-xs",
+                              message.role === "assistant" && "px-0"
+                            )}
+                          >
                             {message.role === "assistant" && (
                               <span className="flex size-4 shrink-0 items-center justify-center rounded-sm bg-primary text-xs leading-none font-semibold text-primary-foreground">
                                 6
@@ -293,6 +308,22 @@ export function ConversationView({
                                 )}
                               </AlertDescription>
                             </Alert>
+                          ) : message.question &&
+                            message.status === "complete" ? (
+                            <InteractiveQuestionCard
+                              text={message.content}
+                              question={message.question}
+                              picks={picks}
+                              disabled={busy}
+                              onPick={setPicks}
+                              onSend={(choices) => {
+                                void send({ message: "", choices })
+                              }}
+                              onOther={() => {
+                                // The clicked option takes focus first.
+                                setTimeout(() => composer.current?.focus())
+                              }}
+                            />
                           ) : (
                             message.content && (
                               <Bubble
@@ -399,12 +430,24 @@ export function ConversationView({
         <div className="mx-auto w-full max-w-2xl shrink-0 px-4 pb-3 md:pb-4">
           <Composer
             disabled={pending || busy || last?.status === "error"}
+            inputRef={composer}
             hint={
               last?.status === "error"
                 ? "Retry the answer to continue…"
-                : undefined
+                : openQuestion && picks.other
+                  ? "Type your answer…"
+                  : undefined
             }
-            onSend={(message, images) => send({ message, images })}
+            onSend={(message, images) =>
+              send({
+                message,
+                images,
+                // Options ticked next to a typed answer are sent with it.
+                ...(openQuestion?.multiple && picks.choices.length
+                  ? { choices: picks.choices }
+                  : {}),
+              })
+            }
           />
         </div>
       </DetailPane>

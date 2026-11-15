@@ -54,6 +54,21 @@ export type ChatImage = {
   height: number
 }
 export const imageUrl = (id: string) => `/api/uploads/${encodeURIComponent(id)}`
+/** An Interactive Question offers this many options, besides "Something else". */
+export const MIN_QUESTION_OPTIONS = 2
+export const MAX_QUESTION_OPTIONS = 6
+/** After this many Interactive Questions in a row the agent works with what it knows. */
+export const MAX_QUESTIONS_IN_A_ROW = 3
+export const SOMETHING_ELSE = "Something else"
+/** What the agent asks: the question text is the message's content. */
+export type AskedQuestion = { options: Array<string>; multiple: boolean }
+/**
+ * An Interactive Question on an agent message. `answer` is null while it is
+ * open; `other` means the user typed their own answer ("Something else").
+ */
+export type InteractiveQuestion = AskedQuestion & {
+  answer: { choices: Array<number>; other: boolean } | null
+}
 export type ChatMessage = {
   id: string
   role: "user" | "assistant"
@@ -65,6 +80,8 @@ export type ChatMessage = {
   images: Array<ChatImage>
   /** On an agent answer: the model could not take pictures, so only the text was answered. */
   imagesUnread: boolean
+  /** On an agent message that is an Interactive Question. */
+  question?: InteractiveQuestion
 }
 export type Conversation = {
   id: string
@@ -79,6 +96,11 @@ export type ChatEvent =
   | { type: "done"; conversation: Conversation }
 
 export type ReplyInput =
-  | { message: string; images?: Array<string> }
+  | {
+      message: string
+      images?: Array<string>
+      /** Options picked on the open Interactive Question, by position. */
+      choices?: Array<number>
+    }
   | { retry: true }
   | { start: true }

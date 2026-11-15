@@ -719,4 +719,204 @@ describe("OpenAI-compatible Chat Completions", () => {
       (await service.get(client, conversation.id)).messages.at(-1)
     ).toMatchObject({ status: "error", content: REPLY_LIMIT })
   })
+  it("ends the turn on ask_question, saves the question, and sends the answer back with the tool history", async () => {
+    const requests: Array<{ messages: Array<Record<string, unknown>> }> = []
+    const ask = (id: string, args: unknown) =>
+      completion(
+        {
+          role: "assistant",
+          tool_calls: [
+            {
+              index: 0,
+              id,
+              type: "function",
+              function: {
+                name: "ask_question",
+                arguments: JSON.stringify(args),
+              },
+            },
+          ],
+        },
+        "tool_calls"
+      )
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (_url: string, init: RequestInit) => {
+        requests.push(JSON.parse(init.body as string))
+        // An unusable question is handed back to the model, not shown.
+        if (requests.length === 1)
+          return ask("call-bad", {
+            question: "Which screen?",
+            options: ["Billing", "Something else"],
+            multiple: false,
+          })
+        if (requests.length === 2)
+          return ask("call-ask", {
+            question: "Which screen is this about?",
+            options: ["Billing", "Deliveries", "Other"],
+            multiple: false,
+          })
+        return completion(
+          { role: "assistant", content: "Open Billing." },
+          "stop"
+        )
+      })
+    )
+    const service = sdk()
+    const conversation = await service.create(
+      client,
+      applicationId,
+      "It doesn't work"
+    )
+    await events(await service.reply(client, conversation.id, { start: true }))
+    expect(requests).toHaveLength(2)
+    expect(JSON.stringify(requests[1].messages)).toContain("must not be one")
+    expect(
+      (await service.get(client, conversation.id)).messages.at(-1)
+    ).toMatchObject({
+      status: "complete",
+      content: "Which screen is this about?",
+      question: {
+        options: ["Billing", "Deliveries"],
+        multiple: false,
+        answer: null,
+      },
+    })
+    await events(
+      await service.reply(client, conversation.id, {
+        message: "",
+        choices: [0],
+      })
+    )
+    expect(requests).toHaveLength(3)
+    const sent = requests[2].messages
+    expect(sent.at(-1)).toMatchObject({ role: "user", content: "Billing" })
+    expect(sent.at(-2)).toMatchObject({
+      role: "tool",
+      tool_call_id: "call-ask",
+    })
+    expect(
+      (await service.get(client, conversation.id)).messages.map(
+        (message) => message.content
+      )
+    ).toEqual([
+      "It doesn't work",
+      "Which screen is this about?",
+      "Billing",
+      "Open Billing.",
+    ])
+  })
+})
+
+describe("Interactive Questions", () => {
+  const asking = (asked: { options: Array<string>; multiple: boolean }) =>
+    run.mockImplementationOnce(async ({ history, question }) => ({
+      text: "What looked wrong?",
+      asked,
+      history: [...history, { role: "user", content: question }],
+    }))
+  const reopen = () =>
+    createChatManagement({
+      auth,
+      conversations: createConversationsRepository(
+        openDb(join(directory, "agent6.db"))
+      ),
+      getScope,
+      fresh,
+      uploads,
+      run,
+    })
+  const options = ["The map didn't load", "The date was missing", "Not sure"]
+  async function ask(multiple: boolean) {
+    asking({ options, multiple })
+    const conversation = await create()
+    await events(
+      await management.reply(client, conversation.id, { start: true })
+    )
+    return conversation.id
+  }
+
+  it("keeps an open question open and answerable after a reload from the database", async () => {
+    const id = await ask(false)
+    const reopened = reopen()
+    expect((await reopened.get(client, id)).messages.at(-1)).toMatchObject({
+      role: "assistant",
+      status: "complete",
+      content: "What looked wrong?",
+      question: { options, multiple: false, answer: null },
+    })
+    await events(
+      await reopened.reply(client, id, { message: "", choices: [1] })
+    )
+    const messages = (await reopen().get(client, id)).messages
+    expect(messages[1].question?.answer).toEqual({ choices: [1], other: false })
+    expect(messages[2]).toMatchObject({
+      role: "user",
+      content: "The date was missing",
+    })
+    expect(messages[3]).toMatchObject({ role: "assistant", status: "complete" })
+    expect(messages[3].question).toBeUndefined()
+    expect(run.mock.calls[1][0].question).toBe("The date was missing")
+  })
+  it("saves several choices with a typed answer, and a typed message alone as Something else", async () => {
+    const id = await ask(true)
+    await events(
+      await management.reply(client, id, {
+        message: "and the page was slow",
+        choices: [1, 0, 1],
+      })
+    )
+    let messages = (await reopen().get(client, id)).messages
+    expect(messages[1].question?.answer).toEqual({
+      choices: [0, 1],
+      other: true,
+    })
+    expect(messages[2].content).toBe(
+      "The map didn't load, The date was missing\nand the page was slow"
+    )
+    const typed = await ask(false)
+    await events(
+      await management.reply(client, typed, { message: "The price was wrong" })
+    )
+    messages = (await reopen().get(client, typed)).messages
+    expect(messages[1].question?.answer).toEqual({ choices: [], other: true })
+    expect(messages[2].content).toBe("The price was wrong")
+  })
+  it("refuses choices that do not fit the question, and a second answer", async () => {
+    const id = await ask(false)
+    for (const choices of [[3], [0, 1]])
+      await expect(
+        management.reply(client, id, { message: "", choices })
+      ).rejects.toMatchObject({ status: 400 })
+    expect((await management.get(client, id)).messages).toHaveLength(2)
+    await events(
+      await management.reply(client, id, { message: "", choices: [0] })
+    )
+    await expect(
+      management.reply(client, id, { message: "", choices: [1] })
+    ).rejects.toMatchObject({ status: 409 })
+    const messages = (await management.get(client, id)).messages
+    expect(messages).toHaveLength(4)
+    expect(messages[1].question?.answer).toEqual({ choices: [0], other: false })
+  })
+  it("lets the agent ask only a few times in a row", async () => {
+    const id = await ask(false)
+    for (let turn = 0; turn < 3; turn++) {
+      asking({ options, multiple: false })
+      await events(
+        await management.reply(client, id, { message: "", choices: [2] })
+      )
+    }
+    expect(run.mock.calls.map(([call]) => call.mayAsk)).toEqual([
+      true,
+      true,
+      true,
+      false,
+    ])
+    await events(
+      await management.reply(client, id, { message: "", choices: [2] })
+    )
+    await events(await management.reply(client, id, { message: "Thanks" }))
+    expect(run.mock.calls.at(-1)![0].mayAsk).toBe(true)
+  })
 })

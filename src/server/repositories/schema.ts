@@ -256,6 +256,10 @@ export const message = sqliteTable(
     imagesUnread: integer("images_unread", { mode: "boolean" })
       .notNull()
       .default(false),
+    /** Interactive Question on an agent message: JSON `{ options, multiple }`. */
+    question: text("question"),
+    /** Its answer, null while open: JSON `{ choices, other }`. */
+    answer: text("answer"),
     createdAt: timestamp("created_at").notNull(),
   },
   (table) => [

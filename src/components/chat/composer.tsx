@@ -49,10 +49,13 @@ export function Composer({
   disabled,
   onSend,
   hint,
+  inputRef,
 }: {
   disabled?: boolean
   onSend: (message: string, images: Array<string>) => Promise<boolean>
   hint?: string
+  /** Lets the Conversation move focus here, for "Something else". */
+  inputRef?: React.Ref<HTMLTextAreaElement>
 }) {
   const [text, setText] = useState("")
   const [sending, setSending] = useState(false)
@@ -237,6 +240,7 @@ export function Composer({
             )}
             <InputGroupTextarea
               id={id}
+              ref={inputRef}
               rows={2}
               className="max-h-48 text-sm md:text-sm"
               placeholder={hint ?? "Message the agent…"}

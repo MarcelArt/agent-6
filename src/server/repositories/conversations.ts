@@ -15,10 +15,12 @@ import {
 import type { Db } from "./db"
 import type { AgentInputItem } from "@openai/agents"
 import type {
+  AskedQuestion,
   ChatImage,
   ChatMessage,
   Conversation,
   FiledIssueRecord,
+  InteractiveQuestion,
   ReplyInput,
   Report,
 } from "@/lib/chat"
@@ -110,6 +112,16 @@ export function createConversationsRepository(db: Db = getDb()) {
         reports: reports.get(row.id) ?? [],
         images: images.get(row.id) ?? [],
         imagesUnread: row.imagesUnread,
+        ...(row.question
+          ? {
+              question: {
+                ...(JSON.parse(row.question) as AskedQuestion),
+                answer: row.answer
+                  ? (JSON.parse(row.answer) as InteractiveQuestion["answer"])
+                  : null,
+              },
+            }
+          : {}),
       }))
   }
   function recover(id: string, userId: string) {
@@ -263,7 +275,35 @@ export function createConversationsRepository(db: Db = getDb()) {
                 "Please retry the last answer first.",
                 409
               )
-            queue(id, userId, input.message, input.images ?? [], new Date())
+            let content = input.message
+            const open = last?.question && !last.question.answer
+            if (open) {
+              // Any message while a question is open is its answer.
+              const { options, multiple } = last.question!
+              const choices = [...new Set(input.choices ?? [])].sort()
+              if (
+                choices.some((choice) => choice >= options.length) ||
+                (!multiple && choices.length > 1)
+              )
+                throw new ConversationError("Please choose one of the options.")
+              content = [
+                choices.map((choice) => options[choice]).join(", "),
+                input.message,
+              ]
+                .filter(Boolean)
+                .join("\n")
+              db.update(message)
+                .set({
+                  answer: JSON.stringify({ choices, other: !!input.message }),
+                })
+                .where(eq(message.id, last.id))
+                .run()
+            } else if (input.choices?.length)
+              throw new ConversationError(
+                "This question has already been answered.",
+                409
+              )
+            queue(id, userId, content, input.images ?? [], new Date())
             rows = messages(id)
           } else if ("retry" in input) {
             if (last?.status !== "error")
@@ -281,6 +321,7 @@ export function createConversationsRepository(db: Db = getDb()) {
               status: "pending",
               content: "",
               imagesUnread: false,
+              question: null,
             })
             .where(eq(message.id, assistant.id))
             .run()
@@ -296,9 +337,15 @@ export function createConversationsRepository(db: Db = getDb()) {
             })
             .where(eq(conversation.id, id))
             .run()
+          // Interactive Questions asked back to back, up to this answer.
+          const earlier = rows.filter((row) => row.role === "assistant")
+          earlier.pop()
+          let questionsInARow = 0
+          while (earlier.pop()?.question) questionsInARow++
           return {
             conversation: found,
             assistantId,
+            questionsInARow,
             question: question.content,
             images: question.images.map((image) => image.id),
             history: JSON.parse(found.history) as Array<AgentInputItem>,
@@ -360,7 +407,9 @@ export function createConversationsRepository(db: Db = getDb()) {
       assistantId: string,
       content: string,
       history?: Array<AgentInputItem>,
-      imagesUnread = false
+      imagesUnread = false,
+      /** Makes the answer an open Interactive Question. */
+      question?: AskedQuestion
     ) {
       db.transaction(() => {
         const updated = db
@@ -369,6 +418,7 @@ export function createConversationsRepository(db: Db = getDb()) {
             content,
             status: history ? "complete" : "error",
             imagesUnread,
+            question: history && question ? JSON.stringify(question) : null,
           })
           .where(
             and(eq(message.id, assistantId), eq(message.status, "pending"))
