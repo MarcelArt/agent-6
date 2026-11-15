@@ -48,7 +48,7 @@ export function InteractiveQuestionCard({
 }) {
   const id = useId()
   const { options, multiple, answer } = question
-  const labels = [...options, SOMETHING_ELSE]
+  const labels = [...options, question.otherOption ?? SOMETHING_ELSE]
   const title = (
     <CardHeader>
       <CardTitle id={`${id}-title`}>{text}</CardTitle>

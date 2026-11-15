@@ -16,6 +16,6 @@ export default [
     },
   },
   {
-    ignores: ["eslint.config.js", ".prettierrc", "docs/design/prototype/**"],
+    ignores: ["eslint.config.js", ".prettierrc", "docs/design/prototype/**", "data/**"],
   },
 ]

@@ -10,7 +10,9 @@ import { createApplicationsRepository } from "./repositories/applications"
 import { createRepositoriesRepository } from "./repositories/repositories"
 import { createConversationsRepository } from "./repositories/conversations"
 import sharp from "sharp"
-import { createSupportRun } from "./support-agent"
+import { createSupportRun, supportInstructions } from "./support-agent"
+import { createSettingsRepository } from "./repositories/settings"
+import { INDONESIAN_AGENT_MESSAGES } from "@/lib/preferred-language"
 import { createUploads } from "./uploads"
 import { createUploadsRepository } from "./repositories/uploads"
 import { AuthorizationError } from "./session"
@@ -31,6 +33,7 @@ let directory: string
 let auth: Auth
 let client: Headers, other: Headers
 let conversations: ReturnType<typeof createConversationsRepository>
+let settings: ReturnType<typeof createSettingsRepository>
 let applications: ReturnType<typeof createApplicationsRepository>
 let repositories: ReturnType<typeof createRepositoriesRepository>
 let applicationId: string, repositoryId: string
@@ -78,6 +81,7 @@ beforeEach(async () => {
   }
   ;[client, other] = sessions
   conversations = createConversationsRepository(db)
+  settings = createSettingsRepository(db)
   uploads = createUploads({
     auth,
     conversations,
@@ -138,6 +142,7 @@ beforeEach(async () => {
     }
   })
   management = createChatManagement({
+    settings,
     auth,
     conversations,
     getScope,
@@ -228,7 +233,7 @@ describe("Conversations", () => {
   it("streams and persists messages/history, resumes from a newly opened database, and refreshes once even after a sync failure", async () => {
     fresh.mockRejectedValueOnce(new Error("sync failed"))
     const conversation = await create()
-    expect(conversation.title).toBe("How do I download an invoice?")
+    expect(conversation.title).toBe("Application support")
     const streamed = await events(
       await management.reply(client, conversation.id, { start: true })
     )
@@ -446,6 +451,90 @@ describe("Conversations", () => {
 })
 
 describe("Guardrail wiring", () => {
+  it("reads the language again on each message, including refusals and failures", async () => {
+    const conversation = await create()
+    await events(
+      await management.reply(client, conversation.id, { start: true })
+    )
+    expect(run.mock.calls[0][0].language?.preferredLanguage).toBe("English")
+    settings.set("preferredLanguage", "Indonesian")
+    await events(
+      await management.reply(client, conversation.id, { message: "What next?" })
+    )
+    const options = run.mock.calls[1][0]
+    expect(options.language?.preferredLanguage).toBe("Indonesian")
+    const instructions = supportInstructions(
+      options.scope,
+      new Date(),
+      options.language!.preferredLanguage
+    )
+    expect(instructions).toContain('Preferred Language: "Indonesian"')
+    expect(instructions).toContain(
+      "Even if the person clearly writes in another language"
+    )
+    expect(instructions).toContain(
+      "Write it in English unless the Repository's description says otherwise"
+    )
+    classify.mockResolvedValueOnce(false)
+    await events(
+      await management.reply(client, conversation.id, {
+        message: "Write a poem",
+      })
+    )
+    expect(
+      (await management.get(client, conversation.id)).messages.at(-1)?.content
+    ).toBe(INDONESIAN_AGENT_MESSAGES.guardrailRefused)
+    classify.mockRejectedValueOnce(new Error("offline"))
+    await events(
+      await management.reply(client, conversation.id, { message: "Help" })
+    )
+    expect(
+      (await management.get(client, conversation.id)).messages.at(-1)?.content
+    ).toBe(INDONESIAN_AGENT_MESSAGES.guardrailFailed)
+    run.mockRejectedValueOnce(new Error("offline"))
+    await events(
+      await management.reply(client, conversation.id, { message: "Help" })
+    )
+    expect(
+      (await management.get(client, conversation.id)).messages.at(-1)?.content
+    ).toBe(INDONESIAN_AGENT_MESSAGES.replyFailed)
+    expect(
+      (await management.get(client, conversation.id)).agentMessages?.progress
+    ).toBe(INDONESIAN_AGENT_MESSAGES.progress)
+  })
+
+  it("localizes timeouts and expired replies without making another model call", async () => {
+    settings.set("preferredLanguage", "Indonesian")
+    run.mockImplementation(() => new Promise(() => {}))
+    const service = createChatManagement({
+      auth,
+      conversations,
+      settings,
+      getScope,
+      classify,
+      fresh,
+      uploads,
+      run,
+      timeLimitMs: 20,
+    })
+    const conversation = await service.create(
+      client,
+      applicationId,
+      "How do I download an invoice?"
+    )
+    expect(conversation.title).toBe(INDONESIAN_AGENT_MESSAGES.conversationTitle)
+    await events(await service.reply(client, conversation.id, { start: true }))
+    expect(
+      (await service.get(client, conversation.id)).messages.at(-1)?.content
+    ).toBe(INDONESIAN_AGENT_MESSAGES.replyLimit)
+    const owner = (await auth.api.getSession({ headers: client }))!.user.id
+    conversations.begin(conversation.id, owner, { retry: true })
+    vi.useFakeTimers({ toFake: ["Date"] })
+    vi.setSystemTime(Date.now() + 100_000)
+    expect(
+      (await service.get(client, conversation.id)).messages.at(-1)?.content
+    ).toBe(INDONESIAN_AGENT_MESSAGES.replyFailed)
+  })
   it.each([
     "Write me a poem",
     "what's the capital of France",
@@ -697,7 +786,7 @@ describe("Pictures", () => {
       mine.id,
     ])
     expect(conversation).toMatchObject({
-      title: "Picture",
+      title: "Application support",
       messages: [{ content: "", images: [mine] }, {}],
     })
     await expect(
@@ -724,6 +813,7 @@ describe("Pictures", () => {
 describe("OpenAI-compatible Chat Completions", () => {
   function sdk() {
     return createChatManagement({
+      settings,
       auth,
       conversations,
       getScope,
@@ -747,6 +837,73 @@ describe("OpenAI-compatible Chat Completions", () => {
       { headers: { "Content-Type": "text/event-stream" } }
     )
   }
+  it("builds an Indonesian run with a translated title and Interactive Question while keeping developer issues in English", async () => {
+    settings.set("preferredLanguage", "Indonesian")
+    let requests = 0
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (_url: string, init: RequestInit) => {
+        const body = JSON.parse(init.body as string)
+        expect(body.messages[0].content).toContain(
+          'Preferred Language: "Indonesian"'
+        )
+        expect(body.messages[0].content).toContain(
+          "Write it in English unless the Repository's description says otherwise"
+        )
+        const name =
+          requests++ === 0 ? "set_conversation_title" : "ask_question"
+        const args =
+          name === "set_conversation_title"
+            ? { title: "Masalah tagihan" }
+            : {
+                question: "Layar mana yang bermasalah?",
+                options: ["Tagihan", "Pengiriman", "Yang lain"],
+                multiple: false,
+              }
+        return completion(
+          {
+            role: "assistant",
+            tool_calls: [
+              {
+                index: 0,
+                id: `call-${requests}`,
+                type: "function",
+                function: { name, arguments: JSON.stringify(args) },
+              },
+            ],
+          },
+          "tool_calls"
+        )
+      })
+    )
+    const service = sdk()
+    const conversation = await service.create(
+      client,
+      applicationId,
+      "It does not work"
+    )
+    await events(await service.reply(client, conversation.id, { start: true }))
+    expect(await service.get(client, conversation.id)).toMatchObject({
+      title: "Masalah tagihan",
+      messages: [
+        { role: "user" },
+        {
+          content: "Layar mana yang bermasalah?",
+          question: {
+            options: ["Tagihan", "Pengiriman"],
+            otherOption: "Yang lain",
+            answer: null,
+          },
+        },
+      ],
+    })
+    settings.set("preferredLanguage", "English")
+    // A previously asked question keeps its original catch-all label.
+    expect(
+      (await service.get(client, conversation.id)).messages.at(-1)?.question
+        ?.otherOption
+    ).toBe("Yang lain")
+  })
   it("executes a real SDK tool call, streams plain text, and replays tool history on a follow-up", async () => {
     const requests: Array<Record<string, unknown>> = []
     vi.stubGlobal(

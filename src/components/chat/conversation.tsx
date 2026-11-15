@@ -36,6 +36,7 @@ import {
 import { Spinner } from "@/components/ui/spinner"
 import { getConversation } from "@/server/chat.functions"
 import { imageUrl } from "@/lib/chat"
+import { ENGLISH_AGENT_MESSAGES } from "@/lib/preferred-language"
 import { cn } from "@/lib/utils"
 import type { ChatEvent, Conversation, ReplyInput, Report } from "@/lib/chat"
 import type { ConversationAudit } from "@/lib/conversation-history"
@@ -106,6 +107,7 @@ export function ConversationView({
   // Renames refresh the loader while streamed message state stays local.
   const title = initial.title
   const last = conversation.messages.at(-1)
+  const agentMessages = conversation.agentMessages ?? ENGLISH_AGENT_MESSAGES
   const pending = last?.status === "pending" || last?.status === "queued"
   const openQuestion =
     last?.status === "complete" && last.question && !last.question.answer
@@ -462,7 +464,7 @@ export function ConversationView({
                 {(pending || busy) && (
                   <Marker role="status">
                     <Spinner aria-hidden="true" />
-                    <MarkerContent>Looking at how the app works…</MarkerContent>
+                    <MarkerContent>{agentMessages.progress}</MarkerContent>
                   </Marker>
                 )}
                 {networkError && (

@@ -3,6 +3,8 @@ import "@tanstack/react-start/server-only"
 import { randomUUID } from "node:crypto"
 import { and, asc, desc, eq, isNull, sql } from "drizzle-orm"
 import { getDb } from "./db"
+import { createSettingsRepository } from "./settings"
+import { readLanguageSettings } from "../preferred-language"
 import {
   application,
   conversation,
@@ -33,7 +35,7 @@ import type {
   ReplyInput,
   Report,
 } from "@/lib/chat"
-import { REPLY_FAILED, REPLY_TIME_LIMIT_MS } from "@/lib/chat"
+import { REPLY_TIME_LIMIT_MS } from "@/lib/chat"
 
 export class ConversationError extends Error {
   constructor(
@@ -148,7 +150,11 @@ export function createConversationsRepository(db: Db = getDb()) {
         const found = owned(id, userId)
         if (found.runningUntil && found.runningUntil.getTime() < Date.now()) {
           db.update(message)
-            .set({ status: "error", content: REPLY_FAILED })
+            .set({
+              status: "error",
+              content: readLanguageSettings(createSettingsRepository(db))
+                .messages.replyFailed,
+            })
             .where(
               and(eq(message.conversationId, id), eq(message.status, "pending"))
             )
@@ -176,6 +182,8 @@ export function createConversationsRepository(db: Db = getDb()) {
       title: found.title,
       application: app,
       messages: messages(id, admin),
+      agentMessages: readLanguageSettings(createSettingsRepository(db))
+        .messages,
     }
   }
   /** Adds the user's message with the pictures they picked, and the answer to write. */
@@ -236,7 +244,8 @@ export function createConversationsRepository(db: Db = getDb()) {
     /** Makes the answer an open Interactive Question. */
     question?: AskedQuestion,
     /** Refuses both messages atomically, leaving accepted SDK history intact. */
-    refusedUserId?: string
+    refusedUserId?: string,
+    title?: { previous: string; next: string }
   ) {
     db.transaction(() => {
       const updated = db
@@ -258,6 +267,13 @@ export function createConversationsRepository(db: Db = getDb()) {
         .returning({ id: message.id })
         .all()
       if (!updated.length) return
+      if (title && history)
+        db.update(conversation)
+          .set({ title: title.next })
+          .where(
+            and(eq(conversation.id, id), eq(conversation.title, title.previous))
+          )
+          .run()
       if (refusedUserId)
         db.update(message)
           .set({ refused: true })
@@ -495,7 +511,8 @@ export function createConversationsRepository(db: Db = getDb()) {
       userId: string,
       applicationId: string,
       content: string,
-      images: Array<string> = []
+      images: Array<string> = [],
+      initialTitle?: string
     ) {
       const id = randomUUID(),
         now = new Date()
@@ -505,7 +522,11 @@ export function createConversationsRepository(db: Db = getDb()) {
             id,
             userId,
             applicationId,
-            title: content.replace(/\s+/g, " ").slice(0, 70) || "Picture",
+            title:
+              initialTitle ??
+              (content.replace(/\s+/g, " ").slice(0, 70) ||
+                readLanguageSettings(createSettingsRepository(db)).messages
+                  .pictureTitle),
             createdAt: now,
             updatedAt: now,
           })

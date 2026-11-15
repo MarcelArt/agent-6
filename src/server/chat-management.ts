@@ -13,6 +13,9 @@ import { ensureFresh } from "./repository-sync"
 import { createSupportRun } from "./support-agent"
 import { createGuardrailClassifier } from "./guardrail"
 import { createUploads } from "./uploads"
+import { createSettingsRepository } from "./repositories/settings"
+import { readLanguageSettings } from "./preferred-language"
+import type { SettingsRepository } from "./repositories/settings"
 import type { Auth } from "./auth"
 import type { ConversationsRepository } from "./repositories/conversations"
 import type { SupportRun } from "./support-agent"
@@ -25,11 +28,7 @@ import {
   MAX_MESSAGE_LENGTH,
   MAX_QUESTIONS_IN_A_ROW,
   MAX_QUESTION_OPTIONS,
-  REPLY_FAILED,
-  REPLY_LIMIT,
   REPLY_TIME_LIMIT_MS,
-  GUARDRAIL_FAILED,
-  GUARDRAIL_REFUSED,
 } from "@/lib/chat"
 
 /** A message needs text, pictures or both. */
@@ -73,6 +72,7 @@ export function createChatManagement(
     run?: SupportRun
     classify?: GuardrailClassifier
     uploads?: Pick<Uploads, "modelInput">
+    settings?: SettingsRepository
     timeLimitMs?: number
   } = {}
 ) {
@@ -111,7 +111,9 @@ export function createChatManagement(
         owner.id,
         applicationId,
         parsed.data.message,
-        parsed.data.images
+        parsed.data.images,
+        readLanguageSettings(deps.settings ?? createSettingsRepository())
+          .messages.conversationTitle
       )
     },
     async get(headers: Headers, id: string) {
@@ -125,6 +127,9 @@ export function createChatManagement(
         throw new ConversationError(
           "Please write a shorter message and try again."
         )
+      const language = readLanguageSettings(
+        deps.settings ?? createSettingsRepository()
+      )
       const claim = conversations.begin(id, owner.id, parsed.data)
       const current = () =>
         conversations.get(id, owner.id, owner.role === "admin")
@@ -206,6 +211,8 @@ export function createChatManagement(
                     deps.run ?? createSupportRun(getConfig())
                   )({
                     scope: applicationScope,
+                    language,
+                    needsTitle: claim.history.length === 0,
                     conversationId: id,
                     messageId: claim.assistantId,
                     history: prepared.history,
@@ -243,7 +250,7 @@ export function createChatManagement(
                   id,
                   claim.assistantId,
                   claim.userMessageId,
-                  GUARDRAIL_REFUSED
+                  language.messages.guardrailRefused
                 )
               } else {
                 conversations.finish(
@@ -253,6 +260,15 @@ export function createChatManagement(
                   result.history,
                   result.imagesUnread,
                   result.asked
+                    ? {
+                        ...result.asked,
+                        otherOption: language.messages.somethingElse,
+                      }
+                    : undefined,
+                  undefined,
+                  result.title
+                    ? { previous: claim.conversation.title, next: result.title }
+                    : undefined
                 )
               }
             } catch (error) {
@@ -278,15 +294,15 @@ export function createChatManagement(
                   id,
                   claim.assistantId,
                   claim.userMessageId,
-                  GUARDRAIL_FAILED
+                  language.messages.guardrailFailed
                 )
               } else {
                 conversations.finish(
                   id,
                   claim.assistantId,
                   error instanceof MaxTurnsExceededError || abort.signal.aborted
-                    ? REPLY_LIMIT
-                    : REPLY_FAILED
+                    ? language.messages.replyLimit
+                    : language.messages.replyFailed
                 )
               }
             } finally {

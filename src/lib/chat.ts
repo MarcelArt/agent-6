@@ -1,3 +1,5 @@
+import type { AgentMessages } from "./preferred-language"
+
 export const MAX_MESSAGE_LENGTH = 8000
 export const REPLY_TIME_LIMIT_MS = 90_000
 export const REPLY_MAX_TURNS = 12
@@ -66,7 +68,11 @@ export const MAX_QUESTION_OPTIONS = 6
 export const MAX_QUESTIONS_IN_A_ROW = 3
 export const SOMETHING_ELSE = "Something else"
 /** What the agent asks: the question text is the message's content. */
-export type AskedQuestion = { options: Array<string>; multiple: boolean }
+export type AskedQuestion = {
+  options: Array<string>
+  multiple: boolean
+  otherOption?: string
+}
 /**
  * An Interactive Question on an agent message. `answer` is null while it is
  * open; `other` means the user typed their own answer ("Something else").
@@ -95,6 +101,7 @@ export type Conversation = {
   title: string
   application: { id: string; name: string }
   messages: Array<ChatMessage>
+  agentMessages?: AgentMessages
 }
 export type ChatEvent =
   | { type: "snapshot"; conversation: Conversation }
