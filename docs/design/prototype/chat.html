@@ -1,0 +1,494 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>October invoice won’t download · Agent 6</title>
+<link rel="stylesheet" href="assets/app.css">
+</head>
+<body class="min-h-svh">
+<section data-screen="chat" data-title="October invoice won’t download · Agent 6">
+<div class="flex h-svh flex-col overflow-hidden md:flex-row">
+<nav class="hidden w-14 shrink-0 flex-col items-center gap-1 border-r bg-sidebar py-2 text-sidebar-foreground md:flex" aria-label="Main">
+  <a href="#chat" class="mb-2 flex" aria-label="Agent 6" title="Agent 6"><span class="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary text-sm font-semibold leading-none text-primary-foreground">6</span></a>
+  <a href="#chat" class="ui-sidebar-menu-button size-8 justify-center p-0 text-muted-foreground hover:text-sidebar-accent-foreground data-active:text-sidebar-accent-foreground" data-nav="chat" data-nav-also="chat-new" aria-label="Chat" title="Chat"><svg aria-hidden="true"><use href="#i-message-square"/></svg></a>
+  <a href="history.html" class="ui-sidebar-menu-button size-8 justify-center p-0 text-muted-foreground hover:text-sidebar-accent-foreground data-active:text-sidebar-accent-foreground" data-nav="history" aria-label="History" title="History"><svg aria-hidden="true"><use href="#i-history"/></svg></a>
+  
+  <button type="button" class="mt-auto rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring/50" data-popup-trigger="user-menu-chat" aria-expanded="false" aria-label="Rina Saputra: theme and log out" title="Rina Saputra">
+    <span class="ui-avatar"><span class="ui-avatar-fallback text-xs font-medium text-foreground">RS</span></span>
+  </button>
+</nav>
+<div id="user-menu-chat" class="ui-menu fixed bottom-2 left-16 w-60" role="menu" aria-label="Account" data-popup hidden>
+  <div class="flex items-center gap-2.5 px-2 py-2">
+    <span class="ui-avatar"><span class="ui-avatar-fallback text-foreground">RS</span></span>
+    <span class="flex min-w-0 flex-col"><span class="truncate text-xs font-medium">Rina Saputra</span><span class="truncate text-xs text-muted-foreground">rina.saputra@halden.co.id</span></span>
+  </div>
+  <div class="ui-menu-separator"></div>
+  <div class="ui-menu-label">Theme</div>
+<button type="button" class="ui-menu-item" role="menuitemradio" aria-checked="false" data-theme-set="light"><svg aria-hidden="true"><use href="#i-sun"/></svg>Light<span class="ui-menu-indicator"><svg aria-hidden="true"><use href="#i-check"/></svg></span></button>
+<button type="button" class="ui-menu-item" role="menuitemradio" aria-checked="false" data-theme-set="dark"><svg aria-hidden="true"><use href="#i-moon"/></svg>Dark<span class="ui-menu-indicator"><svg aria-hidden="true"><use href="#i-check"/></svg></span></button>
+<button type="button" class="ui-menu-item" role="menuitemradio" aria-checked="false" data-theme-set="system"><svg aria-hidden="true"><use href="#i-monitor"/></svg>System<span class="ui-menu-indicator"><svg aria-hidden="true"><use href="#i-check"/></svg></span></button>
+  <div class="ui-menu-separator"></div>
+  <a href="login.html" class="ui-menu-item" role="menuitem"><svg aria-hidden="true"><use href="#i-log-out"/></svg>Log out</a>
+</div>
+<aside class="hidden md:flex min-h-0 flex-1 flex-col md:w-80 md:flex-none md:border-r" aria-label="History">
+  <div class="flex h-12 shrink-0 items-center gap-2 border-b px-4">
+    <h2 class="text-sm font-medium">Conversations</h2>
+    <div class="ml-auto flex items-center"><a href="#chat-new" class="ui-button" data-variant="outline" data-size="sm"><svg aria-hidden="true"><use href="#i-square-pen"/></svg>New conversation</a></div>
+  </div>
+  <div class="flex items-center gap-1.5 px-2 py-2">
+    <div class="ui-input-group flex-1">
+      <span class="ui-input-group-addon" data-align="inline-start"><svg aria-hidden="true"><use href="#i-search"/></svg></span>
+      <input class="ui-input-group-control py-0.5 pl-1.5" type="search" placeholder="Search by title" aria-label="Search by title">
+    </div>
+    <div class="relative">
+      <button type="button" class="ui-select-trigger" data-popup-trigger="app-filter-chat" aria-expanded="false" aria-label="Filter by Application">All Applications<svg aria-hidden="true"><use href="#i-chevron-down"/></svg></button>
+      <div id="app-filter-chat" class="ui-menu absolute right-0 top-full mt-1 w-48" role="menu" data-popup hidden>
+          <button type="button" class="ui-menu-item" role="menuitemradio" aria-checked="true">All Applications<span class="ui-menu-indicator"><svg aria-hidden="true"><use href="#i-check"/></svg></span></button>
+          <button type="button" class="ui-menu-item" role="menuitemradio" aria-checked="false">Customer Portal<span class="ui-menu-indicator"><svg aria-hidden="true"><use href="#i-check"/></svg></span></button>
+          <button type="button" class="ui-menu-item" role="menuitemradio" aria-checked="false">Driver App<span class="ui-menu-indicator"><svg aria-hidden="true"><use href="#i-check"/></svg></span></button>
+          <button type="button" class="ui-menu-item" role="menuitemradio" aria-checked="false">Dispatch Console<span class="ui-menu-indicator"><svg aria-hidden="true"><use href="#i-check"/></svg></span></button>
+          <button type="button" class="ui-menu-item" role="menuitemradio" aria-checked="false">Billing Back Office<span class="ui-menu-indicator"><svg aria-hidden="true"><use href="#i-check"/></svg></span></button>
+      </div>
+    </div>
+  </div>
+  <ul class="min-h-0 flex-1 overflow-y-auto px-2 pb-2" aria-label="Conversations">
+  <li class="group relative">
+    <a href="#chat" class="flex flex-col rounded-md px-2 py-2.5 md:py-1.5 bg-muted" aria-current="true">
+      <span class="truncate pr-7 text-xs font-medium leading-5">October invoice won’t download</span>
+      <span class="flex items-center gap-1.5 text-xs leading-4 text-foreground/70"><span class="truncate">Customer Portal · Today, 09:15</span><span class="ml-auto flex shrink-0 items-center gap-1 text-foreground md:ml-0" title="Reported to the team"><svg class="size-3" aria-hidden="true"><use href="#i-circle-dot"/></svg><span class="md:sr-only">Reported to the team</span></span></span>
+    </a>
+    <button type="button" class="ui-button absolute right-1 top-2 md:top-1 md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100 md:aria-expanded:opacity-100" data-variant="ghost" data-size="icon-sm" data-popup-trigger="row-menu-chat-0" aria-expanded="false" aria-label="More actions for October invoice won’t download"><svg aria-hidden="true"><use href="#i-ellipsis"/></svg></button>
+    <div id="row-menu-chat-0" class="ui-menu absolute right-1 top-8 w-40" role="menu" data-popup hidden>
+      <button type="button" class="ui-menu-item" role="menuitem"><svg aria-hidden="true"><use href="#i-pencil"/></svg>Rename</button>
+      <button type="button" class="ui-menu-item" data-variant="destructive" role="menuitem"><svg aria-hidden="true"><use href="#i-trash-2"/></svg>Delete</button>
+    </div>
+  </li>
+  <li class="group relative">
+    <a href="#chat" class="flex flex-col rounded-md px-2 py-2.5 md:py-1.5 hover:bg-muted/50">
+      <span class="truncate pr-7 text-xs font-medium leading-5">Driver can’t upload proof of delivery photo</span>
+      <span class="flex items-center gap-1.5 text-xs leading-4 text-muted-foreground"><span class="truncate">Driver App · Yesterday, 16:40</span><span class="ml-auto flex shrink-0 items-center gap-1 text-foreground md:ml-0" title="Reported to the team"><svg class="size-3" aria-hidden="true"><use href="#i-circle-dot"/></svg><span class="md:sr-only">Reported to the team</span></span></span>
+    </a>
+    <button type="button" class="ui-button absolute right-1 top-2 md:top-1 md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100 md:aria-expanded:opacity-100" data-variant="ghost" data-size="icon-sm" data-popup-trigger="row-menu-chat-1" aria-expanded="false" aria-label="More actions for Driver can’t upload proof of delivery photo"><svg aria-hidden="true"><use href="#i-ellipsis"/></svg></button>
+    <div id="row-menu-chat-1" class="ui-menu absolute right-1 top-8 w-40" role="menu" data-popup hidden>
+      <button type="button" class="ui-menu-item" role="menuitem"><svg aria-hidden="true"><use href="#i-pencil"/></svg>Rename</button>
+      <button type="button" class="ui-menu-item" data-variant="destructive" role="menuitem"><svg aria-hidden="true"><use href="#i-trash-2"/></svg>Delete</button>
+    </div>
+  </li>
+  <li class="group relative">
+    <a href="#chat" class="flex flex-col rounded-md px-2 py-2.5 md:py-1.5 hover:bg-muted/50">
+      <span class="truncate pr-7 text-xs font-medium leading-5">How do I resend a delivery confirmation email?</span>
+      <span class="flex items-center gap-1.5 text-xs leading-4 text-muted-foreground"><span class="truncate">Customer Portal · 12 Nov</span></span>
+    </a>
+    <button type="button" class="ui-button absolute right-1 top-2 md:top-1 md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100 md:aria-expanded:opacity-100" data-variant="ghost" data-size="icon-sm" data-popup-trigger="row-menu-chat-2" aria-expanded="false" aria-label="More actions for How do I resend a delivery confirmation email?"><svg aria-hidden="true"><use href="#i-ellipsis"/></svg></button>
+    <div id="row-menu-chat-2" class="ui-menu absolute right-1 top-8 w-40" role="menu" data-popup hidden>
+      <button type="button" class="ui-menu-item" role="menuitem"><svg aria-hidden="true"><use href="#i-pencil"/></svg>Rename</button>
+      <button type="button" class="ui-menu-item" data-variant="destructive" role="menuitem"><svg aria-hidden="true"><use href="#i-trash-2"/></svg>Delete</button>
+    </div>
+  </li>
+  <li class="group relative">
+    <a href="#chat" class="flex flex-col rounded-md px-2 py-2.5 md:py-1.5 hover:bg-muted/50">
+      <span class="truncate pr-7 text-xs font-medium leading-5">Truck shows in the wrong city on the map</span>
+      <span class="flex items-center gap-1.5 text-xs leading-4 text-muted-foreground"><span class="truncate">Dispatch Console · 11 Nov</span><span class="ml-auto flex shrink-0 items-center gap-1 text-foreground md:ml-0" title="Reported to the team"><svg class="size-3" aria-hidden="true"><use href="#i-circle-dot"/></svg><span class="md:sr-only">Reported to the team</span></span></span>
+    </a>
+    <button type="button" class="ui-button absolute right-1 top-2 md:top-1 md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100 md:aria-expanded:opacity-100" data-variant="ghost" data-size="icon-sm" data-popup-trigger="row-menu-chat-3" aria-expanded="false" aria-label="More actions for Truck shows in the wrong city on the map"><svg aria-hidden="true"><use href="#i-ellipsis"/></svg></button>
+    <div id="row-menu-chat-3" class="ui-menu absolute right-1 top-8 w-40" role="menu" data-popup hidden>
+      <button type="button" class="ui-menu-item" role="menuitem"><svg aria-hidden="true"><use href="#i-pencil"/></svg>Rename</button>
+      <button type="button" class="ui-menu-item" data-variant="destructive" role="menuitem"><svg aria-hidden="true"><use href="#i-trash-2"/></svg>Delete</button>
+    </div>
+  </li>
+  <li class="group relative">
+    <a href="#chat" class="flex flex-col rounded-md px-2 py-2.5 md:py-1.5 hover:bg-muted/50">
+      <span class="truncate pr-7 text-xs font-medium leading-5">Change the billing contact for CV Anugerah Jaya</span>
+      <span class="flex items-center gap-1.5 text-xs leading-4 text-muted-foreground"><span class="truncate">Customer Portal · 6 Nov</span></span>
+    </a>
+    <button type="button" class="ui-button absolute right-1 top-2 md:top-1 md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100 md:aria-expanded:opacity-100" data-variant="ghost" data-size="icon-sm" data-popup-trigger="row-menu-chat-4" aria-expanded="false" aria-label="More actions for Change the billing contact for CV Anugerah Jaya"><svg aria-hidden="true"><use href="#i-ellipsis"/></svg></button>
+    <div id="row-menu-chat-4" class="ui-menu absolute right-1 top-8 w-40" role="menu" data-popup hidden>
+      <button type="button" class="ui-menu-item" role="menuitem"><svg aria-hidden="true"><use href="#i-pencil"/></svg>Rename</button>
+      <button type="button" class="ui-menu-item" data-variant="destructive" role="menuitem"><svg aria-hidden="true"><use href="#i-trash-2"/></svg>Delete</button>
+    </div>
+  </li>
+  <li class="group relative">
+    <a href="#chat" class="flex flex-col rounded-md px-2 py-2.5 md:py-1.5 hover:bg-muted/50">
+      <span class="truncate pr-7 text-xs font-medium leading-5">Customer sees two invoices for one shipment</span>
+      <span class="flex items-center gap-1.5 text-xs leading-4 text-muted-foreground"><span class="truncate">Customer Portal · 3 Nov</span><span class="ml-auto flex shrink-0 items-center gap-1 text-foreground md:ml-0" title="Reported to the team"><svg class="size-3" aria-hidden="true"><use href="#i-circle-dot"/></svg><span class="md:sr-only">Reported to the team</span></span></span>
+    </a>
+    <button type="button" class="ui-button absolute right-1 top-2 md:top-1 md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100 md:aria-expanded:opacity-100" data-variant="ghost" data-size="icon-sm" data-popup-trigger="row-menu-chat-5" aria-expanded="false" aria-label="More actions for Customer sees two invoices for one shipment"><svg aria-hidden="true"><use href="#i-ellipsis"/></svg></button>
+    <div id="row-menu-chat-5" class="ui-menu absolute right-1 top-8 w-40" role="menu" data-popup hidden>
+      <button type="button" class="ui-menu-item" role="menuitem"><svg aria-hidden="true"><use href="#i-pencil"/></svg>Rename</button>
+      <button type="button" class="ui-menu-item" data-variant="destructive" role="menuitem"><svg aria-hidden="true"><use href="#i-trash-2"/></svg>Delete</button>
+    </div>
+  </li>
+  <li class="group relative">
+    <a href="#chat" class="flex flex-col rounded-md px-2 py-2.5 md:py-1.5 hover:bg-muted/50">
+      <span class="truncate pr-7 text-xs font-medium leading-5">Where can drivers see tomorrow’s route?</span>
+      <span class="flex items-center gap-1.5 text-xs leading-4 text-muted-foreground"><span class="truncate">Driver App · 28 Oct</span></span>
+    </a>
+    <button type="button" class="ui-button absolute right-1 top-2 md:top-1 md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100 md:aria-expanded:opacity-100" data-variant="ghost" data-size="icon-sm" data-popup-trigger="row-menu-chat-6" aria-expanded="false" aria-label="More actions for Where can drivers see tomorrow’s route?"><svg aria-hidden="true"><use href="#i-ellipsis"/></svg></button>
+    <div id="row-menu-chat-6" class="ui-menu absolute right-1 top-8 w-40" role="menu" data-popup hidden>
+      <button type="button" class="ui-menu-item" role="menuitem"><svg aria-hidden="true"><use href="#i-pencil"/></svg>Rename</button>
+      <button type="button" class="ui-menu-item" data-variant="destructive" role="menuitem"><svg aria-hidden="true"><use href="#i-trash-2"/></svg>Delete</button>
+    </div>
+  </li>
+  <li class="group relative">
+    <a href="#chat" class="flex flex-col rounded-md px-2 py-2.5 md:py-1.5 hover:bg-muted/50">
+      <span class="truncate pr-7 text-xs font-medium leading-5">Load planning screen is slow in the morning</span>
+      <span class="flex items-center gap-1.5 text-xs leading-4 text-muted-foreground"><span class="truncate">Dispatch Console · 21 Oct</span></span>
+    </a>
+    <button type="button" class="ui-button absolute right-1 top-2 md:top-1 md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100 md:aria-expanded:opacity-100" data-variant="ghost" data-size="icon-sm" data-popup-trigger="row-menu-chat-7" aria-expanded="false" aria-label="More actions for Load planning screen is slow in the morning"><svg aria-hidden="true"><use href="#i-ellipsis"/></svg></button>
+    <div id="row-menu-chat-7" class="ui-menu absolute right-1 top-8 w-40" role="menu" data-popup hidden>
+      <button type="button" class="ui-menu-item" role="menuitem"><svg aria-hidden="true"><use href="#i-pencil"/></svg>Rename</button>
+      <button type="button" class="ui-menu-item" data-variant="destructive" role="menuitem"><svg aria-hidden="true"><use href="#i-trash-2"/></svg>Delete</button>
+    </div>
+  </li>
+</ul>
+</aside>
+<main class="flex min-h-0 min-w-0 flex-1 flex-col">
+<div class="flex h-12 shrink-0 items-center gap-2 border-b px-4">
+    <a href="history.html" class="ui-button -ml-2 md:hidden" data-variant="ghost" data-size="icon" aria-label="Back to History"><svg aria-hidden="true"><use href="#i-chevron-left"/></svg></a>
+    <div class="flex min-w-0 flex-col gap-0.5 md:flex-row md:items-center md:gap-2">
+      <h1 class="truncate text-sm font-medium leading-5">October invoice won’t download</h1>
+      <span class="ui-badge hidden md:inline-flex" data-variant="outline"><svg aria-hidden="true"><use href="#i-globe"/></svg>Customer Portal</span>
+      <span class="flex items-center gap-1 text-xs leading-4 text-muted-foreground md:hidden"><svg class="size-3" aria-hidden="true"><use href="#i-globe"/></svg>Customer Portal</span>
+    </div>
+    
+  </div>
+  <div class="min-h-0 flex-1 overflow-y-auto" data-scroll-end>
+    <div class="mx-auto flex w-full max-w-2xl flex-col gap-5 px-4 py-6">
+      <div class="ui-marker" data-variant="separator">Today</div>
+
+      <div class="ui-message" data-align="end">
+        <div class="ui-message-content">
+          <div class="ui-message-header gap-1.5 text-xs"><span class="text-foreground">Rina</span><span aria-hidden="true">·</span><span>09:12</span></div>
+          <div class="ui-bubble" data-variant="secondary"><div class="ui-bubble-content text-sm/relaxed">PT Sumber Makmur can’t download their October invoice from the Customer Portal. The Download button just keeps spinning. They need it for their finance team today.</div></div>
+          <button type="button" class="block w-64 overflow-hidden rounded-lg border bg-card text-left sm:w-72" aria-label="Open invoice-download.png larger" title="Open larger">
+            <div data-shot="invoice-spinner"></div>
+            <span class="flex items-center gap-1.5 border-t px-2.5 py-1.5 text-xs"><svg class="size-3.5 text-muted-foreground" aria-hidden="true"><use href="#i-image"/></svg><span class="truncate font-medium">invoice-download.png</span></span>
+          </button>
+        </div>
+      </div>
+
+      <div class="ui-message">
+        <div class="ui-message-content">
+          <div class="ui-message-header gap-1.5 px-0 text-xs"><span class="flex size-4 shrink-0 items-center justify-center rounded-sm bg-primary text-xs font-semibold leading-none text-primary-foreground">6</span><span class="text-foreground">Agent 6</span></div>
+          <div class="ui-card w-full max-w-md" data-size="sm">
+            <div class="ui-card-header"><div class="ui-card-title">Does this happen with every invoice, or only October’s?</div></div>
+            <div class="ui-card-content">
+              <ul class="flex flex-col gap-2 text-sm" aria-label="Options">
+              <li class="flex items-center gap-2.5 font-medium"><input type="radio" class="ui-radio" disabled checked aria-label="Only the October invoice"><span>Only the October invoice</span></li>
+              <li class="flex items-center gap-2.5 text-muted-foreground"><input type="radio" class="ui-radio" disabled aria-label="Every invoice"><span>Every invoice</span></li>
+              <li class="flex items-center gap-2.5 text-muted-foreground"><input type="radio" class="ui-radio" disabled aria-label="I’m not sure"><span>I’m not sure</span></li>
+              <li class="flex items-center gap-2.5 text-muted-foreground"><input type="radio" class="ui-radio" disabled aria-label="Something else"><span>Something else</span></li>
+              </ul>
+            </div>
+            <div class="ui-card-footer gap-1.5 border-t text-muted-foreground"><svg class="size-3" aria-hidden="true"><use href="#i-lock"/></svg>Answered</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="ui-message" data-align="end">
+        <div class="ui-message-content">
+          <div class="ui-bubble" data-variant="secondary"><div class="ui-bubble-content text-sm/relaxed">Only the October invoice</div></div>
+        </div>
+      </div>
+
+      <div class="ui-message">
+        <div class="ui-message-content">
+          <div class="ui-message-header gap-1.5 px-0 text-xs"><span class="flex size-4 shrink-0 items-center justify-center rounded-sm bg-primary text-xs font-semibold leading-none text-primary-foreground">6</span><span class="text-foreground">Agent 6</span><span aria-hidden="true">·</span><span>09:13</span></div>
+          <div class="ui-bubble" data-variant="ghost"><div class="ui-bubble-content text-sm/relaxed">Thanks, the screenshot makes this clear. The October invoice can’t be created because one delivery on it, from 14 October, has no price recorded, so the download stops before the file is ready. This is a fault on our side, not something you or the customer did. I’ve passed it to the developers so they can add the missing price and stop it happening again. Until then, September’s invoice and older ones still download normally.</div></div>
+          <div class="ui-alert w-fit"><svg aria-hidden="true"><use href="#i-circle-dot"/></svg><div class="ui-alert-title">Reported to the team</div><div class="ui-alert-description">The developers have what they need to fix this.</div></div>
+        </div>
+      </div>
+
+      <div class="ui-message" data-align="end">
+        <div class="ui-message-content">
+          <div class="ui-message-header gap-1.5 text-xs"><span class="text-foreground">Rina</span><span aria-hidden="true">·</span><span>09:15</span></div>
+          <div class="ui-bubble" data-variant="secondary"><div class="ui-bubble-content text-sm/relaxed">Thanks. They also said the tracking page looked wrong yesterday.</div></div>
+        </div>
+      </div>
+
+      <div class="ui-message">
+        <div class="ui-message-content">
+          <div class="ui-message-header gap-1.5 px-0 text-xs"><span class="flex size-4 shrink-0 items-center justify-center rounded-sm bg-primary text-xs font-semibold leading-none text-primary-foreground">6</span><span class="text-foreground">Agent 6</span></div>
+          <form class="ui-card w-full max-w-md" data-size="sm" aria-label="Interactive Question" onsubmit="return false">
+            <div class="ui-card-header"><div class="ui-card-title">What looked wrong on the tracking page?</div><div class="ui-card-description">Choose all that apply.</div></div>
+            <div class="ui-card-content flex flex-col gap-1.5">
+            <label class="ui-choice"><div class="ui-field py-2.5" data-orientation="horizontal"><input type="checkbox" class="ui-checkbox"><div class="ui-field-content"><div class="ui-field-title text-sm">The map didn’t load</div></div></div></label>
+            <label class="ui-choice"><div class="ui-field py-2.5" data-orientation="horizontal"><input type="checkbox" class="ui-checkbox"><div class="ui-field-content"><div class="ui-field-title text-sm">The delivery date was missing</div></div></div></label>
+            <label class="ui-choice"><div class="ui-field py-2.5" data-orientation="horizontal"><input type="checkbox" class="ui-checkbox" checked><div class="ui-field-content"><div class="ui-field-title text-sm">The status hadn’t changed for days</div></div></div></label>
+            <label class="ui-choice"><div class="ui-field py-2.5" data-orientation="horizontal"><input type="checkbox" class="ui-checkbox"><div class="ui-field-content"><div class="ui-field-title text-sm">Something else</div></div></div></label>
+            </div>
+            <div class="ui-card-footer flex-wrap gap-x-3 gap-y-2">
+              <button type="submit" class="ui-button" data-size="lg">Send answer</button>
+              <span class="text-xs text-muted-foreground">Or type your own answer below.</span>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="mx-auto w-full max-w-2xl shrink-0 px-4 pb-3 md:pb-4">
+      <label class="sr-only" for="msg-chat">Message the agent</label>
+<div class="ui-input-group">
+  <textarea id="msg-chat" class="ui-input-group-control text-sm md:text-sm" rows="2" placeholder="Message the agent…"></textarea>
+  <div class="ui-input-group-addon" data-align="block-end">
+    <button type="button" class="ui-button" data-variant="ghost" data-size="icon-sm" aria-label="Attach image" title="Attach image"><svg aria-hidden="true"><use href="#i-image"/></svg></button>
+    <button type="button" class="ui-button ml-auto" data-size="icon-sm" aria-label="Send" title="Send"><svg aria-hidden="true"><use href="#i-arrow-up"/></svg></button>
+  </div>
+</div>
+  </div>
+</main>
+<nav class="relative flex h-14 shrink-0 border-t bg-sidebar md:hidden" aria-label="Main">
+  <a href="#chat" class="flex flex-1 flex-col items-center justify-center gap-0.5 text-xs text-muted-foreground data-active:font-medium data-active:text-foreground aria-expanded:text-foreground" data-nav="chat" data-nav-also="chat-new"><span class="flex h-6 items-center"><svg class="size-5" aria-hidden="true"><use href="#i-message-square"/></svg></span>Chat</a>
+  <a href="history.html" class="flex flex-1 flex-col items-center justify-center gap-0.5 text-xs text-muted-foreground data-active:font-medium data-active:text-foreground aria-expanded:text-foreground" data-nav="history"><span class="flex h-6 items-center"><svg class="size-5" aria-hidden="true"><use href="#i-history"/></svg></span>History</a>
+  
+  <button type="button" class="flex flex-1 flex-col items-center justify-center gap-0.5 text-xs text-muted-foreground data-active:font-medium data-active:text-foreground aria-expanded:text-foreground" data-popup-trigger="account-menu-chat" aria-expanded="false" aria-label="Account: Rina Saputra"><span class="flex h-6 items-center"><span class="ui-avatar" data-size="sm"><span class="ui-avatar-fallback text-foreground">RS</span></span></span>Account</button>
+  
+  <div id="account-menu-chat" class="ui-menu absolute bottom-full right-2 mb-2 w-60" role="menu" aria-label="Account" data-popup hidden>
+  <div class="flex items-center gap-2.5 px-2 py-2">
+    <span class="ui-avatar"><span class="ui-avatar-fallback text-foreground">RS</span></span>
+    <span class="flex min-w-0 flex-col"><span class="truncate text-xs font-medium">Rina Saputra</span><span class="truncate text-xs text-muted-foreground">rina.saputra@halden.co.id</span></span>
+  </div>
+  <div class="ui-menu-separator"></div>
+  <div class="ui-menu-label">Theme</div>
+<button type="button" class="ui-menu-item" role="menuitemradio" aria-checked="false" data-theme-set="light"><svg aria-hidden="true"><use href="#i-sun"/></svg>Light<span class="ui-menu-indicator"><svg aria-hidden="true"><use href="#i-check"/></svg></span></button>
+<button type="button" class="ui-menu-item" role="menuitemradio" aria-checked="false" data-theme-set="dark"><svg aria-hidden="true"><use href="#i-moon"/></svg>Dark<span class="ui-menu-indicator"><svg aria-hidden="true"><use href="#i-check"/></svg></span></button>
+<button type="button" class="ui-menu-item" role="menuitemradio" aria-checked="false" data-theme-set="system"><svg aria-hidden="true"><use href="#i-monitor"/></svg>System<span class="ui-menu-indicator"><svg aria-hidden="true"><use href="#i-check"/></svg></span></button>
+  <div class="ui-menu-separator"></div>
+  <a href="login.html" class="ui-menu-item" role="menuitem"><svg aria-hidden="true"><use href="#i-log-out"/></svg>Log out</a>
+</div>
+</nav>
+</div>
+</section>
+
+<section data-screen="chat-new" data-title="New conversation · Agent 6" hidden>
+<div class="flex h-svh flex-col overflow-hidden md:flex-row">
+<nav class="hidden w-14 shrink-0 flex-col items-center gap-1 border-r bg-sidebar py-2 text-sidebar-foreground md:flex" aria-label="Main">
+  <a href="#chat" class="mb-2 flex" aria-label="Agent 6" title="Agent 6"><span class="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary text-sm font-semibold leading-none text-primary-foreground">6</span></a>
+  <a href="#chat" class="ui-sidebar-menu-button size-8 justify-center p-0 text-muted-foreground hover:text-sidebar-accent-foreground data-active:text-sidebar-accent-foreground" data-nav="chat" data-nav-also="chat-new" aria-label="Chat" title="Chat"><svg aria-hidden="true"><use href="#i-message-square"/></svg></a>
+  <a href="history.html" class="ui-sidebar-menu-button size-8 justify-center p-0 text-muted-foreground hover:text-sidebar-accent-foreground data-active:text-sidebar-accent-foreground" data-nav="history" aria-label="History" title="History"><svg aria-hidden="true"><use href="#i-history"/></svg></a>
+  
+  <button type="button" class="mt-auto rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring/50" data-popup-trigger="user-menu-chat-new" aria-expanded="false" aria-label="Rina Saputra: theme and log out" title="Rina Saputra">
+    <span class="ui-avatar"><span class="ui-avatar-fallback text-xs font-medium text-foreground">RS</span></span>
+  </button>
+</nav>
+<div id="user-menu-chat-new" class="ui-menu fixed bottom-2 left-16 w-60" role="menu" aria-label="Account" data-popup hidden>
+  <div class="flex items-center gap-2.5 px-2 py-2">
+    <span class="ui-avatar"><span class="ui-avatar-fallback text-foreground">RS</span></span>
+    <span class="flex min-w-0 flex-col"><span class="truncate text-xs font-medium">Rina Saputra</span><span class="truncate text-xs text-muted-foreground">rina.saputra@halden.co.id</span></span>
+  </div>
+  <div class="ui-menu-separator"></div>
+  <div class="ui-menu-label">Theme</div>
+<button type="button" class="ui-menu-item" role="menuitemradio" aria-checked="false" data-theme-set="light"><svg aria-hidden="true"><use href="#i-sun"/></svg>Light<span class="ui-menu-indicator"><svg aria-hidden="true"><use href="#i-check"/></svg></span></button>
+<button type="button" class="ui-menu-item" role="menuitemradio" aria-checked="false" data-theme-set="dark"><svg aria-hidden="true"><use href="#i-moon"/></svg>Dark<span class="ui-menu-indicator"><svg aria-hidden="true"><use href="#i-check"/></svg></span></button>
+<button type="button" class="ui-menu-item" role="menuitemradio" aria-checked="false" data-theme-set="system"><svg aria-hidden="true"><use href="#i-monitor"/></svg>System<span class="ui-menu-indicator"><svg aria-hidden="true"><use href="#i-check"/></svg></span></button>
+  <div class="ui-menu-separator"></div>
+  <a href="login.html" class="ui-menu-item" role="menuitem"><svg aria-hidden="true"><use href="#i-log-out"/></svg>Log out</a>
+</div>
+<aside class="hidden md:flex min-h-0 flex-1 flex-col md:w-80 md:flex-none md:border-r" aria-label="History">
+  <div class="flex h-12 shrink-0 items-center gap-2 border-b px-4">
+    <h2 class="text-sm font-medium">Conversations</h2>
+    <div class="ml-auto flex items-center"><a href="#chat-new" class="ui-button bg-muted text-foreground" data-variant="outline" data-size="sm"><svg aria-hidden="true"><use href="#i-square-pen"/></svg>New conversation</a></div>
+  </div>
+  <div class="flex items-center gap-1.5 px-2 py-2">
+    <div class="ui-input-group flex-1">
+      <span class="ui-input-group-addon" data-align="inline-start"><svg aria-hidden="true"><use href="#i-search"/></svg></span>
+      <input class="ui-input-group-control py-0.5 pl-1.5" type="search" placeholder="Search by title" aria-label="Search by title">
+    </div>
+    <div class="relative">
+      <button type="button" class="ui-select-trigger" data-popup-trigger="app-filter-chat-new" aria-expanded="false" aria-label="Filter by Application">All Applications<svg aria-hidden="true"><use href="#i-chevron-down"/></svg></button>
+      <div id="app-filter-chat-new" class="ui-menu absolute right-0 top-full mt-1 w-48" role="menu" data-popup hidden>
+          <button type="button" class="ui-menu-item" role="menuitemradio" aria-checked="true">All Applications<span class="ui-menu-indicator"><svg aria-hidden="true"><use href="#i-check"/></svg></span></button>
+          <button type="button" class="ui-menu-item" role="menuitemradio" aria-checked="false">Customer Portal<span class="ui-menu-indicator"><svg aria-hidden="true"><use href="#i-check"/></svg></span></button>
+          <button type="button" class="ui-menu-item" role="menuitemradio" aria-checked="false">Driver App<span class="ui-menu-indicator"><svg aria-hidden="true"><use href="#i-check"/></svg></span></button>
+          <button type="button" class="ui-menu-item" role="menuitemradio" aria-checked="false">Dispatch Console<span class="ui-menu-indicator"><svg aria-hidden="true"><use href="#i-check"/></svg></span></button>
+          <button type="button" class="ui-menu-item" role="menuitemradio" aria-checked="false">Billing Back Office<span class="ui-menu-indicator"><svg aria-hidden="true"><use href="#i-check"/></svg></span></button>
+      </div>
+    </div>
+  </div>
+  <ul class="min-h-0 flex-1 overflow-y-auto px-2 pb-2" aria-label="Conversations">
+  <li class="group relative">
+    <a href="#chat" class="flex flex-col rounded-md px-2 py-2.5 md:py-1.5 hover:bg-muted/50">
+      <span class="truncate pr-7 text-xs font-medium leading-5">October invoice won’t download</span>
+      <span class="flex items-center gap-1.5 text-xs leading-4 text-muted-foreground"><span class="truncate">Customer Portal · Today, 09:15</span><span class="ml-auto flex shrink-0 items-center gap-1 text-foreground md:ml-0" title="Reported to the team"><svg class="size-3" aria-hidden="true"><use href="#i-circle-dot"/></svg><span class="md:sr-only">Reported to the team</span></span></span>
+    </a>
+    <button type="button" class="ui-button absolute right-1 top-2 md:top-1 md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100 md:aria-expanded:opacity-100" data-variant="ghost" data-size="icon-sm" data-popup-trigger="row-menu-chat-new-0" aria-expanded="false" aria-label="More actions for October invoice won’t download"><svg aria-hidden="true"><use href="#i-ellipsis"/></svg></button>
+    <div id="row-menu-chat-new-0" class="ui-menu absolute right-1 top-8 w-40" role="menu" data-popup hidden>
+      <button type="button" class="ui-menu-item" role="menuitem"><svg aria-hidden="true"><use href="#i-pencil"/></svg>Rename</button>
+      <button type="button" class="ui-menu-item" data-variant="destructive" role="menuitem"><svg aria-hidden="true"><use href="#i-trash-2"/></svg>Delete</button>
+    </div>
+  </li>
+  <li class="group relative">
+    <a href="#chat" class="flex flex-col rounded-md px-2 py-2.5 md:py-1.5 hover:bg-muted/50">
+      <span class="truncate pr-7 text-xs font-medium leading-5">Driver can’t upload proof of delivery photo</span>
+      <span class="flex items-center gap-1.5 text-xs leading-4 text-muted-foreground"><span class="truncate">Driver App · Yesterday, 16:40</span><span class="ml-auto flex shrink-0 items-center gap-1 text-foreground md:ml-0" title="Reported to the team"><svg class="size-3" aria-hidden="true"><use href="#i-circle-dot"/></svg><span class="md:sr-only">Reported to the team</span></span></span>
+    </a>
+    <button type="button" class="ui-button absolute right-1 top-2 md:top-1 md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100 md:aria-expanded:opacity-100" data-variant="ghost" data-size="icon-sm" data-popup-trigger="row-menu-chat-new-1" aria-expanded="false" aria-label="More actions for Driver can’t upload proof of delivery photo"><svg aria-hidden="true"><use href="#i-ellipsis"/></svg></button>
+    <div id="row-menu-chat-new-1" class="ui-menu absolute right-1 top-8 w-40" role="menu" data-popup hidden>
+      <button type="button" class="ui-menu-item" role="menuitem"><svg aria-hidden="true"><use href="#i-pencil"/></svg>Rename</button>
+      <button type="button" class="ui-menu-item" data-variant="destructive" role="menuitem"><svg aria-hidden="true"><use href="#i-trash-2"/></svg>Delete</button>
+    </div>
+  </li>
+  <li class="group relative">
+    <a href="#chat" class="flex flex-col rounded-md px-2 py-2.5 md:py-1.5 hover:bg-muted/50">
+      <span class="truncate pr-7 text-xs font-medium leading-5">How do I resend a delivery confirmation email?</span>
+      <span class="flex items-center gap-1.5 text-xs leading-4 text-muted-foreground"><span class="truncate">Customer Portal · 12 Nov</span></span>
+    </a>
+    <button type="button" class="ui-button absolute right-1 top-2 md:top-1 md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100 md:aria-expanded:opacity-100" data-variant="ghost" data-size="icon-sm" data-popup-trigger="row-menu-chat-new-2" aria-expanded="false" aria-label="More actions for How do I resend a delivery confirmation email?"><svg aria-hidden="true"><use href="#i-ellipsis"/></svg></button>
+    <div id="row-menu-chat-new-2" class="ui-menu absolute right-1 top-8 w-40" role="menu" data-popup hidden>
+      <button type="button" class="ui-menu-item" role="menuitem"><svg aria-hidden="true"><use href="#i-pencil"/></svg>Rename</button>
+      <button type="button" class="ui-menu-item" data-variant="destructive" role="menuitem"><svg aria-hidden="true"><use href="#i-trash-2"/></svg>Delete</button>
+    </div>
+  </li>
+  <li class="group relative">
+    <a href="#chat" class="flex flex-col rounded-md px-2 py-2.5 md:py-1.5 hover:bg-muted/50">
+      <span class="truncate pr-7 text-xs font-medium leading-5">Truck shows in the wrong city on the map</span>
+      <span class="flex items-center gap-1.5 text-xs leading-4 text-muted-foreground"><span class="truncate">Dispatch Console · 11 Nov</span><span class="ml-auto flex shrink-0 items-center gap-1 text-foreground md:ml-0" title="Reported to the team"><svg class="size-3" aria-hidden="true"><use href="#i-circle-dot"/></svg><span class="md:sr-only">Reported to the team</span></span></span>
+    </a>
+    <button type="button" class="ui-button absolute right-1 top-2 md:top-1 md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100 md:aria-expanded:opacity-100" data-variant="ghost" data-size="icon-sm" data-popup-trigger="row-menu-chat-new-3" aria-expanded="false" aria-label="More actions for Truck shows in the wrong city on the map"><svg aria-hidden="true"><use href="#i-ellipsis"/></svg></button>
+    <div id="row-menu-chat-new-3" class="ui-menu absolute right-1 top-8 w-40" role="menu" data-popup hidden>
+      <button type="button" class="ui-menu-item" role="menuitem"><svg aria-hidden="true"><use href="#i-pencil"/></svg>Rename</button>
+      <button type="button" class="ui-menu-item" data-variant="destructive" role="menuitem"><svg aria-hidden="true"><use href="#i-trash-2"/></svg>Delete</button>
+    </div>
+  </li>
+  <li class="group relative">
+    <a href="#chat" class="flex flex-col rounded-md px-2 py-2.5 md:py-1.5 hover:bg-muted/50">
+      <span class="truncate pr-7 text-xs font-medium leading-5">Change the billing contact for CV Anugerah Jaya</span>
+      <span class="flex items-center gap-1.5 text-xs leading-4 text-muted-foreground"><span class="truncate">Customer Portal · 6 Nov</span></span>
+    </a>
+    <button type="button" class="ui-button absolute right-1 top-2 md:top-1 md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100 md:aria-expanded:opacity-100" data-variant="ghost" data-size="icon-sm" data-popup-trigger="row-menu-chat-new-4" aria-expanded="false" aria-label="More actions for Change the billing contact for CV Anugerah Jaya"><svg aria-hidden="true"><use href="#i-ellipsis"/></svg></button>
+    <div id="row-menu-chat-new-4" class="ui-menu absolute right-1 top-8 w-40" role="menu" data-popup hidden>
+      <button type="button" class="ui-menu-item" role="menuitem"><svg aria-hidden="true"><use href="#i-pencil"/></svg>Rename</button>
+      <button type="button" class="ui-menu-item" data-variant="destructive" role="menuitem"><svg aria-hidden="true"><use href="#i-trash-2"/></svg>Delete</button>
+    </div>
+  </li>
+  <li class="group relative">
+    <a href="#chat" class="flex flex-col rounded-md px-2 py-2.5 md:py-1.5 hover:bg-muted/50">
+      <span class="truncate pr-7 text-xs font-medium leading-5">Customer sees two invoices for one shipment</span>
+      <span class="flex items-center gap-1.5 text-xs leading-4 text-muted-foreground"><span class="truncate">Customer Portal · 3 Nov</span><span class="ml-auto flex shrink-0 items-center gap-1 text-foreground md:ml-0" title="Reported to the team"><svg class="size-3" aria-hidden="true"><use href="#i-circle-dot"/></svg><span class="md:sr-only">Reported to the team</span></span></span>
+    </a>
+    <button type="button" class="ui-button absolute right-1 top-2 md:top-1 md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100 md:aria-expanded:opacity-100" data-variant="ghost" data-size="icon-sm" data-popup-trigger="row-menu-chat-new-5" aria-expanded="false" aria-label="More actions for Customer sees two invoices for one shipment"><svg aria-hidden="true"><use href="#i-ellipsis"/></svg></button>
+    <div id="row-menu-chat-new-5" class="ui-menu absolute right-1 top-8 w-40" role="menu" data-popup hidden>
+      <button type="button" class="ui-menu-item" role="menuitem"><svg aria-hidden="true"><use href="#i-pencil"/></svg>Rename</button>
+      <button type="button" class="ui-menu-item" data-variant="destructive" role="menuitem"><svg aria-hidden="true"><use href="#i-trash-2"/></svg>Delete</button>
+    </div>
+  </li>
+  <li class="group relative">
+    <a href="#chat" class="flex flex-col rounded-md px-2 py-2.5 md:py-1.5 hover:bg-muted/50">
+      <span class="truncate pr-7 text-xs font-medium leading-5">Where can drivers see tomorrow’s route?</span>
+      <span class="flex items-center gap-1.5 text-xs leading-4 text-muted-foreground"><span class="truncate">Driver App · 28 Oct</span></span>
+    </a>
+    <button type="button" class="ui-button absolute right-1 top-2 md:top-1 md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100 md:aria-expanded:opacity-100" data-variant="ghost" data-size="icon-sm" data-popup-trigger="row-menu-chat-new-6" aria-expanded="false" aria-label="More actions for Where can drivers see tomorrow’s route?"><svg aria-hidden="true"><use href="#i-ellipsis"/></svg></button>
+    <div id="row-menu-chat-new-6" class="ui-menu absolute right-1 top-8 w-40" role="menu" data-popup hidden>
+      <button type="button" class="ui-menu-item" role="menuitem"><svg aria-hidden="true"><use href="#i-pencil"/></svg>Rename</button>
+      <button type="button" class="ui-menu-item" data-variant="destructive" role="menuitem"><svg aria-hidden="true"><use href="#i-trash-2"/></svg>Delete</button>
+    </div>
+  </li>
+  <li class="group relative">
+    <a href="#chat" class="flex flex-col rounded-md px-2 py-2.5 md:py-1.5 hover:bg-muted/50">
+      <span class="truncate pr-7 text-xs font-medium leading-5">Load planning screen is slow in the morning</span>
+      <span class="flex items-center gap-1.5 text-xs leading-4 text-muted-foreground"><span class="truncate">Dispatch Console · 21 Oct</span></span>
+    </a>
+    <button type="button" class="ui-button absolute right-1 top-2 md:top-1 md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100 md:aria-expanded:opacity-100" data-variant="ghost" data-size="icon-sm" data-popup-trigger="row-menu-chat-new-7" aria-expanded="false" aria-label="More actions for Load planning screen is slow in the morning"><svg aria-hidden="true"><use href="#i-ellipsis"/></svg></button>
+    <div id="row-menu-chat-new-7" class="ui-menu absolute right-1 top-8 w-40" role="menu" data-popup hidden>
+      <button type="button" class="ui-menu-item" role="menuitem"><svg aria-hidden="true"><use href="#i-pencil"/></svg>Rename</button>
+      <button type="button" class="ui-menu-item" data-variant="destructive" role="menuitem"><svg aria-hidden="true"><use href="#i-trash-2"/></svg>Delete</button>
+    </div>
+  </li>
+</ul>
+</aside>
+<main class="flex min-h-0 min-w-0 flex-1 flex-col">
+<div class="flex h-12 shrink-0 items-center gap-2 border-b px-4">
+    <a href="history.html" class="ui-button -ml-2 md:hidden" data-variant="ghost" data-size="icon" aria-label="Back to History"><svg aria-hidden="true"><use href="#i-chevron-left"/></svg></a>
+    <h1 class="truncate text-sm font-medium">New conversation</h1>
+    
+  </div>
+  <div class="min-h-0 flex-1 overflow-y-auto">
+    <div class="mx-auto flex min-h-full w-full max-w-xl flex-col justify-center gap-5 px-4 py-6 md:py-10">
+      <div class="flex flex-col gap-1">
+        <h2 class="text-base font-medium">Which Application do you need help with?</h2>
+        <p class="text-sm text-muted-foreground">Pick one so the agent knows where to look. You can’t change it later in this Conversation.</p>
+      </div>
+      <div class="flex flex-col gap-2" role="radiogroup" aria-label="Application">
+        <label class="ui-choice">
+          <div class="ui-field gap-3 py-2.5" data-orientation="horizontal">
+            <span class="flex size-8 shrink-0 items-center justify-center rounded-md border bg-muted text-foreground"><svg aria-hidden="true"><use href="#i-globe"/></svg></span>
+            <div class="ui-field-content">
+              <div class="ui-field-title text-sm">Customer Portal</div>
+              <div class="ui-field-description">Shipment tracking, invoices and account settings for Halden’s customers.</div>
+            </div>
+            <input type="radio" name="application" class="ui-radio" aria-label="Customer Portal">
+          </div>
+        </label>
+        <label class="ui-choice">
+          <div class="ui-field gap-3 py-2.5" data-orientation="horizontal">
+            <span class="flex size-8 shrink-0 items-center justify-center rounded-md border bg-muted text-foreground"><svg aria-hidden="true"><use href="#i-truck"/></svg></span>
+            <div class="ui-field-content">
+              <div class="ui-field-title text-sm">Driver App</div>
+              <div class="ui-field-description">The phone app drivers use for pickups, proof of delivery and routes.</div>
+            </div>
+            <input type="radio" name="application" class="ui-radio" aria-label="Driver App">
+          </div>
+        </label>
+        <label class="ui-choice">
+          <div class="ui-field gap-3 py-2.5" data-orientation="horizontal">
+            <span class="flex size-8 shrink-0 items-center justify-center rounded-md border bg-muted text-foreground"><svg aria-hidden="true"><use href="#i-package"/></svg></span>
+            <div class="ui-field-content">
+              <div class="ui-field-title text-sm">Dispatch Console</div>
+              <div class="ui-field-description">Planning loads, assigning drivers and following trucks on the map.</div>
+            </div>
+            <input type="radio" name="application" class="ui-radio" aria-label="Dispatch Console">
+          </div>
+        </label>
+        <label class="ui-choice cursor-not-allowed border-dashed hover:bg-transparent">
+          <div class="ui-field gap-3 py-2.5" data-orientation="horizontal">
+            <span class="flex size-8 shrink-0 items-center justify-center rounded-md border text-muted-foreground"><svg aria-hidden="true"><use href="#i-receipt"/></svg></span>
+            <div class="ui-field-content">
+              <div class="ui-field-title text-sm text-muted-foreground">Billing Back Office</div>
+              <div class="ui-field-description">Rates, invoice runs and payment follow-up for the finance team.</div>
+              <div class="mt-1 flex items-center gap-1.5 text-xs text-foreground"><svg class="size-3" aria-hidden="true"><use href="#i-clock"/></svg>Not ready yet: its Repository is still syncing.</div>
+            </div>
+            <input type="radio" name="application" class="ui-radio" disabled aria-label="Billing Back Office">
+          </div>
+        </label>
+      </div>
+      <div class="pt-1">
+        <label class="sr-only" for="msg-new">Message the agent</label>
+<div class="ui-input-group">
+  <textarea id="msg-new" class="ui-input-group-control text-sm md:text-sm" rows="2" placeholder="Message the agent…"></textarea>
+  <div class="ui-input-group-addon" data-align="block-end">
+    <button type="button" class="ui-button" data-variant="ghost" data-size="icon-sm" aria-label="Attach image" title="Attach image"><svg aria-hidden="true"><use href="#i-image"/></svg></button>
+    <a href="#chat" class="ui-button ml-auto" data-size="icon-sm" aria-label="Send" title="Send"><svg aria-hidden="true"><use href="#i-arrow-up"/></svg></a>
+  </div>
+</div>
+      </div>
+    </div>
+  </div>
+</main>
+<nav class="relative flex h-14 shrink-0 border-t bg-sidebar md:hidden" aria-label="Main">
+  <a href="#chat" class="flex flex-1 flex-col items-center justify-center gap-0.5 text-xs text-muted-foreground data-active:font-medium data-active:text-foreground aria-expanded:text-foreground" data-nav="chat" data-nav-also="chat-new"><span class="flex h-6 items-center"><svg class="size-5" aria-hidden="true"><use href="#i-message-square"/></svg></span>Chat</a>
+  <a href="history.html" class="flex flex-1 flex-col items-center justify-center gap-0.5 text-xs text-muted-foreground data-active:font-medium data-active:text-foreground aria-expanded:text-foreground" data-nav="history"><span class="flex h-6 items-center"><svg class="size-5" aria-hidden="true"><use href="#i-history"/></svg></span>History</a>
+  
+  <button type="button" class="flex flex-1 flex-col items-center justify-center gap-0.5 text-xs text-muted-foreground data-active:font-medium data-active:text-foreground aria-expanded:text-foreground" data-popup-trigger="account-menu-chat-new" aria-expanded="false" aria-label="Account: Rina Saputra"><span class="flex h-6 items-center"><span class="ui-avatar" data-size="sm"><span class="ui-avatar-fallback text-foreground">RS</span></span></span>Account</button>
+  
+  <div id="account-menu-chat-new" class="ui-menu absolute bottom-full right-2 mb-2 w-60" role="menu" aria-label="Account" data-popup hidden>
+  <div class="flex items-center gap-2.5 px-2 py-2">
+    <span class="ui-avatar"><span class="ui-avatar-fallback text-foreground">RS</span></span>
+    <span class="flex min-w-0 flex-col"><span class="truncate text-xs font-medium">Rina Saputra</span><span class="truncate text-xs text-muted-foreground">rina.saputra@halden.co.id</span></span>
+  </div>
+  <div class="ui-menu-separator"></div>
+  <div class="ui-menu-label">Theme</div>
+<button type="button" class="ui-menu-item" role="menuitemradio" aria-checked="false" data-theme-set="light"><svg aria-hidden="true"><use href="#i-sun"/></svg>Light<span class="ui-menu-indicator"><svg aria-hidden="true"><use href="#i-check"/></svg></span></button>
+<button type="button" class="ui-menu-item" role="menuitemradio" aria-checked="false" data-theme-set="dark"><svg aria-hidden="true"><use href="#i-moon"/></svg>Dark<span class="ui-menu-indicator"><svg aria-hidden="true"><use href="#i-check"/></svg></span></button>
+<button type="button" class="ui-menu-item" role="menuitemradio" aria-checked="false" data-theme-set="system"><svg aria-hidden="true"><use href="#i-monitor"/></svg>System<span class="ui-menu-indicator"><svg aria-hidden="true"><use href="#i-check"/></svg></span></button>
+  <div class="ui-menu-separator"></div>
+  <a href="login.html" class="ui-menu-item" role="menuitem"><svg aria-hidden="true"><use href="#i-log-out"/></svg>Log out</a>
+</div>
+</nav>
+</div>
+</section>
+
+<script src="assets/icons.js"></script>
+<script src="assets/kit.js"></script>
+</body>
+</html>

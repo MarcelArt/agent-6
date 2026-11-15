@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sign in · Agent 6</title>
+<link rel="stylesheet" href="assets/app.css">
+</head>
+<body class="min-h-svh">
+<section data-screen="login" data-title="Sign in · Agent 6">
+<div class="relative flex min-h-svh flex-col md:flex-row">
+  <div class="flex items-center border-b bg-sidebar px-4 py-3 md:w-1/2 md:flex-col md:items-start md:justify-between md:border-r md:border-b-0 md:p-10">
+    <div class="flex items-center gap-2.5"><span class="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary text-sm font-semibold leading-none text-primary-foreground">6</span><span class="text-sm font-medium">Agent 6</span></div>
+    <div class="hidden max-w-md flex-col gap-3 md:flex">
+      <p class="text-lg/relaxed font-medium tracking-tight">Ask about the Customer Portal, Driver App or Dispatch Console and get an answer in a few plain sentences.</p>
+      <p class="text-lg/relaxed font-medium tracking-tight text-muted-foreground">When something needs fixing, Agent 6 files an issue for Halden’s developers.</p>
+    </div>
+  </div>
+  <div class="flex flex-1 justify-center px-4 py-10 md:items-center md:px-10">
+    <form class="flex w-full max-w-sm flex-col gap-6" onsubmit="location.href='repositories.html';return false">
+      <div class="flex flex-col gap-1">
+        <h1 class="text-lg font-medium tracking-tight">Sign in to Agent 6</h1>
+        <p class="text-sm text-muted-foreground">Halden Freight support</p>
+      </div>
+      <div class="ui-field-group">
+        <div class="ui-field">
+          <label class="ui-label" for="login-email">Email</label>
+          <input id="login-email" class="ui-input" type="email" placeholder="name@halden.co.id" autocomplete="email">
+        </div>
+        <div class="ui-field">
+          <label class="ui-label" for="login-password">Password</label>
+          <input id="login-password" class="ui-input" type="password" autocomplete="current-password">
+        </div>
+      </div>
+      <div class="flex flex-col gap-4">
+        <button type="submit" class="ui-button w-full" data-size="lg">Sign in</button>
+        <div class="ui-marker" data-variant="separator">or</div>
+        <a href="chat.html#chat-new" class="ui-button w-full" data-variant="outline" data-size="lg"><svg aria-hidden="true"><use href="#i-key-round"/></svg>Continue with Keycloak</a>
+      </div>
+      <p class="text-center text-xs text-muted-foreground">Accounts are created by your Admin.</p>
+    </form>
+  </div>
+  <div class="ui-toggle-group absolute right-4 top-4" role="group" aria-label="Theme">
+    <button type="button" class="ui-toggle" data-variant="outline" data-size="sm" data-theme-set="light" aria-label="Light theme" title="Light"><svg aria-hidden="true"><use href="#i-sun"/></svg></button>
+    <button type="button" class="ui-toggle" data-variant="outline" data-size="sm" data-theme-set="dark" aria-label="Dark theme" title="Dark"><svg aria-hidden="true"><use href="#i-moon"/></svg></button>
+    <button type="button" class="ui-toggle" data-variant="outline" data-size="sm" data-theme-set="system" aria-label="System theme" title="System"><svg aria-hidden="true"><use href="#i-monitor"/></svg></button>
+  </div>
+</div>
+</section>
+
+<script src="assets/icons.js"></script>
+<script src="assets/kit.js"></script>
+</body>
+</html>
