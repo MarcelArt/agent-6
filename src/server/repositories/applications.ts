@@ -10,6 +10,7 @@ import {
   repositoryAttachment,
 } from "./schema"
 import { createDatabaseConnectionsRepository } from "./database-connections"
+import { createLogConnectionsRepository } from "./log-connections"
 import { createRepositoriesRepository } from "./repositories"
 import type { Db } from "./db"
 import type {
@@ -135,6 +136,9 @@ export function createApplicationsRepository(db: Db = getDb()) {
               kind: "database-connection" as const,
               resource,
             })),
+          ...createLogConnectionsRepository(db)
+            .attached(applicationId)
+            .map((item) => ({ kind: "log-connection" as const, ...item })),
         ],
       }
     },

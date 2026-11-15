@@ -3,6 +3,12 @@ import {
   detachDatabaseConnection,
   listAvailableDatabaseConnections,
 } from "@/server/database-connections.functions"
+import {
+  attachLogConnection,
+  detachLogConnection,
+  listAvailableLogConnections,
+} from "@/server/log-connections.functions"
+import { BaseSelectorForm } from "@/components/log-connections/base-selector-form"
 import { useState } from "react"
 import { Link, createFileRoute, useRouter } from "@tanstack/react-router"
 import {
@@ -11,6 +17,7 @@ import {
   EllipsisIcon,
   FolderGit2Icon,
   PlusIcon,
+  ScrollTextIcon,
   Trash2Icon,
 } from "lucide-react"
 import { z } from "zod"
@@ -59,9 +66,11 @@ import {
 export const Route = createFileRoute("/admin/applications/$applicationId")({
   validateSearch: z.object({
     attach: z
-      .enum(["repository", "database-connection"])
+      .enum(["repository", "database-connection", "log-connection"])
       .optional()
       .catch(undefined),
+    /** The Log Connection chosen in the picker, awaiting its Base Selector. */
+    attachId: z.string().optional().catch(undefined),
     attachQ: z.string().optional().catch(undefined),
     attachPage: z.number().int().min(1).optional().catch(undefined),
   }),
@@ -84,7 +93,18 @@ export const Route = createFileRoute("/admin/applications/$applicationId")({
             data: { ...params, search: deps.search, page: deps.page },
           })
         : null
-    return { ...scope, available, availableConnections }
+    const availableLogConnections =
+      deps.attach === "log-connection"
+        ? await listAvailableLogConnections({
+            data: { ...params, search: deps.search, page: deps.page },
+          })
+        : null
+    return {
+      ...scope,
+      available,
+      availableConnections,
+      availableLogConnections,
+    }
   },
   head: ({ loaderData }) => ({
     meta: [
@@ -106,8 +126,13 @@ export const Route = createFileRoute("/admin/applications/$applicationId")({
 const UNREACHABLE =
   "Agent 6 could not complete this change. Check your connection, then try again."
 function Page() {
-  const { application, attachments, available, availableConnections } =
-    Route.useLoaderData()
+  const {
+    application,
+    attachments,
+    available,
+    availableConnections,
+    availableLogConnections,
+  } = Route.useLoaderData()
   const search = Route.useSearch()
   const router = useRouter()
   const [confirming, setConfirming] = useState(false)
@@ -117,6 +142,12 @@ function Page() {
   const repositories = attachments.filter((item) => item.kind === "repository")
   const connections = attachments.filter(
     (item) => item.kind === "database-connection"
+  )
+  const logConnections = attachments.filter(
+    (item) => item.kind === "log-connection"
+  )
+  const chosenLogConnection = availableLogConnections?.connections.find(
+    (item) => item.id === search.attachId
   )
   const listSearch = { q: search.q, page: search.page }
   async function closePicker() {
@@ -179,6 +210,33 @@ function Page() {
       setAttachmentProblem(UNREACHABLE)
     } finally {
       setPending(false)
+    }
+  }
+  async function detachLog(logConnectionId: string) {
+    setPending(true)
+    setAttachmentProblem(undefined)
+    try {
+      const result = await detachLogConnection({
+        data: { applicationId: application.id, logConnectionId },
+      })
+      if (result.ok) await router.invalidate()
+      else setAttachmentProblem(result.message)
+    } catch {
+      setAttachmentProblem(UNREACHABLE)
+    } finally {
+      setPending(false)
+    }
+  }
+  async function attachLog(logConnectionId: string, baseSelector: string) {
+    try {
+      const result = await attachLogConnection({
+        data: { applicationId: application.id, logConnectionId, baseSelector },
+      })
+      if (!result.ok) return result.message
+      await closePicker()
+      await router.invalidate()
+    } catch {
+      return UNREACHABLE
     }
   }
   return (
@@ -393,6 +451,79 @@ function Page() {
               this Application’s data.
             </p>
           )}
+          <div className="flex items-center justify-between gap-2">
+            <h2 className="text-xs font-medium">Log Connections</h2>
+            <Link
+              to="/admin/applications/$applicationId"
+              params={{ applicationId: application.id }}
+              search={{ ...listSearch, attach: "log-connection" }}
+              className={buttonVariants({ variant: "outline", size: "sm" })}
+              onClick={() => setAttachmentProblem(undefined)}
+            >
+              <PlusIcon />
+              Add Log Connection
+            </Link>
+          </div>
+          {logConnections.length ? (
+            <ul className="divide-y rounded-md border">
+              {logConnections.map(({ resource, baseSelector }) => (
+                <li
+                  key={resource.id}
+                  className="flex min-w-0 items-center gap-2 px-3 py-2"
+                >
+                  <ScrollTextIcon className="size-3.5 shrink-0 text-muted-foreground" />
+                  <div className="flex min-w-0 flex-1 flex-col gap-1">
+                    <Link
+                      to="/admin/log-connections/$logConnectionId"
+                      params={{ logConnectionId: resource.id }}
+                      className="truncate text-xs font-medium underline-offset-4 hover:underline"
+                    >
+                      {resource.name}
+                    </Link>
+                    <span className="font-mono text-xs break-all text-muted-foreground">
+                      {baseSelector}
+                    </span>
+                    {!resource.test.ok && (
+                      <span className="text-xs text-destructive">
+                        Connection test failed
+                      </span>
+                    )}
+                  </div>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger
+                      render={
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon-sm"
+                          aria-label={`Actions for ${resource.name}`}
+                          disabled={pending}
+                        />
+                      }
+                    >
+                      <EllipsisIcon />
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuGroup>
+                        <DropdownMenuItem
+                          variant="destructive"
+                          onClick={() => void detachLog(resource.id)}
+                        >
+                          <Trash2Icon />
+                          Remove Attachment
+                        </DropdownMenuItem>
+                      </DropdownMenuGroup>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="rounded-md border border-dashed p-4 text-xs text-muted-foreground">
+              No Log Connections attached. Add one so the agent can read this
+              Application’s logs.
+            </p>
+          )}
           <FieldDescription>
             Attachment changes take effect immediately.
           </FieldDescription>
@@ -563,6 +694,108 @@ function Page() {
                   <Link to="." search={{ ...search, attachPage: target }} />
                 )}
               />
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+      <Dialog
+        open={search.attach === "log-connection"}
+        onOpenChange={(open) => {
+          if (!open) void closePicker()
+        }}
+      >
+        <DialogContent className="flex max-h-[85svh] flex-col sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Add Log Connection</DialogTitle>
+            <DialogDescription>
+              {chosenLogConnection
+                ? `Set the Base Selector that confines ${chosenLogConnection.name} to the logs of ${application.name}.`
+                : `Choose a Log Connection to attach to ${application.name}.`}
+            </DialogDescription>
+          </DialogHeader>
+          {chosenLogConnection ? (
+            <BaseSelectorForm
+              key={chosenLogConnection.id}
+              connection={chosenLogConnection}
+              applicationName={application.name}
+              attach={(baseSelector) =>
+                attachLog(chosenLogConnection.id, baseSelector)
+              }
+              back={
+                <Link
+                  to="."
+                  search={{ ...search, attachId: undefined }}
+                  className={buttonVariants({ variant: "outline" })}
+                >
+                  Back
+                </Link>
+              }
+            />
+          ) : (
+            <>
+              <RecordSearch
+                label="Search available Log Connections"
+                value={search.attachQ ?? ""}
+                onSearch={(q) =>
+                  void router.navigate({
+                    to: ".",
+                    search: {
+                      ...search,
+                      attachQ: q || undefined,
+                      attachPage: undefined,
+                      attachId: undefined,
+                    },
+                    replace: true,
+                  })
+                }
+              />
+              {availableLogConnections && (
+                <>
+                  {availableLogConnections.connections.length ? (
+                    <ul className="min-h-0 divide-y overflow-y-auto">
+                      {availableLogConnections.connections.map((connection) => (
+                        <li
+                          key={connection.id}
+                          className="flex items-center gap-2 py-2"
+                        >
+                          <ScrollTextIcon className="size-3.5 shrink-0 text-muted-foreground" />
+                          <div className="flex min-w-0 flex-1 flex-col">
+                            <span className="truncate text-xs font-medium">
+                              {connection.name}
+                            </span>
+                            <span className="text-xs text-muted-foreground">
+                              {connection.description || "No description"}
+                            </span>
+                          </div>
+                          <Link
+                            to="."
+                            search={{ ...search, attachId: connection.id }}
+                            className={buttonVariants({
+                              variant: "outline",
+                              size: "sm",
+                            })}
+                            aria-label={`Choose ${connection.name}`}
+                          >
+                            Choose
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="py-4 text-xs text-muted-foreground">
+                      {search.attachQ
+                        ? "No available Log Connections match this search."
+                        : "All Log Connections are already attached, or none have been added yet."}
+                    </p>
+                  )}
+                  <RecordPagination
+                    {...availableLogConnections}
+                    pageLink={(target) => (
+                      <Link to="." search={{ ...search, attachPage: target }} />
+                    )}
+                  />
+                </>
+              )}
             </>
           )}
         </DialogContent>

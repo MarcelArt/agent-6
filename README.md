@@ -44,7 +44,7 @@ Admins create Applications at `/admin/applications` with a name, a description f
 
 Deleting an Application removes its Attachments and keeps its Repositories. An Application with saved Conversations cannot be removed. Removing a Repository lists its Applications in the confirmation and removes all its Attachments. Tags describe a resource; they never grant scope.
 
-Agent tools must resolve resources through `getApplicationScope` in `src/server/applications.functions.ts`. It accepts an Application id, requires a logged-in user and returns only explicitly attached resources. Attachment tables have foreign keys for each resource kind; step 09 can add a sibling Log Connection table and extend the `Attachment` union in `src/lib/applications.ts`.
+Agent tools must resolve resources through `getApplicationScope` in `src/server/applications.functions.ts`. It accepts an Application id, requires a logged-in user and returns only explicitly attached resources. Attachment tables have foreign keys for each resource kind, and `Attachment` in `src/lib/applications.ts` is their union.
 
 ## Chat
 
@@ -115,6 +115,14 @@ SELECT
 ```
 
 Expect `can_read` to be `true` and the other values to be `false`. Check each schema and table you intend to expose. In Agent 6, enter `agent6_reader` and its password in the Database Connection, select the appropriate SSL mode, and save. The test should succeed without a writable-role warning; then attach the connection to the Application.
+
+## Log Connections
+
+Admins add Loki endpoints at `/admin/log-connections`. The base URL is either a Loki server (`http://loki:3100`) or a Grafana datasource proxy URL that exposes the Loki API (`https://grafana.example.com/api/datasources/proxy/uid/<datasource uid>`, with a Grafana service account token as a Bearer token). The optional auth header (Basic or Bearer) is encrypted with `ENCRYPTION_KEY` and never returned to the browser; leave it blank on edit to keep it. The optional tenant ID is sent as `X-Scope-OrgID`. Saving, and **Test connection**, call the Loki labels endpoint.
+
+Attach a Log Connection under **Attachments → Add Log Connection** on an Application. The Attachment needs a **Base Selector** such as `{app="billing"}`. The dialog shows how many streams it matched in the last 24 hours, so a typo shows as zero. To change a Base Selector, remove the Attachment and add it again.
+
+The agent can list labels and read log lines only through an Attachment of the Conversation's Application. Its tools take label matchers, a text or regex line filter, a time range and a limit, never a LogQL string. Agent 6 builds the query itself with the Base Selector's matchers first, and refuses a matcher on a Base Selector label. A query covers the last hour by default and at most 24 hours, returns at most 200 lines of at most 2000 characters and 48 KB in total, times out after 10 seconds, and tells the model when output was cut.
 
 ## Scripts
 

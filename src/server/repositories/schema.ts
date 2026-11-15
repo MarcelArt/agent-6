@@ -162,10 +162,45 @@ export const databaseConnectionAttachment = sqliteTable(
   ]
 )
 
+export const logConnection = sqliteTable("log_connection", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  baseUrl: text("base_url").notNull(),
+  /** "none", "basic" or "bearer". */
+  authType: text("auth_type").notNull(),
+  authUsername: text("auth_username").notNull().default(""),
+  /** The basic auth password or bearer token. Null when authType is "none". */
+  encryptedAuthSecret: text("encrypted_auth_secret"),
+  tenantId: text("tenant_id").notNull().default(""),
+  tags: text("tags").notNull().default("[]"),
+  description: text("description").notNull().default(""),
+  testOk: integer("test_ok", { mode: "boolean" }).notNull(),
+  testMessage: text("test_message").notNull(),
+  createdAt: timestamp("created_at").notNull(),
+  updatedAt: timestamp("updated_at").notNull(),
+})
+
+export const logConnectionAttachment = sqliteTable(
+  "log_connection_attachment",
+  {
+    applicationId: text("application_id")
+      .notNull()
+      .references(() => application.id, { onDelete: "cascade" }),
+    logConnectionId: text("log_connection_id")
+      .notNull()
+      .references(() => logConnection.id, { onDelete: "cascade" }),
+    /** Confines every log query for this Application. Stored in parsed-and-reformatted form. */
+    baseSelector: text("base_selector").notNull(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.applicationId, table.logConnectionId] }),
+    index("log_connection_attachment_connection_idx").on(table.logConnectionId),
+  ]
+)
+
 /**
- * Typed Attachment tables keep real foreign keys. Step 09 adds a sibling
- * table for Log Connections (including the Log Base Selector).
- * The service exposes them together as a discriminated Attachment union.
+ * Typed Attachment tables keep real foreign keys. The service exposes them
+ * together as a discriminated Attachment union.
  */
 export const repositoryAttachment = sqliteTable(
   "repository_attachment",
