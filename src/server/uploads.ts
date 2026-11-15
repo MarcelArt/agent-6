@@ -186,7 +186,11 @@ export function createUploads(
       if (!found) throw gone()
       if (found.conversationId) {
         try {
-          conversations.owned(found.conversationId, reader.id)
+          conversations.readable(
+            found.conversationId,
+            reader.id,
+            reader.role === "admin"
+          )
         } catch (error) {
           if (error instanceof ConversationError) throw gone()
           throw error

@@ -182,17 +182,25 @@ describe("access rule", () => {
       AuthorizationError
     )
   })
-  it("serves a picture to the Conversation's owner only, even against an Admin", async () => {
+  it("serves sent pictures to the owner and Admins, keeping unsent pictures private", async () => {
     const unsent = await add()
     await expect(uploads.read(admin, unsent.id)).rejects.toMatchObject({
       status: 404,
     })
     const sent = await add()
-    conversations.create(ownerId, applicationId, "What is this?", [sent.id])
+    const saved = conversations.create(
+      ownerId,
+      applicationId,
+      "What is this?",
+      [sent.id]
+    )
     expect((await uploads.read(owner, sent.id)).name).toBe("error.png")
-    await expect(uploads.read(admin, sent.id)).rejects.toMatchObject({
+    expect((await uploads.read(admin, sent.id)).name).toBe("error.png")
+    conversations.remove(saved.id, ownerId)
+    await expect(uploads.read(owner, sent.id)).rejects.toMatchObject({
       status: 404,
     })
+    expect((await uploads.read(admin, sent.id)).name).toBe("error.png")
     await expect(uploads.read(owner, "missing")).rejects.toMatchObject({
       status: 404,
     })

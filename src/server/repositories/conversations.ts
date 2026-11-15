@@ -1,7 +1,7 @@
 import "@tanstack/react-start/server-only"
 
 import { randomUUID } from "node:crypto"
-import { and, asc, eq, isNull, sql } from "drizzle-orm"
+import { and, asc, desc, eq, isNull, sql } from "drizzle-orm"
 import { getDb } from "./db"
 import {
   application,
@@ -11,9 +11,17 @@ import {
   repository,
   repositoryAttachment,
   upload,
+  user,
 } from "./schema"
 import type { Db } from "./db"
 import { guardrailContext } from "../guardrail"
+import { auditText, historyActivities } from "../conversation-audit"
+import type {
+  ConversationAudit,
+  ConversationFilters,
+  ConversationSummary,
+  ToolActivity,
+} from "@/lib/conversation-history"
 import type { AgentInputItem } from "@openai/agents"
 import type {
   AskedQuestion,
@@ -37,16 +45,24 @@ export class ConversationError extends Error {
 }
 
 export function createConversationsRepository(db: Db = getDb()) {
-  function owned(id: string, userId: string) {
+  function readable(id: string, userId: string, admin = false) {
     const found = db
       .select()
       .from(conversation)
-      .where(and(eq(conversation.id, id), eq(conversation.userId, userId)))
+      .where(
+        and(
+          eq(conversation.id, id),
+          ...(admin
+            ? []
+            : [eq(conversation.userId, userId), isNull(conversation.deletedAt)])
+        )
+      )
       .get()
     if (!found)
       throw new ConversationError("This Conversation is not available.", 404)
     return found
   }
+  const owned = (id: string, userId: string) => readable(id, userId)
   function messages(id: string, admin = false): Array<ChatMessage> {
     const reports = new Map<string, Array<Report>>()
     for (const row of db
@@ -266,7 +282,191 @@ export function createConversationsRepository(db: Db = getDb()) {
 
   return {
     owned,
+    readable,
     get,
+    list(filters: ConversationFilters, ownerId?: string) {
+      const issues =
+        sql<number>`(select count(distinct ${filedIssue.url}) from ${filedIssue} where ${filedIssue.conversationId} = ${conversation.id} and ${filedIssue.outcome} != 'failed')`.mapWith(
+          Number
+        )
+      const refused =
+        sql<boolean>`exists(select 1 from ${message} where ${message.conversationId} = ${conversation.id} and ${message.refused} = 1)`.mapWith(
+          Boolean
+        )
+      const where = and(
+        ...(ownerId
+          ? [eq(conversation.userId, ownerId), isNull(conversation.deletedAt)]
+          : []),
+        filters.applicationId
+          ? eq(conversation.applicationId, filters.applicationId)
+          : undefined,
+        !ownerId && filters.userId
+          ? eq(conversation.userId, filters.userId)
+          : undefined,
+        filters.q?.trim()
+          ? sql`instr(lower(${conversation.title}), lower(${filters.q.trim()})) > 0`
+          : undefined,
+        !ownerId && filters.hasIssue
+          ? filters.hasIssue === "yes"
+            ? sql`${issues} > 0`
+            : sql`${issues} = 0`
+          : undefined
+      )
+      const total = db
+        .select({ count: sql<number>`count(*)`.mapWith(Number) })
+        .from(conversation)
+        .where(where)
+        .get()!.count
+      const pageSize = 20
+      const page = Math.min(
+        Math.max(1, filters.page ?? 1),
+        Math.max(1, Math.ceil(total / pageSize))
+      )
+      const rows: Array<ConversationSummary> = db
+        .select({
+          id: conversation.id,
+          title: conversation.title,
+          application: { id: application.id, name: application.name },
+          user: { id: user.id, name: user.name, email: user.email },
+          updatedAt: conversation.updatedAt,
+          deletedAt: conversation.deletedAt,
+          issueCount: issues,
+          refused,
+        })
+        .from(conversation)
+        .innerJoin(application, eq(application.id, conversation.applicationId))
+        .innerJoin(user, eq(user.id, conversation.userId))
+        .where(where)
+        .orderBy(desc(conversation.updatedAt), desc(conversation.id))
+        .limit(pageSize)
+        .offset((page - 1) * pageSize)
+        .all()
+        .map((row) => ({
+          ...row,
+          updatedAt: row.updatedAt.getTime(),
+          deletedAt: row.deletedAt?.getTime() ?? null,
+        }))
+      // Options are independent of filters; no other person's titles or identity are exposed to an owner.
+      const applications = db
+        .selectDistinct({ id: application.id, name: application.name })
+        .from(application)
+        .innerJoin(conversation, eq(conversation.applicationId, application.id))
+        .where(
+          ownerId
+            ? and(
+                eq(conversation.userId, ownerId),
+                isNull(conversation.deletedAt)
+              )
+            : undefined
+        )
+        .orderBy(asc(application.name))
+        .all()
+      const users = ownerId
+        ? []
+        : db
+            .selectDistinct({ id: user.id, name: user.name, email: user.email })
+            .from(user)
+            .innerJoin(conversation, eq(conversation.userId, user.id))
+            .orderBy(asc(user.name))
+            .all()
+      return { conversations: rows, total, page, pageSize, applications, users }
+    },
+    rename(id: string, userId: string, title: string) {
+      owned(id, userId)
+      db.update(conversation)
+        .set({ title })
+        .where(
+          and(
+            eq(conversation.id, id),
+            eq(conversation.userId, userId),
+            isNull(conversation.deletedAt)
+          )
+        )
+        .run()
+    },
+    remove(id: string, userId: string) {
+      owned(id, userId)
+      db.update(conversation)
+        .set({ deletedAt: new Date() })
+        .where(
+          and(
+            eq(conversation.id, id),
+            eq(conversation.userId, userId),
+            isNull(conversation.deletedAt)
+          )
+        )
+        .run()
+    },
+    audit(id: string): ConversationAudit {
+      const found = readable(id, "", true)
+      const app = db
+        .select({ id: application.id, name: application.name })
+        .from(application)
+        .where(eq(application.id, found.applicationId))
+        .get()!
+      const owner = db
+        .select({ id: user.id, name: user.name, email: user.email })
+        .from(user)
+        .where(eq(user.id, found.userId))
+        .get()!
+      const saved = db
+        .select({ id: message.id, activity: message.activity })
+        .from(message)
+        .where(eq(message.conversationId, id))
+        .orderBy(asc(message.createdAt), asc(sql`rowid`))
+        .all()
+      const activities = saved.flatMap((row) =>
+        (JSON.parse(row.activity) as Array<ToolActivity>).map((item) => ({
+          ...item,
+          input: auditText(item.input),
+          ...(item.error ? { error: auditText(item.error) } : {}),
+          messageId: row.id,
+        }))
+      )
+      // Older runs have SDK history only. Do not duplicate newly persisted calls.
+      const old = historyActivities(
+        JSON.parse(found.history) as Array<unknown>
+      ).filter(
+        (item) => !activities.some((entry) => entry.id.endsWith(`:${item.id}`))
+      )
+      return {
+        id,
+        title: found.title,
+        application: app,
+        user: owner,
+        deletedAt: found.deletedAt?.getTime() ?? null,
+        updatedAt: found.updatedAt.getTime(),
+        messages: messages(id, true),
+        activities: [...old, ...activities],
+      }
+    },
+    recordActivity(assistantId: string, item: ToolActivity) {
+      const safe = {
+        ...item,
+        name: auditText(item.name),
+        input: auditText(item.input),
+        ...(item.error ? { error: auditText(item.error) } : {}),
+      }
+      // A transaction also protects concurrent tool completions from losing one another.
+      db.transaction(() => {
+        const row = db
+          .select({ activity: message.activity })
+          .from(message)
+          .where(
+            and(eq(message.id, assistantId), eq(message.status, "pending"))
+          )
+          .get()
+        if (!row) return
+        const items = JSON.parse(row.activity) as Array<ToolActivity>
+        const index = items.findIndex((entry) => entry.id === safe.id)
+        if (index < 0) items.push({ createdAt: Date.now(), ...safe })
+        else items[index] = { ...items[index], ...safe }
+        db.update(message)
+          .set({ activity: JSON.stringify(items) })
+          .where(eq(message.id, assistantId))
+          .run()
+      })
+    },
     applications() {
       return db
         .select({

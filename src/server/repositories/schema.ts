@@ -233,12 +233,14 @@ export const conversation = sqliteTable(
     history: text("history").notNull().default("[]"),
     refreshedAt: timestamp("refreshed_at"),
     runningUntil: timestamp("running_until"),
+    deletedAt: timestamp("deleted_at"),
     createdAt: timestamp("created_at").notNull(),
     updatedAt: timestamp("updated_at").notNull(),
   },
   (table) => [
     index("conversation_user_idx").on(table.userId),
     index("conversation_application_idx").on(table.applicationId),
+    index("conversation_activity_idx").on(table.updatedAt, table.id),
   ]
 )
 
@@ -261,6 +263,8 @@ export const message = sqliteTable(
     question: text("question"),
     /** Its answer, null while open: JSON `{ choices, other }`. */
     answer: text("answer"),
+    /** Redacted tool inputs and errors; never part of the Client projection. */
+    activity: text("activity").notNull().default("[]"),
     createdAt: timestamp("created_at").notNull(),
   },
   (table) => [

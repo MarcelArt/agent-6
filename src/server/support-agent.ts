@@ -10,6 +10,8 @@ import { LOG_CAPS, LogQueryError } from "./loki"
 import { CodeToolError, createCodeTools } from "./code-tools"
 import { createGitHubIssues } from "./github"
 import { IssueToolError, createIssueTools } from "./issue-tools"
+import { historyActivities } from "./conversation-audit"
+import type { ToolActivity } from "@/lib/conversation-history"
 import type { AgentInputItem } from "@openai/agents"
 import type { Config } from "./config"
 import type { ApplicationScope } from "@/lib/applications"
@@ -37,6 +39,8 @@ export type SupportRun = (options: {
   signal: AbortSignal
   onText: (text: string) => void
   onProgress: () => void
+  /** Redacted audit projection, saved even when a later model turn fails. */
+  onActivity?: (activity: ToolActivity) => void
 }) => Promise<{
   text: string
   history: Array<AgentInputItem>
@@ -149,6 +153,7 @@ export function createSupportRun(config: Config): SupportRun {
     signal,
     onText,
     onProgress,
+    onActivity,
   }) => {
     if (!config.openaiApiKey || !config.openaiModel)
       throw new Error("Model is not configured")
@@ -379,6 +384,7 @@ export function createSupportRun(config: Config): SupportRun {
     const progress = { started: false }
     async function attempt(input: Array<AgentInputItem>) {
       questions.length = 0
+      const auditItems: Array<unknown> = []
       const result = await runner.run(agent, input, {
         stream: true,
         maxTurns: REPLY_MAX_TURNS,
@@ -388,6 +394,19 @@ export function createSupportRun(config: Config): SupportRun {
       void result.completed.catch(() => {})
       for await (const event of result) {
         signal.throwIfAborted()
+        if (
+          event.type === "run_item_stream_event" &&
+          (event.name === "tool_called" || event.name === "tool_output")
+        ) {
+          const raw = event.item.rawItem
+          auditItems.push(raw)
+          if ("callId" in raw) {
+            const activity = historyActivities(auditItems).find(
+              (item) => item.id === raw.callId
+            )
+            if (activity) onActivity?.(activity)
+          }
+        }
         if (
           event.type === "raw_model_stream_event" &&
           event.data.type === "output_text_delta"

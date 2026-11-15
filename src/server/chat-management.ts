@@ -227,6 +227,13 @@ export function createChatManagement(
                     onProgress() {
                       emit({ type: "progress" })
                     },
+                    onActivity(activity) {
+                      if (!abort.signal.aborted)
+                        conversations.recordActivity(claim.assistantId, {
+                          ...activity,
+                          id: `${claim.assistantId}:${activity.id}`,
+                        })
+                    },
                   })
                   return { ...answer, history: prepared.store(answer.history) }
                 })(),
@@ -249,6 +256,23 @@ export function createChatManagement(
                 )
               }
             } catch (error) {
+              conversations.recordActivity(claim.assistantId, {
+                id: `${claim.assistantId}:error`,
+                name: guardrail.passed ? "Agent run" : "Guardrail",
+                input: "",
+                status: "error",
+                createdAt: Date.now(),
+                error: abort.signal.aborted
+                  ? "The reply reached its time limit."
+                  : error instanceof MaxTurnsExceededError
+                    ? "The agent reached its turn limit."
+                    : error &&
+                        typeof error === "object" &&
+                        "status" in error &&
+                        typeof error.status === "number"
+                      ? `The model request failed (HTTP ${error.status}).`
+                      : "The reply failed. Check the model and Application connections, then retry.",
+              })
               if (!guardrail.passed) {
                 conversations.refuse(
                   id,

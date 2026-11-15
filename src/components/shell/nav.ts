@@ -43,6 +43,12 @@ export const chatNav: Array<NavItem> = [
 /** Sections for Admins. */
 export const adminNav: Array<NavItem> = [
   {
+    label: "All Conversations",
+    to: "/admin/conversations",
+    icon: MessageSquareIcon,
+    isActive: under("/admin/conversations"),
+  },
+  {
     label: "Users",
     to: "/admin/users",
     icon: UsersIcon,

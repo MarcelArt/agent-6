@@ -1,5 +1,5 @@
 import { Fragment, useCallback, useEffect, useRef, useState } from "react"
-import { Link, useNavigate } from "@tanstack/react-router"
+import { Link, useNavigate, useRouter } from "@tanstack/react-router"
 import {
   AppWindowIcon,
   ChevronLeftIcon,
@@ -7,6 +7,7 @@ import {
   CircleDotIcon,
   ImageIcon,
   ImageOffIcon,
+  SquarePenIcon,
 } from "lucide-react"
 import { ChatSidebar } from "./chat-sidebar"
 import { Composer } from "./composer"
@@ -37,6 +38,8 @@ import { getConversation } from "@/server/chat.functions"
 import { imageUrl } from "@/lib/chat"
 import { cn } from "@/lib/utils"
 import type { ChatEvent, Conversation, ReplyInput, Report } from "@/lib/chat"
+import type { ConversationAudit } from "@/lib/conversation-history"
+import { AuditActivity } from "./audit-activity"
 
 /** The Filed Issue notice under an agent answer. Only Admins receive `issue` and failures. */
 function ReportNotice({ report }: { report: Report }) {
@@ -80,13 +83,16 @@ export function ConversationView({
   initial,
   userName,
   openImage,
+  audit,
 }: {
   initial: Conversation
   userName: string
   /** Id of the picture shown larger, from the URL. */
   openImage?: string
+  audit?: ConversationAudit
 }) {
   const navigate = useNavigate()
+  const router = useRouter()
   const [conversation, setConversation] = useState(initial)
   const [busy, setBusy] = useState(false)
   const [networkError, setNetworkError] = useState<string>()
@@ -97,6 +103,8 @@ export function ConversationView({
   const mounted = useRef(true)
   const started = useRef(false)
   const id = initial.id
+  // Renames refresh the loader while streamed message state stays local.
+  const title = initial.title
   const last = conversation.messages.at(-1)
   const pending = last?.status === "pending" || last?.status === "queued"
   const openQuestion =
@@ -171,6 +179,7 @@ export function ConversationView({
         }
         if (!done) throw new Error("Reply interrupted")
         setPicks(NO_PICKS)
+        void router.invalidate()
         return true
       } catch {
         try {
@@ -188,7 +197,7 @@ export function ConversationView({
         if (mounted.current) setBusy(false)
       }
     },
-    [id, refresh]
+    [id, refresh, router]
   )
   useEffect(() => {
     mounted.current = true
@@ -197,34 +206,43 @@ export function ConversationView({
     }
   }, [])
   useEffect(() => {
-    if (initial.messages.at(-1)?.status === "queued" && !started.current) {
+    if (
+      !audit &&
+      initial.messages.at(-1)?.status === "queued" &&
+      !started.current
+    ) {
       started.current = true
       void send({ start: true })
     }
-  }, [initial, send])
+  }, [initial, send, audit])
   useEffect(() => {
-    if (!pending || busy) return
+    if (audit || !pending || busy) return
     const timer = setInterval(() => {
       void refresh().catch(() => {})
     }, 1500)
     return () => clearInterval(timer)
-  }, [pending, busy, refresh])
+  }, [pending, busy, refresh, audit])
   return (
     <>
-      <ChatSidebar conversation={conversation} />
+      {!audit && <ChatSidebar />}
       <DetailPane aria-label="Conversation">
         <header className="flex h-12 shrink-0 items-center gap-2 border-b px-4">
           <Button
             variant="ghost"
             size="icon"
             className="-ml-2 md:hidden"
-            aria-label="New conversation"
-            render={<Link to="/chat" />}
+            aria-label={audit ? "Back to all Conversations" : "Back to history"}
+            render={
+              <Link
+                to={audit ? "/admin/conversations" : "/chat/history"}
+                search={(previous) => ({ ...previous, image: undefined })}
+              />
+            }
           >
             <ChevronLeftIcon />
           </Button>
           <div className="flex min-w-0 flex-col md:flex-1">
-            <PaneTitle as="h1">{conversation.title}</PaneTitle>
+            <PaneTitle as="h1">{title}</PaneTitle>
             <span className="flex items-center gap-1 truncate text-xs text-muted-foreground md:hidden">
               <AppWindowIcon className="size-3" />
               {conversation.application.name}
@@ -237,6 +255,21 @@ export function ConversationView({
             <AppWindowIcon />
             <span className="truncate">{conversation.application.name}</span>
           </Badge>
+          {audit ? (
+            <Badge variant="outline" className="ml-auto text-xs">
+              Read-only
+            </Badge>
+          ) : (
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              className="ml-auto md:hidden"
+              aria-label="New conversation"
+              render={<Link to="/chat" />}
+            >
+              <SquarePenIcon />
+            </Button>
+          )}
         </header>
         <MessageScrollerProvider autoScroll defaultScrollPosition="end">
           <MessageScroller className="flex-1">
@@ -247,6 +280,23 @@ export function ConversationView({
                 aria-live="polite"
                 aria-relevant="additions text"
               >
+                {audit && (
+                  <div className="flex flex-col gap-2 text-xs">
+                    <p>
+                      {audit.user.name} · {audit.user.email}
+                    </p>
+                    {audit.deletedAt && (
+                      <Badge variant="outline" className="text-xs">
+                        Deleted by user
+                      </Badge>
+                    )}
+                    <AuditActivity
+                      activities={audit.activities.filter(
+                        (item) => !item.messageId
+                      )}
+                    />
+                  </div>
+                )}
                 {conversation.messages.map((message, index) => (
                   <Fragment key={message.id}>
                     {(index === 0 ||
@@ -294,18 +344,20 @@ export function ConversationView({
                               <CircleAlertIcon />
                               <AlertDescription className="flex flex-col items-start gap-2">
                                 <p>{message.content}</p>
-                                {index === conversation.messages.length - 1 && (
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    disabled={busy}
-                                    onClick={() => {
-                                      void send({ retry: true })
-                                    }}
-                                  >
-                                    Try again
-                                  </Button>
-                                )}
+                                {!audit &&
+                                  index ===
+                                    conversation.messages.length - 1 && (
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      disabled={busy}
+                                      onClick={() => {
+                                        void send({ retry: true })
+                                      }}
+                                    >
+                                      Try again
+                                    </Button>
+                                  )}
                               </AlertDescription>
                             </Alert>
                           ) : message.question &&
@@ -314,7 +366,7 @@ export function ConversationView({
                               text={message.content}
                               question={message.question}
                               picks={picks}
-                              disabled={busy}
+                              disabled={!!audit || busy}
                               onPick={setPicks}
                               onSend={(choices) => {
                                 void send({ message: "", choices })
@@ -343,9 +395,16 @@ export function ConversationView({
                             <Link
                               key={image.id}
                               data-slot="message-image"
-                              to="/chat/$conversationId"
+                              to={
+                                audit
+                                  ? "/admin/conversations/$conversationId"
+                                  : "/chat/$conversationId"
+                              }
                               params={{ conversationId: id }}
-                              search={{ image: image.id }}
+                              search={(previous) => ({
+                                ...previous,
+                                image: image.id,
+                              })}
                               className="block w-64 overflow-hidden rounded-lg border bg-card text-left outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 sm:w-72"
                               aria-label={`Open ${image.name} larger`}
                               title="Open larger"
@@ -383,6 +442,18 @@ export function ConversationView({
                           {message.reports.map((report) => (
                             <ReportNotice key={report.id} report={report} />
                           ))}
+                          {audit && message.refused && (
+                            <Badge variant="outline" className="text-xs">
+                              Refused by Guardrail
+                            </Badge>
+                          )}
+                          {audit && (
+                            <AuditActivity
+                              activities={audit.activities.filter(
+                                (item) => item.messageId === message.id
+                              )}
+                            />
+                          )}
                         </MessageContent>
                       </Message>
                     </MessageScrollerItem>
@@ -427,37 +498,42 @@ export function ConversationView({
             <MessageScrollerButton />
           </MessageScroller>
         </MessageScrollerProvider>
-        <div className="mx-auto w-full max-w-2xl shrink-0 px-4 pb-3 md:pb-4">
-          <Composer
-            disabled={pending || busy || last?.status === "error"}
-            inputRef={composer}
-            hint={
-              last?.status === "error"
-                ? "Retry the answer to continue…"
-                : openQuestion && picks.other
-                  ? "Type your answer…"
-                  : undefined
-            }
-            onSend={(message, images) =>
-              send({
-                message,
-                images,
-                // Options ticked next to a typed answer are sent with it.
-                ...(openQuestion?.multiple && picks.choices.length
-                  ? { choices: picks.choices }
-                  : {}),
-              })
-            }
-          />
-        </div>
+        {!audit && (
+          <div className="mx-auto w-full max-w-2xl shrink-0 px-4 pb-3 md:pb-4">
+            <Composer
+              disabled={pending || busy || last?.status === "error"}
+              inputRef={composer}
+              hint={
+                last?.status === "error"
+                  ? "Retry the answer to continue…"
+                  : openQuestion && picks.other
+                    ? "Type your answer…"
+                    : undefined
+              }
+              onSend={(message, images) =>
+                send({
+                  message,
+                  images,
+                  // Options ticked next to a typed answer are sent with it.
+                  ...(openQuestion?.multiple && picks.choices.length
+                    ? { choices: picks.choices }
+                    : {}),
+                })
+              }
+            />
+          </div>
+        )}
       </DetailPane>
       <Dialog
         open={!!enlarged}
         onOpenChange={(open) => {
           if (!open)
             void navigate({
-              to: "/chat/$conversationId",
+              to: audit
+                ? "/admin/conversations/$conversationId"
+                : "/chat/$conversationId",
               params: { conversationId: id },
+              search: (previous) => ({ ...previous, image: undefined }),
               replace: true,
             })
         }}

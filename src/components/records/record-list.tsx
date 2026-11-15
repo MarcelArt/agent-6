@@ -155,8 +155,8 @@ export function RecordRow({
   name: React.ReactNode
   property?: React.ReactNode
   detail: React.ReactNode
-  /** 2 lets a long detail, such as an error text, wrap once. */
-  detailLines?: 1 | 2
+  /** 2 wraps an error once; 4 leaves room for audit status badges. */
+  detailLines?: 1 | 2 | 4
   secondary?: React.ReactNode
 }) {
   // On a selected row, muted text would fall below 4.5:1 in light theme.
@@ -190,7 +190,11 @@ export function RecordRow({
               <span
                 className={cn(
                   "min-w-0",
-                  detailLines === 2 ? "line-clamp-2" : "truncate",
+                  detailLines === 4
+                    ? "line-clamp-4"
+                    : detailLines === 2
+                      ? "line-clamp-2"
+                      : "truncate",
                   muted
                 )}
               >

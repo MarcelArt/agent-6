@@ -51,7 +51,7 @@ export type ImageType = (typeof IMAGE_TYPES)[number]
 export const IMAGE_TOO_LARGE = `This picture is too large. Pictures can be up to ${MAX_IMAGE_BYTES / 1024 / 1024} MB.`
 export const IMAGE_NOT_SUPPORTED =
   "This file is not a picture Agent 6 can read. Use a PNG, JPEG or WebP image."
-/** A picture on a message. Its bytes are served to the Conversation's owner only. */
+/** A picture on a message. Its owner and Admins may read its bytes. */
 export type ChatImage = {
   id: string
   name: string

@@ -816,6 +816,76 @@ describe("OpenAI-compatible Chat Completions", () => {
       "Help the billing team."
     )
     expect(JSON.stringify(requests[0].messages)).toContain("frontend")
+    expect(conversations.audit(conversation.id).activities).toMatchObject([
+      {
+        name: "read_file",
+        status: "complete",
+        input: expect.stringContaining("billing.ts"),
+      },
+    ])
+    expect(
+      JSON.stringify(await service.get(client, conversation.id))
+    ).not.toContain("read_file")
+  })
+  it("keeps tool activity when the next model request fails, including across a retry", async () => {
+    const fetcher = vi
+      .fn()
+      .mockResolvedValueOnce(
+        completion(
+          {
+            role: "assistant",
+            tool_calls: [
+              {
+                index: 0,
+                id: "failed-run-call",
+                type: "function",
+                function: {
+                  name: "read_file",
+                  arguments: JSON.stringify({
+                    repositoryId,
+                    path: "missing.ts",
+                    startLine: 1,
+                    endLine: 20,
+                  }),
+                },
+              },
+            ],
+          },
+          "tool_calls"
+        )
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            error: { message: "secret credential", type: "server_error" },
+          }),
+          { status: 500, headers: { "Content-Type": "application/json" } }
+        )
+      )
+      .mockImplementation(async () =>
+        completion(
+          { role: "assistant", content: "Please try Billing." },
+          "stop"
+        )
+      )
+    vi.stubGlobal("fetch", fetcher)
+    const service = sdk(),
+      conversation = await create()
+    await events(await service.reply(client, conversation.id, { start: true }))
+    const failed = conversations.audit(conversation.id)
+    expect(failed.activities).toMatchObject([
+      {
+        name: "read_file",
+        status: "error",
+        input: expect.stringContaining("missing.ts"),
+      },
+      { name: "Agent run", status: "error" },
+    ])
+    expect(JSON.stringify(failed)).not.toContain("secret credential")
+    await events(await service.reply(client, conversation.id, { retry: true }))
+    const retried = conversations.audit(conversation.id)
+    expect(retried.activities).toHaveLength(2)
+    expect(retried.activities[0].messageId).toBe(retried.messages.at(-1)?.id)
   })
   it("sends pictures as image input, and answers the text alone when the model refuses pictures", async () => {
     const requests: Array<{ messages: Array<{ content: unknown }> }> = []
