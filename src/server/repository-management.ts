@@ -133,10 +133,7 @@ export function createRepositoryManagement(
     sync?: RepositorySync
     /** Undefined when `GITHUB_TOKEN` is not set. */
     github?: GitHub
-    /**
-     * Names of the Applications a Repository is attached to. Step 06 passes
-     * the real lookup, and deletes the Attachments in `remove`.
-     */
+    /** Names of the Applications a Repository is attached to. */
     applicationsOf?: (repositoryId: string) => Array<string>
   } = {}
 ) {
@@ -150,7 +147,7 @@ export function createRepositoryManagement(
           const { githubToken } = getConfig()
           return githubToken ? createGitHub(githubToken) : undefined
         })()
-  const applicationsOf = deps.applicationsOf ?? (() => [])
+  const applicationsOf = deps.applicationsOf ?? repositories.applicationsOf
 
   function requireGitHub(): GitHub {
     if (!github) throw new RepositoryError(TOKEN_MISSING_MESSAGE)
@@ -367,8 +364,7 @@ export function createRepositoryManagement(
     async remove(headers: Headers, repositoryId: string): Promise<void> {
       await requireAdmin({ auth, headers })
       if (!repositories.findById(repositoryId)) return
-      // Step 06: delete the Repository's Attachments here, in one transaction
-      // with the record.
+      // Foreign keys cascade to its Attachments in the same statement.
       repositories.delete(repositoryId)
       await sync.remove(repositoryId)
     },

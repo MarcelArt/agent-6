@@ -3,7 +3,7 @@ import "@tanstack/react-start/server-only"
 import { randomUUID } from "node:crypto"
 import { asc, count, eq, inArray, or, sql } from "drizzle-orm"
 import { getDb } from "./db"
-import { repository } from "./schema"
+import { application, repository, repositoryAttachment } from "./schema"
 import type { Db } from "./db"
 import type { Repository, RepositoryStatus } from "@/lib/repositories"
 
@@ -171,6 +171,20 @@ export function createRepositoriesRepository(db: Db = getDb()) {
 
     markFailed(id: string, error: string): void {
       update(id, { status: "failed", error })
+    },
+
+    applicationsOf(repositoryId: string): Array<string> {
+      return db
+        .select({ name: application.name })
+        .from(application)
+        .innerJoin(
+          repositoryAttachment,
+          eq(repositoryAttachment.applicationId, application.id)
+        )
+        .where(eq(repositoryAttachment.repositoryId, repositoryId))
+        .orderBy(asc(sql`lower(${application.name})`), asc(application.id))
+        .all()
+        .map((row) => row.name)
     },
 
     delete(id: string): void {

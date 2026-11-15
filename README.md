@@ -38,6 +38,14 @@ The server validates its configuration at start and stops with a message naming 
 
 **First Admin.** If no user exists when the server starts, it creates an Admin from `ADMIN_EMAIL` and `ADMIN_PASSWORD`. Log in with them at `/login`. Once any user exists the two variables are ignored, even if you change them. Nobody can register themselves; Admins create the other users.
 
+## Applications
+
+Admins create Applications at `/admin/applications` with a name, a description for Clients and plain-text notes for the agent. Open an Application and use **Add Repository** under Attachments to put connected Repositories in scope. Attachment changes take effect immediately, and a Repository can be attached to several Applications.
+
+Deleting an Application removes its Attachments and keeps its Repositories. Removing a Repository lists its Applications in the confirmation and removes all its Attachments. Tags describe a resource; they never grant scope.
+
+Agent tools must resolve resources through `getApplicationScope` in `src/server/applications.functions.ts`. It accepts an Application id, requires a logged-in user and returns only explicitly attached resources. Attachment tables have foreign keys for each resource kind; steps 08 and 09 can add sibling connection tables and extend the `Attachment` union in `src/lib/applications.ts`.
+
 ## Scripts
 
 | Script | What it does |

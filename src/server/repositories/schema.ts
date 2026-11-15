@@ -1,4 +1,10 @@
-import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core"
+import {
+  index,
+  integer,
+  primaryKey,
+  sqliteTable,
+  text,
+} from "drizzle-orm/sqlite-core"
 
 /*
  * Column rules (ADR 0001): only text, integer, real, boolean stored as
@@ -109,3 +115,34 @@ export const repository = sqliteTable("repository", {
   createdAt: timestamp("created_at").notNull(),
   updatedAt: timestamp("updated_at").notNull(),
 })
+
+/** A product supported by the organization. */
+export const application = sqliteTable("application", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description").notNull().default(""),
+  notes: text("notes").notNull().default(""),
+  createdAt: timestamp("created_at").notNull(),
+  updatedAt: timestamp("updated_at").notNull(),
+})
+
+/**
+ * Typed Attachment tables keep real foreign keys. Steps 08/09 add sibling
+ * tables for Database/Log Connections (including the Log Base Selector).
+ * The service exposes them together as a discriminated Attachment union.
+ */
+export const repositoryAttachment = sqliteTable(
+  "repository_attachment",
+  {
+    applicationId: text("application_id")
+      .notNull()
+      .references(() => application.id, { onDelete: "cascade" }),
+    repositoryId: text("repository_id")
+      .notNull()
+      .references(() => repository.id, { onDelete: "cascade" }),
+  },
+  (table) => [
+    primaryKey({ columns: [table.applicationId, table.repositoryId] }),
+    index("repository_attachment_repository_idx").on(table.repositoryId),
+  ]
+)

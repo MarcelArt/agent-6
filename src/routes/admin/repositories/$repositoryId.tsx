@@ -21,6 +21,7 @@ import {
   lastSynced,
   statusLabels,
 } from "@/components/repositories/repository-status"
+import { FieldSet, FieldLegend, FieldDescription } from "@/components/ui/field"
 import { Badge } from "@/components/ui/badge"
 import { Button, buttonVariants } from "@/components/ui/button"
 import {
@@ -155,6 +156,20 @@ function Page() {
         notice={
           <>
             <p className="text-xs text-muted-foreground lg:hidden">{synced}</p>
+            <FieldSet>
+              <FieldLegend>Applications</FieldLegend>
+              {applications.length ? (
+                <ul className="flex flex-col gap-1 text-xs">
+                  {applications.map((name, index) => (
+                    <li key={index}>{name}</li>
+                  ))}
+                </ul>
+              ) : (
+                <FieldDescription>
+                  No Applications have this Repository attached.
+                </FieldDescription>
+              )}
+            </FieldSet>
             {repository.status === "failed" && (
               <FormError title="The last sync failed">
                 {repository.error ?? "Agent 6 could not sync this Repository."}
