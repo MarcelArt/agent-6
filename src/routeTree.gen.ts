@@ -8,59 +8,928 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-import { Route as rootRouteImport } from "./routes/__root"
-import { Route as IndexRouteImport } from "./routes/index"
+import { Route as rootRouteImport } from './routes/__root'
+import { Route as IndexRouteImport } from './routes/index'
+import { Route as AdminRouteRouteImport } from './routes/admin/route'
+import { Route as ChatRouteRouteImport } from './routes/chat/route'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as AdminIndexRouteImport } from './routes/admin/index'
+import { Route as AdminApplicationsRouteRouteImport } from './routes/admin/applications/route'
+import { Route as AdminConversationsRouteRouteImport } from './routes/admin/conversations/route'
+import { Route as AdminDatabaseConnectionsRouteRouteImport } from './routes/admin/database-connections/route'
+import { Route as AdminLogConnectionsRouteRouteImport } from './routes/admin/log-connections/route'
+import { Route as AdminRepositoriesRouteRouteImport } from './routes/admin/repositories/route'
+import { Route as AdminSettingsRouteImport } from './routes/admin/settings'
+import { Route as AdminUsersRouteRouteImport } from './routes/admin/users/route'
+import { Route as ApiHealthRouteImport } from './routes/api/health'
+import { Route as ChatIndexRouteImport } from './routes/chat/index'
+import { Route as ChatConversationIdRouteImport } from './routes/chat/$conversationId'
+import { Route as ChatAccountRouteImport } from './routes/chat/account'
+import { Route as ChatHistoryRouteImport } from './routes/chat/history'
+import { Route as AdminApplicationsIndexRouteImport } from './routes/admin/applications/index'
+import { Route as AdminApplicationsApplicationIdRouteImport } from './routes/admin/applications/$applicationId'
+import { Route as AdminApplicationsNewRouteImport } from './routes/admin/applications/new'
+import { Route as AdminConversationsIndexRouteImport } from './routes/admin/conversations/index'
+import { Route as AdminConversationsConversationIdRouteImport } from './routes/admin/conversations/$conversationId'
+import { Route as AdminDatabaseConnectionsIndexRouteImport } from './routes/admin/database-connections/index'
+import { Route as AdminDatabaseConnectionsDatabaseConnectionIdRouteImport } from './routes/admin/database-connections/$databaseConnectionId'
+import { Route as AdminDatabaseConnectionsNewRouteImport } from './routes/admin/database-connections/new'
+import { Route as AdminLogConnectionsIndexRouteImport } from './routes/admin/log-connections/index'
+import { Route as AdminLogConnectionsLogConnectionIdRouteImport } from './routes/admin/log-connections/$logConnectionId'
+import { Route as AdminLogConnectionsNewRouteImport } from './routes/admin/log-connections/new'
+import { Route as AdminRepositoriesIndexRouteImport } from './routes/admin/repositories/index'
+import { Route as AdminRepositoriesRepositoryIdRouteImport } from './routes/admin/repositories/$repositoryId'
+import { Route as AdminRepositoriesNewRouteImport } from './routes/admin/repositories/new'
+import { Route as AdminUsersIndexRouteImport } from './routes/admin/users/index'
+import { Route as AdminUsersUserIdRouteImport } from './routes/admin/users/$userId'
+import { Route as AdminUsersNewRouteImport } from './routes/admin/users/new'
+import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
+import { Route as ApiChatConversationIdRouteImport } from './routes/api/chat/$conversationId'
+import { Route as ApiUploadsIndexRouteImport } from './routes/api/uploads/index'
+import { Route as ApiUploadsUploadIdRouteImport } from './routes/api/uploads/$uploadId'
 
 const IndexRoute = IndexRouteImport.update({
-  id: "/",
-  path: "/",
+  id: '/',
+  path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRouteRoute = AdminRouteRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ChatRouteRoute = ChatRouteRouteImport.update({
+  id: '/chat',
+  path: '/chat',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminApplicationsRouteRoute = AdminApplicationsRouteRouteImport.update({
+  id: '/applications',
+  path: '/applications',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminConversationsRouteRoute = AdminConversationsRouteRouteImport.update({
+  id: '/conversations',
+  path: '/conversations',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminDatabaseConnectionsRouteRoute =
+  AdminDatabaseConnectionsRouteRouteImport.update({
+    id: '/database-connections',
+    path: '/database-connections',
+    getParentRoute: () => AdminRouteRoute,
+  } as any)
+const AdminLogConnectionsRouteRoute =
+  AdminLogConnectionsRouteRouteImport.update({
+    id: '/log-connections',
+    path: '/log-connections',
+    getParentRoute: () => AdminRouteRoute,
+  } as any)
+const AdminRepositoriesRouteRoute = AdminRepositoriesRouteRouteImport.update({
+  id: '/repositories',
+  path: '/repositories',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminSettingsRoute = AdminSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminUsersRouteRoute = AdminUsersRouteRouteImport.update({
+  id: '/users',
+  path: '/users',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const ApiHealthRoute = ApiHealthRouteImport.update({
+  id: '/api/health',
+  path: '/api/health',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ChatIndexRoute = ChatIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => ChatRouteRoute,
+} as any)
+const ChatConversationIdRoute = ChatConversationIdRouteImport.update({
+  id: '/$conversationId',
+  path: '/$conversationId',
+  getParentRoute: () => ChatRouteRoute,
+} as any)
+const ChatAccountRoute = ChatAccountRouteImport.update({
+  id: '/account',
+  path: '/account',
+  getParentRoute: () => ChatRouteRoute,
+} as any)
+const ChatHistoryRoute = ChatHistoryRouteImport.update({
+  id: '/history',
+  path: '/history',
+  getParentRoute: () => ChatRouteRoute,
+} as any)
+const AdminApplicationsIndexRoute = AdminApplicationsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminApplicationsRouteRoute,
+} as any)
+const AdminApplicationsApplicationIdRoute =
+  AdminApplicationsApplicationIdRouteImport.update({
+    id: '/$applicationId',
+    path: '/$applicationId',
+    getParentRoute: () => AdminApplicationsRouteRoute,
+  } as any)
+const AdminApplicationsNewRoute = AdminApplicationsNewRouteImport.update({
+  id: '/new',
+  path: '/new',
+  getParentRoute: () => AdminApplicationsRouteRoute,
+} as any)
+const AdminConversationsIndexRoute = AdminConversationsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminConversationsRouteRoute,
+} as any)
+const AdminConversationsConversationIdRoute =
+  AdminConversationsConversationIdRouteImport.update({
+    id: '/$conversationId',
+    path: '/$conversationId',
+    getParentRoute: () => AdminConversationsRouteRoute,
+  } as any)
+const AdminDatabaseConnectionsIndexRoute =
+  AdminDatabaseConnectionsIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AdminDatabaseConnectionsRouteRoute,
+  } as any)
+const AdminDatabaseConnectionsDatabaseConnectionIdRoute =
+  AdminDatabaseConnectionsDatabaseConnectionIdRouteImport.update({
+    id: '/$databaseConnectionId',
+    path: '/$databaseConnectionId',
+    getParentRoute: () => AdminDatabaseConnectionsRouteRoute,
+  } as any)
+const AdminDatabaseConnectionsNewRoute =
+  AdminDatabaseConnectionsNewRouteImport.update({
+    id: '/new',
+    path: '/new',
+    getParentRoute: () => AdminDatabaseConnectionsRouteRoute,
+  } as any)
+const AdminLogConnectionsIndexRoute =
+  AdminLogConnectionsIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AdminLogConnectionsRouteRoute,
+  } as any)
+const AdminLogConnectionsLogConnectionIdRoute =
+  AdminLogConnectionsLogConnectionIdRouteImport.update({
+    id: '/$logConnectionId',
+    path: '/$logConnectionId',
+    getParentRoute: () => AdminLogConnectionsRouteRoute,
+  } as any)
+const AdminLogConnectionsNewRoute = AdminLogConnectionsNewRouteImport.update({
+  id: '/new',
+  path: '/new',
+  getParentRoute: () => AdminLogConnectionsRouteRoute,
+} as any)
+const AdminRepositoriesIndexRoute = AdminRepositoriesIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminRepositoriesRouteRoute,
+} as any)
+const AdminRepositoriesRepositoryIdRoute =
+  AdminRepositoriesRepositoryIdRouteImport.update({
+    id: '/$repositoryId',
+    path: '/$repositoryId',
+    getParentRoute: () => AdminRepositoriesRouteRoute,
+  } as any)
+const AdminRepositoriesNewRoute = AdminRepositoriesNewRouteImport.update({
+  id: '/new',
+  path: '/new',
+  getParentRoute: () => AdminRepositoriesRouteRoute,
+} as any)
+const AdminUsersIndexRoute = AdminUsersIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminUsersRouteRoute,
+} as any)
+const AdminUsersUserIdRoute = AdminUsersUserIdRouteImport.update({
+  id: '/$userId',
+  path: '/$userId',
+  getParentRoute: () => AdminUsersRouteRoute,
+} as any)
+const AdminUsersNewRoute = AdminUsersNewRouteImport.update({
+  id: '/new',
+  path: '/new',
+  getParentRoute: () => AdminUsersRouteRoute,
+} as any)
+const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
+  id: '/api/auth/$',
+  path: '/api/auth/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiChatConversationIdRoute = ApiChatConversationIdRouteImport.update({
+  id: '/api/chat/$conversationId',
+  path: '/api/chat/$conversationId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiUploadsIndexRoute = ApiUploadsIndexRouteImport.update({
+  id: '/api/uploads/',
+  path: '/api/uploads/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiUploadsUploadIdRoute = ApiUploadsUploadIdRouteImport.update({
+  id: '/api/uploads/$uploadId',
+  path: '/api/uploads/$uploadId',
   getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
-  "/": typeof IndexRoute
+  '/': typeof IndexRoute
+  '/admin': typeof AdminRouteRouteWithChildren
+  '/chat': typeof ChatRouteRouteWithChildren
+  '/login': typeof LoginRoute
+  '/admin/applications': typeof AdminApplicationsRouteRouteWithChildren
+  '/admin/conversations': typeof AdminConversationsRouteRouteWithChildren
+  '/admin/database-connections': typeof AdminDatabaseConnectionsRouteRouteWithChildren
+  '/admin/log-connections': typeof AdminLogConnectionsRouteRouteWithChildren
+  '/admin/repositories': typeof AdminRepositoriesRouteRouteWithChildren
+  '/admin/users': typeof AdminUsersRouteRouteWithChildren
+  '/admin/settings': typeof AdminSettingsRoute
+  '/api/health': typeof ApiHealthRoute
+  '/chat/$conversationId': typeof ChatConversationIdRoute
+  '/chat/account': typeof ChatAccountRoute
+  '/chat/history': typeof ChatHistoryRoute
+  '/admin/': typeof AdminIndexRoute
+  '/chat/': typeof ChatIndexRoute
+  '/admin/applications/$applicationId': typeof AdminApplicationsApplicationIdRoute
+  '/admin/applications/new': typeof AdminApplicationsNewRoute
+  '/admin/conversations/$conversationId': typeof AdminConversationsConversationIdRoute
+  '/admin/database-connections/$databaseConnectionId': typeof AdminDatabaseConnectionsDatabaseConnectionIdRoute
+  '/admin/database-connections/new': typeof AdminDatabaseConnectionsNewRoute
+  '/admin/log-connections/$logConnectionId': typeof AdminLogConnectionsLogConnectionIdRoute
+  '/admin/log-connections/new': typeof AdminLogConnectionsNewRoute
+  '/admin/repositories/$repositoryId': typeof AdminRepositoriesRepositoryIdRoute
+  '/admin/repositories/new': typeof AdminRepositoriesNewRoute
+  '/admin/users/$userId': typeof AdminUsersUserIdRoute
+  '/admin/users/new': typeof AdminUsersNewRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/chat/$conversationId': typeof ApiChatConversationIdRoute
+  '/api/uploads/$uploadId': typeof ApiUploadsUploadIdRoute
+  '/admin/applications/': typeof AdminApplicationsIndexRoute
+  '/admin/conversations/': typeof AdminConversationsIndexRoute
+  '/admin/database-connections/': typeof AdminDatabaseConnectionsIndexRoute
+  '/admin/log-connections/': typeof AdminLogConnectionsIndexRoute
+  '/admin/repositories/': typeof AdminRepositoriesIndexRoute
+  '/admin/users/': typeof AdminUsersIndexRoute
+  '/api/uploads/': typeof ApiUploadsIndexRoute
 }
 export interface FileRoutesByTo {
-  "/": typeof IndexRoute
+  '/': typeof IndexRoute
+  '/login': typeof LoginRoute
+  '/admin/settings': typeof AdminSettingsRoute
+  '/api/health': typeof ApiHealthRoute
+  '/chat/$conversationId': typeof ChatConversationIdRoute
+  '/chat/account': typeof ChatAccountRoute
+  '/chat/history': typeof ChatHistoryRoute
+  '/admin': typeof AdminIndexRoute
+  '/chat': typeof ChatIndexRoute
+  '/admin/applications/$applicationId': typeof AdminApplicationsApplicationIdRoute
+  '/admin/applications/new': typeof AdminApplicationsNewRoute
+  '/admin/conversations/$conversationId': typeof AdminConversationsConversationIdRoute
+  '/admin/database-connections/$databaseConnectionId': typeof AdminDatabaseConnectionsDatabaseConnectionIdRoute
+  '/admin/database-connections/new': typeof AdminDatabaseConnectionsNewRoute
+  '/admin/log-connections/$logConnectionId': typeof AdminLogConnectionsLogConnectionIdRoute
+  '/admin/log-connections/new': typeof AdminLogConnectionsNewRoute
+  '/admin/repositories/$repositoryId': typeof AdminRepositoriesRepositoryIdRoute
+  '/admin/repositories/new': typeof AdminRepositoriesNewRoute
+  '/admin/users/$userId': typeof AdminUsersUserIdRoute
+  '/admin/users/new': typeof AdminUsersNewRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/chat/$conversationId': typeof ApiChatConversationIdRoute
+  '/api/uploads/$uploadId': typeof ApiUploadsUploadIdRoute
+  '/admin/applications': typeof AdminApplicationsIndexRoute
+  '/admin/conversations': typeof AdminConversationsIndexRoute
+  '/admin/database-connections': typeof AdminDatabaseConnectionsIndexRoute
+  '/admin/log-connections': typeof AdminLogConnectionsIndexRoute
+  '/admin/repositories': typeof AdminRepositoriesIndexRoute
+  '/admin/users': typeof AdminUsersIndexRoute
+  '/api/uploads': typeof ApiUploadsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  "/": typeof IndexRoute
+  '/': typeof IndexRoute
+  '/admin': typeof AdminRouteRouteWithChildren
+  '/chat': typeof ChatRouteRouteWithChildren
+  '/login': typeof LoginRoute
+  '/admin/applications': typeof AdminApplicationsRouteRouteWithChildren
+  '/admin/conversations': typeof AdminConversationsRouteRouteWithChildren
+  '/admin/database-connections': typeof AdminDatabaseConnectionsRouteRouteWithChildren
+  '/admin/log-connections': typeof AdminLogConnectionsRouteRouteWithChildren
+  '/admin/repositories': typeof AdminRepositoriesRouteRouteWithChildren
+  '/admin/users': typeof AdminUsersRouteRouteWithChildren
+  '/admin/settings': typeof AdminSettingsRoute
+  '/api/health': typeof ApiHealthRoute
+  '/chat/$conversationId': typeof ChatConversationIdRoute
+  '/chat/account': typeof ChatAccountRoute
+  '/chat/history': typeof ChatHistoryRoute
+  '/admin/': typeof AdminIndexRoute
+  '/chat/': typeof ChatIndexRoute
+  '/admin/applications/$applicationId': typeof AdminApplicationsApplicationIdRoute
+  '/admin/applications/new': typeof AdminApplicationsNewRoute
+  '/admin/conversations/$conversationId': typeof AdminConversationsConversationIdRoute
+  '/admin/database-connections/$databaseConnectionId': typeof AdminDatabaseConnectionsDatabaseConnectionIdRoute
+  '/admin/database-connections/new': typeof AdminDatabaseConnectionsNewRoute
+  '/admin/log-connections/$logConnectionId': typeof AdminLogConnectionsLogConnectionIdRoute
+  '/admin/log-connections/new': typeof AdminLogConnectionsNewRoute
+  '/admin/repositories/$repositoryId': typeof AdminRepositoriesRepositoryIdRoute
+  '/admin/repositories/new': typeof AdminRepositoriesNewRoute
+  '/admin/users/$userId': typeof AdminUsersUserIdRoute
+  '/admin/users/new': typeof AdminUsersNewRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/chat/$conversationId': typeof ApiChatConversationIdRoute
+  '/api/uploads/$uploadId': typeof ApiUploadsUploadIdRoute
+  '/admin/applications/': typeof AdminApplicationsIndexRoute
+  '/admin/conversations/': typeof AdminConversationsIndexRoute
+  '/admin/database-connections/': typeof AdminDatabaseConnectionsIndexRoute
+  '/admin/log-connections/': typeof AdminLogConnectionsIndexRoute
+  '/admin/repositories/': typeof AdminRepositoriesIndexRoute
+  '/admin/users/': typeof AdminUsersIndexRoute
+  '/api/uploads/': typeof ApiUploadsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: "/"
+  fullPaths:
+    | '/'
+    | '/admin'
+    | '/chat'
+    | '/login'
+    | '/admin/applications'
+    | '/admin/conversations'
+    | '/admin/database-connections'
+    | '/admin/log-connections'
+    | '/admin/repositories'
+    | '/admin/users'
+    | '/admin/settings'
+    | '/api/health'
+    | '/chat/$conversationId'
+    | '/chat/account'
+    | '/chat/history'
+    | '/admin/'
+    | '/chat/'
+    | '/admin/applications/$applicationId'
+    | '/admin/applications/new'
+    | '/admin/conversations/$conversationId'
+    | '/admin/database-connections/$databaseConnectionId'
+    | '/admin/database-connections/new'
+    | '/admin/log-connections/$logConnectionId'
+    | '/admin/log-connections/new'
+    | '/admin/repositories/$repositoryId'
+    | '/admin/repositories/new'
+    | '/admin/users/$userId'
+    | '/admin/users/new'
+    | '/api/auth/$'
+    | '/api/chat/$conversationId'
+    | '/api/uploads/$uploadId'
+    | '/admin/applications/'
+    | '/admin/conversations/'
+    | '/admin/database-connections/'
+    | '/admin/log-connections/'
+    | '/admin/repositories/'
+    | '/admin/users/'
+    | '/api/uploads/'
   fileRoutesByTo: FileRoutesByTo
-  to: "/"
-  id: "__root__" | "/"
+  to:
+    | '/'
+    | '/login'
+    | '/admin/settings'
+    | '/api/health'
+    | '/chat/$conversationId'
+    | '/chat/account'
+    | '/chat/history'
+    | '/admin'
+    | '/chat'
+    | '/admin/applications/$applicationId'
+    | '/admin/applications/new'
+    | '/admin/conversations/$conversationId'
+    | '/admin/database-connections/$databaseConnectionId'
+    | '/admin/database-connections/new'
+    | '/admin/log-connections/$logConnectionId'
+    | '/admin/log-connections/new'
+    | '/admin/repositories/$repositoryId'
+    | '/admin/repositories/new'
+    | '/admin/users/$userId'
+    | '/admin/users/new'
+    | '/api/auth/$'
+    | '/api/chat/$conversationId'
+    | '/api/uploads/$uploadId'
+    | '/admin/applications'
+    | '/admin/conversations'
+    | '/admin/database-connections'
+    | '/admin/log-connections'
+    | '/admin/repositories'
+    | '/admin/users'
+    | '/api/uploads'
+  id:
+    | '__root__'
+    | '/'
+    | '/admin'
+    | '/chat'
+    | '/login'
+    | '/admin/applications'
+    | '/admin/conversations'
+    | '/admin/database-connections'
+    | '/admin/log-connections'
+    | '/admin/repositories'
+    | '/admin/users'
+    | '/admin/settings'
+    | '/api/health'
+    | '/chat/$conversationId'
+    | '/chat/account'
+    | '/chat/history'
+    | '/admin/'
+    | '/chat/'
+    | '/admin/applications/$applicationId'
+    | '/admin/applications/new'
+    | '/admin/conversations/$conversationId'
+    | '/admin/database-connections/$databaseConnectionId'
+    | '/admin/database-connections/new'
+    | '/admin/log-connections/$logConnectionId'
+    | '/admin/log-connections/new'
+    | '/admin/repositories/$repositoryId'
+    | '/admin/repositories/new'
+    | '/admin/users/$userId'
+    | '/admin/users/new'
+    | '/api/auth/$'
+    | '/api/chat/$conversationId'
+    | '/api/uploads/$uploadId'
+    | '/admin/applications/'
+    | '/admin/conversations/'
+    | '/admin/database-connections/'
+    | '/admin/log-connections/'
+    | '/admin/repositories/'
+    | '/admin/users/'
+    | '/api/uploads/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminRouteRoute: typeof AdminRouteRouteWithChildren
+  ChatRouteRoute: typeof ChatRouteRouteWithChildren
+  LoginRoute: typeof LoginRoute
+  ApiHealthRoute: typeof ApiHealthRoute
+  ApiAuthSplatRoute: typeof ApiAuthSplatRoute
+  ApiChatConversationIdRoute: typeof ApiChatConversationIdRoute
+  ApiUploadsUploadIdRoute: typeof ApiUploadsUploadIdRoute
+  ApiUploadsIndexRoute: typeof ApiUploadsIndexRoute
 }
 
-declare module "@tanstack/react-router" {
+declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    "/": {
-      id: "/"
-      path: "/"
-      fullPath: "/"
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/chat': {
+      id: '/chat'
+      path: '/chat'
+      fullPath: '/chat'
+      preLoaderRoute: typeof ChatRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/': {
+      id: '/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/applications': {
+      id: '/admin/applications'
+      path: '/applications'
+      fullPath: '/admin/applications'
+      preLoaderRoute: typeof AdminApplicationsRouteRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/conversations': {
+      id: '/admin/conversations'
+      path: '/conversations'
+      fullPath: '/admin/conversations'
+      preLoaderRoute: typeof AdminConversationsRouteRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/database-connections': {
+      id: '/admin/database-connections'
+      path: '/database-connections'
+      fullPath: '/admin/database-connections'
+      preLoaderRoute: typeof AdminDatabaseConnectionsRouteRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/log-connections': {
+      id: '/admin/log-connections'
+      path: '/log-connections'
+      fullPath: '/admin/log-connections'
+      preLoaderRoute: typeof AdminLogConnectionsRouteRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/repositories': {
+      id: '/admin/repositories'
+      path: '/repositories'
+      fullPath: '/admin/repositories'
+      preLoaderRoute: typeof AdminRepositoriesRouteRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/settings': {
+      id: '/admin/settings'
+      path: '/settings'
+      fullPath: '/admin/settings'
+      preLoaderRoute: typeof AdminSettingsRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/users': {
+      id: '/admin/users'
+      path: '/users'
+      fullPath: '/admin/users'
+      preLoaderRoute: typeof AdminUsersRouteRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/api/health': {
+      id: '/api/health'
+      path: '/api/health'
+      fullPath: '/api/health'
+      preLoaderRoute: typeof ApiHealthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/chat/': {
+      id: '/chat/'
+      path: '/'
+      fullPath: '/chat/'
+      preLoaderRoute: typeof ChatIndexRouteImport
+      parentRoute: typeof ChatRouteRoute
+    }
+    '/chat/$conversationId': {
+      id: '/chat/$conversationId'
+      path: '/$conversationId'
+      fullPath: '/chat/$conversationId'
+      preLoaderRoute: typeof ChatConversationIdRouteImport
+      parentRoute: typeof ChatRouteRoute
+    }
+    '/chat/account': {
+      id: '/chat/account'
+      path: '/account'
+      fullPath: '/chat/account'
+      preLoaderRoute: typeof ChatAccountRouteImport
+      parentRoute: typeof ChatRouteRoute
+    }
+    '/chat/history': {
+      id: '/chat/history'
+      path: '/history'
+      fullPath: '/chat/history'
+      preLoaderRoute: typeof ChatHistoryRouteImport
+      parentRoute: typeof ChatRouteRoute
+    }
+    '/admin/applications/': {
+      id: '/admin/applications/'
+      path: '/'
+      fullPath: '/admin/applications/'
+      preLoaderRoute: typeof AdminApplicationsIndexRouteImport
+      parentRoute: typeof AdminApplicationsRouteRoute
+    }
+    '/admin/applications/$applicationId': {
+      id: '/admin/applications/$applicationId'
+      path: '/$applicationId'
+      fullPath: '/admin/applications/$applicationId'
+      preLoaderRoute: typeof AdminApplicationsApplicationIdRouteImport
+      parentRoute: typeof AdminApplicationsRouteRoute
+    }
+    '/admin/applications/new': {
+      id: '/admin/applications/new'
+      path: '/new'
+      fullPath: '/admin/applications/new'
+      preLoaderRoute: typeof AdminApplicationsNewRouteImport
+      parentRoute: typeof AdminApplicationsRouteRoute
+    }
+    '/admin/conversations/': {
+      id: '/admin/conversations/'
+      path: '/'
+      fullPath: '/admin/conversations/'
+      preLoaderRoute: typeof AdminConversationsIndexRouteImport
+      parentRoute: typeof AdminConversationsRouteRoute
+    }
+    '/admin/conversations/$conversationId': {
+      id: '/admin/conversations/$conversationId'
+      path: '/$conversationId'
+      fullPath: '/admin/conversations/$conversationId'
+      preLoaderRoute: typeof AdminConversationsConversationIdRouteImport
+      parentRoute: typeof AdminConversationsRouteRoute
+    }
+    '/admin/database-connections/': {
+      id: '/admin/database-connections/'
+      path: '/'
+      fullPath: '/admin/database-connections/'
+      preLoaderRoute: typeof AdminDatabaseConnectionsIndexRouteImport
+      parentRoute: typeof AdminDatabaseConnectionsRouteRoute
+    }
+    '/admin/database-connections/$databaseConnectionId': {
+      id: '/admin/database-connections/$databaseConnectionId'
+      path: '/$databaseConnectionId'
+      fullPath: '/admin/database-connections/$databaseConnectionId'
+      preLoaderRoute: typeof AdminDatabaseConnectionsDatabaseConnectionIdRouteImport
+      parentRoute: typeof AdminDatabaseConnectionsRouteRoute
+    }
+    '/admin/database-connections/new': {
+      id: '/admin/database-connections/new'
+      path: '/new'
+      fullPath: '/admin/database-connections/new'
+      preLoaderRoute: typeof AdminDatabaseConnectionsNewRouteImport
+      parentRoute: typeof AdminDatabaseConnectionsRouteRoute
+    }
+    '/admin/log-connections/': {
+      id: '/admin/log-connections/'
+      path: '/'
+      fullPath: '/admin/log-connections/'
+      preLoaderRoute: typeof AdminLogConnectionsIndexRouteImport
+      parentRoute: typeof AdminLogConnectionsRouteRoute
+    }
+    '/admin/log-connections/$logConnectionId': {
+      id: '/admin/log-connections/$logConnectionId'
+      path: '/$logConnectionId'
+      fullPath: '/admin/log-connections/$logConnectionId'
+      preLoaderRoute: typeof AdminLogConnectionsLogConnectionIdRouteImport
+      parentRoute: typeof AdminLogConnectionsRouteRoute
+    }
+    '/admin/log-connections/new': {
+      id: '/admin/log-connections/new'
+      path: '/new'
+      fullPath: '/admin/log-connections/new'
+      preLoaderRoute: typeof AdminLogConnectionsNewRouteImport
+      parentRoute: typeof AdminLogConnectionsRouteRoute
+    }
+    '/admin/repositories/': {
+      id: '/admin/repositories/'
+      path: '/'
+      fullPath: '/admin/repositories/'
+      preLoaderRoute: typeof AdminRepositoriesIndexRouteImport
+      parentRoute: typeof AdminRepositoriesRouteRoute
+    }
+    '/admin/repositories/$repositoryId': {
+      id: '/admin/repositories/$repositoryId'
+      path: '/$repositoryId'
+      fullPath: '/admin/repositories/$repositoryId'
+      preLoaderRoute: typeof AdminRepositoriesRepositoryIdRouteImport
+      parentRoute: typeof AdminRepositoriesRouteRoute
+    }
+    '/admin/repositories/new': {
+      id: '/admin/repositories/new'
+      path: '/new'
+      fullPath: '/admin/repositories/new'
+      preLoaderRoute: typeof AdminRepositoriesNewRouteImport
+      parentRoute: typeof AdminRepositoriesRouteRoute
+    }
+    '/admin/users/': {
+      id: '/admin/users/'
+      path: '/'
+      fullPath: '/admin/users/'
+      preLoaderRoute: typeof AdminUsersIndexRouteImport
+      parentRoute: typeof AdminUsersRouteRoute
+    }
+    '/admin/users/$userId': {
+      id: '/admin/users/$userId'
+      path: '/$userId'
+      fullPath: '/admin/users/$userId'
+      preLoaderRoute: typeof AdminUsersUserIdRouteImport
+      parentRoute: typeof AdminUsersRouteRoute
+    }
+    '/admin/users/new': {
+      id: '/admin/users/new'
+      path: '/new'
+      fullPath: '/admin/users/new'
+      preLoaderRoute: typeof AdminUsersNewRouteImport
+      parentRoute: typeof AdminUsersRouteRoute
+    }
+    '/api/auth/$': {
+      id: '/api/auth/$'
+      path: '/api/auth/$'
+      fullPath: '/api/auth/$'
+      preLoaderRoute: typeof ApiAuthSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/chat/$conversationId': {
+      id: '/api/chat/$conversationId'
+      path: '/api/chat/$conversationId'
+      fullPath: '/api/chat/$conversationId'
+      preLoaderRoute: typeof ApiChatConversationIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/uploads/': {
+      id: '/api/uploads/'
+      path: '/api/uploads'
+      fullPath: '/api/uploads/'
+      preLoaderRoute: typeof ApiUploadsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/uploads/$uploadId': {
+      id: '/api/uploads/$uploadId'
+      path: '/api/uploads/$uploadId'
+      fullPath: '/api/uploads/$uploadId'
+      preLoaderRoute: typeof ApiUploadsUploadIdRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
 }
 
+interface AdminApplicationsRouteRouteChildren {
+  AdminApplicationsApplicationIdRoute: typeof AdminApplicationsApplicationIdRoute
+  AdminApplicationsNewRoute: typeof AdminApplicationsNewRoute
+  AdminApplicationsIndexRoute: typeof AdminApplicationsIndexRoute
+}
+
+const AdminApplicationsRouteRouteChildren: AdminApplicationsRouteRouteChildren =
+  {
+    AdminApplicationsApplicationIdRoute: AdminApplicationsApplicationIdRoute,
+    AdminApplicationsNewRoute: AdminApplicationsNewRoute,
+    AdminApplicationsIndexRoute: AdminApplicationsIndexRoute,
+  }
+
+const AdminApplicationsRouteRouteWithChildren =
+  AdminApplicationsRouteRoute._addFileChildren(
+    AdminApplicationsRouteRouteChildren,
+  )
+
+interface AdminConversationsRouteRouteChildren {
+  AdminConversationsConversationIdRoute: typeof AdminConversationsConversationIdRoute
+  AdminConversationsIndexRoute: typeof AdminConversationsIndexRoute
+}
+
+const AdminConversationsRouteRouteChildren: AdminConversationsRouteRouteChildren =
+  {
+    AdminConversationsConversationIdRoute:
+      AdminConversationsConversationIdRoute,
+    AdminConversationsIndexRoute: AdminConversationsIndexRoute,
+  }
+
+const AdminConversationsRouteRouteWithChildren =
+  AdminConversationsRouteRoute._addFileChildren(
+    AdminConversationsRouteRouteChildren,
+  )
+
+interface AdminDatabaseConnectionsRouteRouteChildren {
+  AdminDatabaseConnectionsDatabaseConnectionIdRoute: typeof AdminDatabaseConnectionsDatabaseConnectionIdRoute
+  AdminDatabaseConnectionsNewRoute: typeof AdminDatabaseConnectionsNewRoute
+  AdminDatabaseConnectionsIndexRoute: typeof AdminDatabaseConnectionsIndexRoute
+}
+
+const AdminDatabaseConnectionsRouteRouteChildren: AdminDatabaseConnectionsRouteRouteChildren =
+  {
+    AdminDatabaseConnectionsDatabaseConnectionIdRoute:
+      AdminDatabaseConnectionsDatabaseConnectionIdRoute,
+    AdminDatabaseConnectionsNewRoute: AdminDatabaseConnectionsNewRoute,
+    AdminDatabaseConnectionsIndexRoute: AdminDatabaseConnectionsIndexRoute,
+  }
+
+const AdminDatabaseConnectionsRouteRouteWithChildren =
+  AdminDatabaseConnectionsRouteRoute._addFileChildren(
+    AdminDatabaseConnectionsRouteRouteChildren,
+  )
+
+interface AdminLogConnectionsRouteRouteChildren {
+  AdminLogConnectionsLogConnectionIdRoute: typeof AdminLogConnectionsLogConnectionIdRoute
+  AdminLogConnectionsNewRoute: typeof AdminLogConnectionsNewRoute
+  AdminLogConnectionsIndexRoute: typeof AdminLogConnectionsIndexRoute
+}
+
+const AdminLogConnectionsRouteRouteChildren: AdminLogConnectionsRouteRouteChildren =
+  {
+    AdminLogConnectionsLogConnectionIdRoute:
+      AdminLogConnectionsLogConnectionIdRoute,
+    AdminLogConnectionsNewRoute: AdminLogConnectionsNewRoute,
+    AdminLogConnectionsIndexRoute: AdminLogConnectionsIndexRoute,
+  }
+
+const AdminLogConnectionsRouteRouteWithChildren =
+  AdminLogConnectionsRouteRoute._addFileChildren(
+    AdminLogConnectionsRouteRouteChildren,
+  )
+
+interface AdminRepositoriesRouteRouteChildren {
+  AdminRepositoriesRepositoryIdRoute: typeof AdminRepositoriesRepositoryIdRoute
+  AdminRepositoriesNewRoute: typeof AdminRepositoriesNewRoute
+  AdminRepositoriesIndexRoute: typeof AdminRepositoriesIndexRoute
+}
+
+const AdminRepositoriesRouteRouteChildren: AdminRepositoriesRouteRouteChildren =
+  {
+    AdminRepositoriesRepositoryIdRoute: AdminRepositoriesRepositoryIdRoute,
+    AdminRepositoriesNewRoute: AdminRepositoriesNewRoute,
+    AdminRepositoriesIndexRoute: AdminRepositoriesIndexRoute,
+  }
+
+const AdminRepositoriesRouteRouteWithChildren =
+  AdminRepositoriesRouteRoute._addFileChildren(
+    AdminRepositoriesRouteRouteChildren,
+  )
+
+interface AdminUsersRouteRouteChildren {
+  AdminUsersUserIdRoute: typeof AdminUsersUserIdRoute
+  AdminUsersNewRoute: typeof AdminUsersNewRoute
+  AdminUsersIndexRoute: typeof AdminUsersIndexRoute
+}
+
+const AdminUsersRouteRouteChildren: AdminUsersRouteRouteChildren = {
+  AdminUsersUserIdRoute: AdminUsersUserIdRoute,
+  AdminUsersNewRoute: AdminUsersNewRoute,
+  AdminUsersIndexRoute: AdminUsersIndexRoute,
+}
+
+const AdminUsersRouteRouteWithChildren = AdminUsersRouteRoute._addFileChildren(
+  AdminUsersRouteRouteChildren,
+)
+
+interface AdminRouteRouteChildren {
+  AdminApplicationsRouteRoute: typeof AdminApplicationsRouteRouteWithChildren
+  AdminConversationsRouteRoute: typeof AdminConversationsRouteRouteWithChildren
+  AdminDatabaseConnectionsRouteRoute: typeof AdminDatabaseConnectionsRouteRouteWithChildren
+  AdminLogConnectionsRouteRoute: typeof AdminLogConnectionsRouteRouteWithChildren
+  AdminRepositoriesRouteRoute: typeof AdminRepositoriesRouteRouteWithChildren
+  AdminUsersRouteRoute: typeof AdminUsersRouteRouteWithChildren
+  AdminSettingsRoute: typeof AdminSettingsRoute
+  AdminIndexRoute: typeof AdminIndexRoute
+}
+
+const AdminRouteRouteChildren: AdminRouteRouteChildren = {
+  AdminApplicationsRouteRoute: AdminApplicationsRouteRouteWithChildren,
+  AdminConversationsRouteRoute: AdminConversationsRouteRouteWithChildren,
+  AdminDatabaseConnectionsRouteRoute:
+    AdminDatabaseConnectionsRouteRouteWithChildren,
+  AdminLogConnectionsRouteRoute: AdminLogConnectionsRouteRouteWithChildren,
+  AdminRepositoriesRouteRoute: AdminRepositoriesRouteRouteWithChildren,
+  AdminUsersRouteRoute: AdminUsersRouteRouteWithChildren,
+  AdminSettingsRoute: AdminSettingsRoute,
+  AdminIndexRoute: AdminIndexRoute,
+}
+
+const AdminRouteRouteWithChildren = AdminRouteRoute._addFileChildren(
+  AdminRouteRouteChildren,
+)
+
+interface ChatRouteRouteChildren {
+  ChatConversationIdRoute: typeof ChatConversationIdRoute
+  ChatAccountRoute: typeof ChatAccountRoute
+  ChatHistoryRoute: typeof ChatHistoryRoute
+  ChatIndexRoute: typeof ChatIndexRoute
+}
+
+const ChatRouteRouteChildren: ChatRouteRouteChildren = {
+  ChatConversationIdRoute: ChatConversationIdRoute,
+  ChatAccountRoute: ChatAccountRoute,
+  ChatHistoryRoute: ChatHistoryRoute,
+  ChatIndexRoute: ChatIndexRoute,
+}
+
+const ChatRouteRouteWithChildren = ChatRouteRoute._addFileChildren(
+  ChatRouteRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminRouteRoute: AdminRouteRouteWithChildren,
+  ChatRouteRoute: ChatRouteRouteWithChildren,
+  LoginRoute: LoginRoute,
+  ApiHealthRoute: ApiHealthRoute,
+  ApiAuthSplatRoute: ApiAuthSplatRoute,
+  ApiChatConversationIdRoute: ApiChatConversationIdRoute,
+  ApiUploadsUploadIdRoute: ApiUploadsUploadIdRoute,
+  ApiUploadsIndexRoute: ApiUploadsIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
 
-import type { getRouter } from "./router.tsx"
-import type { createStart } from "@tanstack/react-start"
-declare module "@tanstack/react-start" {
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
   interface Register {
     ssr: true
     router: Awaited<ReturnType<typeof getRouter>>

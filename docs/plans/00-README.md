@@ -4,30 +4,30 @@
 
 ## How to use
 
-Give the agent one step file and say "implement this step". Do not start a step until every step under its "Depends on" is merged. Steps 17 and 18 are optional.
+Give the agent one step file and say "implement this step". Do not start a step until every step under its "Depends on" is merged. Step 01 is a design step: it stops after showing three directions and continues only once you have picked one. Step 18 is optional. Decision AI from `plan.md` has no step yet; it will be planned later.
 
 ## Order
 
 | # | Step | Result |
 |---|---|---|
-| 01 | [Foundation](01-foundation.md) | Config, own database, app shell with real routes |
-| 02 | [Auth](02-auth.md) | Login, first Admin from env, role-guarded routes |
-| 03 | [User management](03-user-management.md) | Admin creates and manages users |
-| 04 | [Repositories](04-repositories.md) | Connect, clone and sync GitHub repositories |
-| 05 | [Applications](05-applications.md) | Group Repositories into Applications |
-| 06 | [Chat, code only](06-chat-code-only.md) | First working chat: agent answers from code |
-| 07 | [Database Connections](07-database-connections.md) | Agent can query Postgres, read-only |
-| 08 | [Log Connections](08-log-connections.md) | Agent can query Loki logs |
-| 09 | [Issue filing](09-issue-filing.md) | Agent files GitHub issues |
-| 10 | [Image upload](10-image-upload.md) | Pictures as context in chat |
-| 11 | [Interactive Questions](11-interactive-questions.md) | Clickable clarifying questions |
-| 12 | [Guardrail](12-guardrail.md) | Off-topic messages refused |
-| 13 | [Conversation history](13-conversation-history.md) | Past Conversations, Admin audit view |
-| 14 | [Preferred Language](14-preferred-language.md) | Agent answers in the configured language |
-| 15 | [OAuth](15-oauth.md) | Optional sign-in through an OAuth 2.0 provider |
-| 16 | [Deployment](16-deployment.md) | Docker image, compose file, setup guide |
-| 17 | [Postgres for own data](17-postgres-for-own-data.md) | Optional alternative to SQLite |
-| 18 | [Decision AI](18-decision-ai.md) | Optional repository-selection model |
+| 01 | [Design](01-design.md) | Chosen visual direction saved as a design reference |
+| 02 | [Foundation](02-foundation.md) | Config, own database, app shell with real routes, light and dark theme |
+| 03 | [Auth](03-auth.md) | Login, first Admin from env, role-guarded routes |
+| 04 | [User management](04-user-management.md) | Admin creates and manages users |
+| 05 | [Repositories](05-repositories.md) | Connect, clone and sync GitHub repositories |
+| 06 | [Applications](06-applications.md) | Group Repositories into Applications |
+| 07 | [Chat, code only](07-chat-code-only.md) | First working chat: agent answers from code |
+| 08 | [Database Connections](08-database-connections.md) | Agent can query Postgres, read-only |
+| 09 | [Log Connections](09-log-connections.md) | Agent can query Loki logs |
+| 10 | [Issue filing](10-issue-filing.md) | Agent files GitHub issues |
+| 11 | [Image upload](11-image-upload.md) | Pictures as context in chat |
+| 12 | [Interactive Questions](12-interactive-questions.md) | Clickable clarifying questions |
+| 13 | [Guardrail](13-guardrail.md) | Off-topic messages refused |
+| 14 | [Conversation history](14-conversation-history.md) | Past Conversations, Admin audit view |
+| 15 | [Preferred Language](15-preferred-language.md) | Agent answers in the configured language |
+| 16 | [OAuth](16-oauth.md) | Optional sign-in through an OAuth 2.0 provider |
+| 17 | [Deployment](17-deployment.md) | Docker image, compose file, setup guide |
+| 18 | [Postgres for own data](18-postgres-for-own-data.md) | Optional alternative to SQLite |
 
 ## Decisions that apply to every step
 
@@ -41,6 +41,7 @@ Give the agent one step file and say "implement this step". Do not start a step 
 | Scope | Resources reach an Application only through an Attachment. See [ADR 0002](../adr/0002-explicit-attachment-not-tags.md). |
 | Access | No multi-tenancy. Every logged-in user may chat about every Application. Admin screens are for Admins only. |
 | Storage | One data directory (`DATA_DIR`) holds the SQLite file, repository clones and uploaded images. |
+| Design | Visual direction is chosen once, in step 01, and recorded in `docs/design/`. Colour, font and radius tokens stay as the shadcn preset in `src/styles.css` defines them. Light and dark themes both ship; dark is designed first. |
 | Secrets | Passwords and auth headers of connections are encrypted at rest with `ENCRYPTION_KEY`. They are never sent to the browser or to the model. |
 
 ## Conventions for the implementing agent
@@ -50,6 +51,7 @@ Give the agent one step file and say "implement this step". Do not start a step 
 - Routing: every screen, tab, dialog-with-content and selected record is a URL. Reloading the browser shows the same thing. List filters and pagination go in search params. No screen is reachable only through component state.
 - Route layout: `/login`, `/chat/*` for all users, `/admin/*` for Admins.
 - Server code lives in `src/server/`. Only `src/server/repositories/` imports Drizzle.
-- For any step that adds or changes a screen, run `/impeccable` for the interface work. Reuse components in `src/components/ui/` and add new shadcn components with the shadcn CLI.
+- For any step after 01 that adds or changes a screen, follow `docs/design/DESIGN.md` and match the prototype for that screen where one exists. Do not run a design skill and do not change the tokens in `src/styles.css`. Reuse components in `src/components/ui/` and add new shadcn components with the shadcn CLI.
+- Every screen must be checked in both dark and light theme before the step is done.
 - Each step ends with `npm run typecheck`, `npm run lint` and `npm test` passing, and its acceptance checks done by hand in the running app.
 - Do only what the step's Scope lists. "Out of scope" items belong to later steps.

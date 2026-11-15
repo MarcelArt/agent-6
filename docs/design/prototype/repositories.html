@@ -1,0 +1,567 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Repositories · Agent 6</title>
+<link rel="stylesheet" href="assets/app.css">
+</head>
+<body class="min-h-svh">
+<section data-screen="repositories" data-title="Repositories · Agent 6">
+<div class="flex h-svh flex-col overflow-hidden md:flex-row">
+<nav class="hidden w-14 shrink-0 flex-col items-center gap-1 border-r bg-sidebar py-2 text-sidebar-foreground md:flex" aria-label="Main">
+  <a href="#repositories" class="mb-2 flex" aria-label="Agent 6" title="Agent 6"><span class="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary text-sm font-semibold leading-none text-primary-foreground">6</span></a>
+  <a href="chat.html" class="ui-sidebar-menu-button size-8 justify-center p-0 text-muted-foreground hover:text-sidebar-accent-foreground data-active:text-sidebar-accent-foreground" data-nav="chat" data-nav-also="chat-new" aria-label="Chat" title="Chat"><svg aria-hidden="true"><use href="#i-message-square"/></svg></a>
+  <a href="history.html" class="ui-sidebar-menu-button size-8 justify-center p-0 text-muted-foreground hover:text-sidebar-accent-foreground data-active:text-sidebar-accent-foreground" data-nav="history" aria-label="History" title="History"><svg aria-hidden="true"><use href="#i-history"/></svg></a>
+  <div class="ui-separator my-1.5 w-6"></div>
+  <button type="button" class="ui-sidebar-menu-button size-8 justify-center p-0 text-muted-foreground hover:text-sidebar-accent-foreground data-active:text-sidebar-accent-foreground" aria-label="Users" title="Users"><svg aria-hidden="true"><use href="#i-users"/></svg></button>
+  <a href="#repositories" class="ui-sidebar-menu-button size-8 justify-center p-0 text-muted-foreground hover:text-sidebar-accent-foreground data-active:text-sidebar-accent-foreground" data-nav="repositories" data-nav-also="repositories-empty repositories-edit repositories-new" aria-label="Repositories" title="Repositories"><svg aria-hidden="true"><use href="#i-folder-git-2"/></svg></a>
+  <button type="button" class="ui-sidebar-menu-button size-8 justify-center p-0 text-muted-foreground hover:text-sidebar-accent-foreground data-active:text-sidebar-accent-foreground" aria-label="Applications" title="Applications"><svg aria-hidden="true"><use href="#i-boxes"/></svg></button>
+  <button type="button" class="ui-sidebar-menu-button size-8 justify-center p-0 text-muted-foreground hover:text-sidebar-accent-foreground data-active:text-sidebar-accent-foreground" aria-label="Database Connections" title="Database Connections"><svg aria-hidden="true"><use href="#i-database"/></svg></button>
+  <button type="button" class="ui-sidebar-menu-button size-8 justify-center p-0 text-muted-foreground hover:text-sidebar-accent-foreground data-active:text-sidebar-accent-foreground" aria-label="Log Connections" title="Log Connections"><svg aria-hidden="true"><use href="#i-scroll-text"/></svg></button>
+  <button type="button" class="ui-sidebar-menu-button size-8 justify-center p-0 text-muted-foreground hover:text-sidebar-accent-foreground data-active:text-sidebar-accent-foreground" aria-label="Settings" title="Settings"><svg aria-hidden="true"><use href="#i-settings"/></svg></button>
+  <button type="button" class="mt-auto rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring/50" data-popup-trigger="user-menu-repositories" aria-expanded="false" aria-label="Nadia Rahman: theme and log out" title="Nadia Rahman">
+    <span class="ui-avatar"><span class="ui-avatar-fallback text-xs font-medium text-foreground">NR</span></span>
+  </button>
+</nav>
+<div id="user-menu-repositories" class="ui-menu fixed bottom-2 left-16 w-60" role="menu" aria-label="Account" data-popup hidden>
+  <div class="flex items-center gap-2.5 px-2 py-2">
+    <span class="ui-avatar"><span class="ui-avatar-fallback text-foreground">NR</span></span>
+    <span class="flex min-w-0 flex-col"><span class="truncate text-xs font-medium">Nadia Rahman</span><span class="truncate text-xs text-muted-foreground">nadia.rahman@halden.co.id</span></span>
+  </div>
+  <div class="ui-menu-separator"></div>
+  <div class="ui-menu-label">Theme</div>
+<button type="button" class="ui-menu-item" role="menuitemradio" aria-checked="false" data-theme-set="light"><svg aria-hidden="true"><use href="#i-sun"/></svg>Light<span class="ui-menu-indicator"><svg aria-hidden="true"><use href="#i-check"/></svg></span></button>
+<button type="button" class="ui-menu-item" role="menuitemradio" aria-checked="false" data-theme-set="dark"><svg aria-hidden="true"><use href="#i-moon"/></svg>Dark<span class="ui-menu-indicator"><svg aria-hidden="true"><use href="#i-check"/></svg></span></button>
+<button type="button" class="ui-menu-item" role="menuitemradio" aria-checked="false" data-theme-set="system"><svg aria-hidden="true"><use href="#i-monitor"/></svg>System<span class="ui-menu-indicator"><svg aria-hidden="true"><use href="#i-check"/></svg></span></button>
+  <div class="ui-menu-separator"></div>
+  <a href="login.html" class="ui-menu-item" role="menuitem"><svg aria-hidden="true"><use href="#i-log-out"/></svg>Log out</a>
+</div>
+<aside class="flex min-h-0 flex-1 flex-col md:w-80 md:flex-none md:border-r" aria-label="Repositories">
+  <div class="flex h-12 shrink-0 items-center gap-2 border-b px-4">
+    <h2 class="text-sm font-medium">Repositories</h2><span class="text-xs tabular-nums text-muted-foreground">7</span>
+    <div class="ml-auto flex items-center"><a href="#repositories-new" class="ui-button" data-variant="ghost" data-size="icon-sm" aria-label="Connect repository" title="Connect repository"><svg aria-hidden="true"><use href="#i-plus"/></svg></a></div>
+  </div>
+  <div class="flex px-2 py-2">
+    <div class="ui-input-group flex-1">
+      <span class="ui-input-group-addon" data-align="inline-start"><svg aria-hidden="true"><use href="#i-search"/></svg></span>
+      <input class="ui-input-group-control py-0.5 pl-1.5" type="search" placeholder="Search repositories" aria-label="Search repositories">
+    </div>
+  </div>
+  <ul class="min-h-0 flex-1 overflow-y-auto px-2 pb-2" aria-label="Repositories">
+  <li><a href="#repositories-edit" class="flex items-start gap-2.5 rounded-md px-2 py-2.5 md:py-1.5 hover:bg-muted/50">
+    <span class="flex h-5 items-center"><svg class="size-3.5 text-muted-foreground" aria-hidden="true"><use href="#i-circle-check"/></svg></span>
+    <span class="flex min-w-0 flex-1 flex-col">
+      <span class="flex items-center gap-2 leading-5"><span class="truncate text-xs font-medium">halden/customer-portal</span><span class="ml-auto flex shrink-0 items-center gap-1 text-xs text-muted-foreground" title="Tracked Branch"><svg class="size-3" aria-hidden="true"><use href="#i-git-branch"/></svg>main</span></span>
+      <span class="flex items-start gap-2 text-xs leading-4"><span class="shrink-0 text-muted-foreground">Ready · 4 min ago</span><span class="ml-auto flex min-w-0 items-center gap-1 text-muted-foreground" title="Tags: frontend, customers"><svg class="size-3" aria-hidden="true"><use href="#i-tag"/></svg><span class="truncate md:hidden">frontend, customers</span><span class="hidden whitespace-nowrap md:inline">frontend +1</span></span></span>
+    </span>
+  </a></li>
+  <li><a href="#repositories-edit" class="flex items-start gap-2.5 rounded-md px-2 py-2.5 md:py-1.5 hover:bg-muted/50">
+    <span class="flex h-5 items-center"><svg class="size-3.5 text-muted-foreground" aria-hidden="true"><use href="#i-circle-check"/></svg></span>
+    <span class="flex min-w-0 flex-1 flex-col">
+      <span class="flex items-center gap-2 leading-5"><span class="truncate text-xs font-medium">halden/billing-service</span><span class="ml-auto flex shrink-0 items-center gap-1 text-xs text-muted-foreground" title="Tracked Branch"><svg class="size-3" aria-hidden="true"><use href="#i-git-branch"/></svg>main</span></span>
+      <span class="flex items-start gap-2 text-xs leading-4"><span class="shrink-0 text-muted-foreground">Ready · 4 min ago</span><span class="ml-auto flex min-w-0 items-center gap-1 text-muted-foreground" title="Tags: backend, invoices, payments"><svg class="size-3" aria-hidden="true"><use href="#i-tag"/></svg><span class="truncate md:hidden">backend, invoices, payments</span><span class="hidden whitespace-nowrap md:inline">backend +2</span></span></span>
+    </span>
+  </a></li>
+  <li><a href="#repositories-edit" class="flex items-start gap-2.5 rounded-md px-2 py-2.5 md:py-1.5 hover:bg-muted/50">
+    <span class="flex h-5 items-center"><svg class="size-3.5 animate-spin text-foreground" aria-hidden="true"><use href="#i-loader-circle"/></svg></span>
+    <span class="flex min-w-0 flex-1 flex-col">
+      <span class="flex items-center gap-2 leading-5"><span class="truncate text-xs font-medium">halden/dispatch-api</span><span class="ml-auto flex shrink-0 items-center gap-1 text-xs text-muted-foreground" title="Tracked Branch"><svg class="size-3" aria-hidden="true"><use href="#i-git-branch"/></svg>main</span></span>
+      <span class="flex items-start gap-2 text-xs leading-4"><span class="shrink-0 text-muted-foreground">Syncing · started 20 s ago</span><span class="ml-auto flex min-w-0 items-center gap-1 text-muted-foreground" title="Tags: backend, orders, tracking"><svg class="size-3" aria-hidden="true"><use href="#i-tag"/></svg><span class="truncate md:hidden">backend, orders, tracking</span><span class="hidden whitespace-nowrap md:inline">backend +2</span></span></span>
+    </span>
+  </a></li>
+  <li><a href="#repositories-edit" class="flex items-start gap-2.5 rounded-md px-2 py-2.5 md:py-1.5 hover:bg-muted/50">
+    <span class="flex h-5 items-center"><svg class="size-3.5 text-muted-foreground" aria-hidden="true"><use href="#i-circle-check"/></svg></span>
+    <span class="flex min-w-0 flex-1 flex-col">
+      <span class="flex items-center gap-2 leading-5"><span class="truncate text-xs font-medium">halden/dispatch-console</span><span class="ml-auto flex shrink-0 items-center gap-1 text-xs text-muted-foreground" title="Tracked Branch"><svg class="size-3" aria-hidden="true"><use href="#i-git-branch"/></svg>main</span></span>
+      <span class="flex items-start gap-2 text-xs leading-4"><span class="shrink-0 text-muted-foreground">Ready · 1 h ago</span><span class="ml-auto flex min-w-0 items-center gap-1 text-muted-foreground" title="Tags: frontend, planning"><svg class="size-3" aria-hidden="true"><use href="#i-tag"/></svg><span class="truncate md:hidden">frontend, planning</span><span class="hidden whitespace-nowrap md:inline">frontend +1</span></span></span>
+    </span>
+  </a></li>
+  <li><a href="#repositories-edit" class="flex items-start gap-2.5 rounded-md px-2 py-2.5 md:py-1.5 hover:bg-muted/50">
+    <span class="flex h-5 items-center"><svg class="size-3.5 text-muted-foreground" aria-hidden="true"><use href="#i-circle-check"/></svg></span>
+    <span class="flex min-w-0 flex-1 flex-col">
+      <span class="flex items-center gap-2 leading-5"><span class="truncate text-xs font-medium">halden/driver-app</span><span class="ml-auto flex shrink-0 items-center gap-1 text-xs text-muted-foreground" title="Tracked Branch"><svg class="size-3" aria-hidden="true"><use href="#i-git-branch"/></svg>release/2026.11</span></span>
+      <span class="flex items-start gap-2 text-xs leading-4"><span class="shrink-0 text-muted-foreground">Ready · 12 min ago</span><span class="ml-auto flex min-w-0 items-center gap-1 text-muted-foreground" title="Tags: mobile, drivers"><svg class="size-3" aria-hidden="true"><use href="#i-tag"/></svg><span class="truncate md:hidden">mobile, drivers</span><span class="hidden whitespace-nowrap md:inline">mobile +1</span></span></span>
+    </span>
+  </a></li>
+  <li><a href="#repositories-edit" class="flex items-start gap-2.5 rounded-md px-2 py-2.5 md:py-1.5 hover:bg-muted/50" title="The GitHub token cannot read this repository.">
+    <span class="flex h-5 items-center"><svg class="size-3.5 text-destructive" aria-hidden="true"><use href="#i-circle-alert"/></svg></span>
+    <span class="flex min-w-0 flex-1 flex-col">
+      <span class="flex items-center gap-2 leading-5"><span class="truncate text-xs font-medium">halden/rates-engine</span><span class="ml-auto flex shrink-0 items-center gap-1 text-xs text-muted-foreground" title="Tracked Branch"><svg class="size-3" aria-hidden="true"><use href="#i-git-branch"/></svg>develop</span></span>
+      <span class="flex items-start gap-2 text-xs leading-4"><span class="line-clamp-2 text-muted-foreground"><span class="text-destructive">Failed</span> · The GitHub token cannot read this repository.</span></span>
+    </span>
+  </a></li>
+  <li><a href="#repositories-edit" class="flex items-start gap-2.5 rounded-md px-2 py-2.5 md:py-1.5 hover:bg-muted/50">
+    <span class="flex h-5 items-center"><svg class="size-3.5 text-muted-foreground" aria-hidden="true"><use href="#i-circle-dashed"/></svg></span>
+    <span class="flex min-w-0 flex-1 flex-col">
+      <span class="flex items-center gap-2 leading-5"><span class="truncate text-xs font-medium">halden/notifications</span><span class="ml-auto flex shrink-0 items-center gap-1 text-xs text-muted-foreground" title="Tracked Branch"><svg class="size-3" aria-hidden="true"><use href="#i-git-branch"/></svg>main</span></span>
+      <span class="flex items-start gap-2 text-xs leading-4"><span class="shrink-0 text-muted-foreground">Pending · Waiting for first sync</span><span class="ml-auto flex min-w-0 items-center gap-1 text-muted-foreground" title="Tags: backend, email"><svg class="size-3" aria-hidden="true"><use href="#i-tag"/></svg><span class="truncate md:hidden">backend, email</span><span class="hidden whitespace-nowrap md:inline">backend +1</span></span></span>
+    </span>
+  </a></li>
+</ul>
+</aside>
+<main class="hidden md:flex min-h-0 min-w-0 flex-1 flex-col">
+  <div class="ui-empty">
+    <div class="ui-empty-header">
+      <div class="ui-empty-media" data-variant="icon"><svg aria-hidden="true"><use href="#i-folder-git-2"/></svg></div>
+      <div class="ui-empty-title">Select a Repository to edit it</div>
+      <div class="ui-empty-description">GitHub repositories the agent can read. Attach them to Applications to put them in scope.</div>
+    </div>
+    <div class="ui-empty-content"><a href="#repositories-new" class="ui-button"><svg aria-hidden="true"><use href="#i-plus"/></svg>Connect repository</a></div>
+  </div>
+</main>
+<nav class="relative flex h-14 shrink-0 border-t bg-sidebar md:hidden" aria-label="Main">
+  <a href="chat.html" class="flex flex-1 flex-col items-center justify-center gap-0.5 text-xs text-muted-foreground data-active:font-medium data-active:text-foreground aria-expanded:text-foreground" data-nav="chat" data-nav-also="chat-new"><span class="flex h-6 items-center"><svg class="size-5" aria-hidden="true"><use href="#i-message-square"/></svg></span>Chat</a>
+  <a href="history.html" class="flex flex-1 flex-col items-center justify-center gap-0.5 text-xs text-muted-foreground data-active:font-medium data-active:text-foreground aria-expanded:text-foreground" data-nav="history"><span class="flex h-6 items-center"><svg class="size-5" aria-hidden="true"><use href="#i-history"/></svg></span>History</a>
+  <button type="button" class="flex flex-1 flex-col items-center justify-center gap-0.5 text-xs text-muted-foreground data-active:font-medium data-active:text-foreground aria-expanded:text-foreground" data-nav="repositories" data-nav-also="repositories-empty repositories-edit repositories-new" data-popup-trigger="admin-menu-repositories" aria-expanded="false"><span class="flex h-6 items-center"><svg class="size-5" aria-hidden="true"><use href="#i-shield-check"/></svg></span>Admin</button>
+  <button type="button" class="flex flex-1 flex-col items-center justify-center gap-0.5 text-xs text-muted-foreground data-active:font-medium data-active:text-foreground aria-expanded:text-foreground" data-popup-trigger="account-menu-repositories" aria-expanded="false" aria-label="Account: Nadia Rahman"><span class="flex h-6 items-center"><span class="ui-avatar" data-size="sm"><span class="ui-avatar-fallback text-foreground">NR</span></span></span>Account</button>
+  <div id="admin-menu-repositories" class="ui-menu absolute bottom-full left-[62.5%] mb-2 w-56 -translate-x-1/2" role="menu" aria-label="Admin" data-popup hidden>
+    <button type="button" class="ui-menu-item" role="menuitem"><svg aria-hidden="true"><use href="#i-users"/></svg>Users</button>
+    <a href="#repositories" class="ui-menu-item data-active:font-medium" role="menuitem" data-nav="repositories" data-nav-also="repositories-empty repositories-edit repositories-new"><svg aria-hidden="true"><use href="#i-folder-git-2"/></svg>Repositories</a>
+    <button type="button" class="ui-menu-item" role="menuitem"><svg aria-hidden="true"><use href="#i-boxes"/></svg>Applications</button>
+    <button type="button" class="ui-menu-item" role="menuitem"><svg aria-hidden="true"><use href="#i-database"/></svg>Database Connections</button>
+    <button type="button" class="ui-menu-item" role="menuitem"><svg aria-hidden="true"><use href="#i-scroll-text"/></svg>Log Connections</button>
+    <button type="button" class="ui-menu-item" role="menuitem"><svg aria-hidden="true"><use href="#i-settings"/></svg>Settings</button>
+  </div>
+  <div id="account-menu-repositories" class="ui-menu absolute bottom-full right-2 mb-2 w-60" role="menu" aria-label="Account" data-popup hidden>
+  <div class="flex items-center gap-2.5 px-2 py-2">
+    <span class="ui-avatar"><span class="ui-avatar-fallback text-foreground">NR</span></span>
+    <span class="flex min-w-0 flex-col"><span class="truncate text-xs font-medium">Nadia Rahman</span><span class="truncate text-xs text-muted-foreground">nadia.rahman@halden.co.id</span></span>
+  </div>
+  <div class="ui-menu-separator"></div>
+  <div class="ui-menu-label">Theme</div>
+<button type="button" class="ui-menu-item" role="menuitemradio" aria-checked="false" data-theme-set="light"><svg aria-hidden="true"><use href="#i-sun"/></svg>Light<span class="ui-menu-indicator"><svg aria-hidden="true"><use href="#i-check"/></svg></span></button>
+<button type="button" class="ui-menu-item" role="menuitemradio" aria-checked="false" data-theme-set="dark"><svg aria-hidden="true"><use href="#i-moon"/></svg>Dark<span class="ui-menu-indicator"><svg aria-hidden="true"><use href="#i-check"/></svg></span></button>
+<button type="button" class="ui-menu-item" role="menuitemradio" aria-checked="false" data-theme-set="system"><svg aria-hidden="true"><use href="#i-monitor"/></svg>System<span class="ui-menu-indicator"><svg aria-hidden="true"><use href="#i-check"/></svg></span></button>
+  <div class="ui-menu-separator"></div>
+  <a href="login.html" class="ui-menu-item" role="menuitem"><svg aria-hidden="true"><use href="#i-log-out"/></svg>Log out</a>
+</div>
+</nav>
+</div>
+</section>
+
+<section data-screen="repositories-edit" data-title="halden/billing-service · Agent 6" hidden>
+<div class="flex h-svh flex-col overflow-hidden md:flex-row">
+<nav class="hidden w-14 shrink-0 flex-col items-center gap-1 border-r bg-sidebar py-2 text-sidebar-foreground md:flex" aria-label="Main">
+  <a href="#repositories" class="mb-2 flex" aria-label="Agent 6" title="Agent 6"><span class="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary text-sm font-semibold leading-none text-primary-foreground">6</span></a>
+  <a href="chat.html" class="ui-sidebar-menu-button size-8 justify-center p-0 text-muted-foreground hover:text-sidebar-accent-foreground data-active:text-sidebar-accent-foreground" data-nav="chat" data-nav-also="chat-new" aria-label="Chat" title="Chat"><svg aria-hidden="true"><use href="#i-message-square"/></svg></a>
+  <a href="history.html" class="ui-sidebar-menu-button size-8 justify-center p-0 text-muted-foreground hover:text-sidebar-accent-foreground data-active:text-sidebar-accent-foreground" data-nav="history" aria-label="History" title="History"><svg aria-hidden="true"><use href="#i-history"/></svg></a>
+  <div class="ui-separator my-1.5 w-6"></div>
+  <button type="button" class="ui-sidebar-menu-button size-8 justify-center p-0 text-muted-foreground hover:text-sidebar-accent-foreground data-active:text-sidebar-accent-foreground" aria-label="Users" title="Users"><svg aria-hidden="true"><use href="#i-users"/></svg></button>
+  <a href="#repositories" class="ui-sidebar-menu-button size-8 justify-center p-0 text-muted-foreground hover:text-sidebar-accent-foreground data-active:text-sidebar-accent-foreground" data-nav="repositories" data-nav-also="repositories-empty repositories-edit repositories-new" aria-label="Repositories" title="Repositories"><svg aria-hidden="true"><use href="#i-folder-git-2"/></svg></a>
+  <button type="button" class="ui-sidebar-menu-button size-8 justify-center p-0 text-muted-foreground hover:text-sidebar-accent-foreground data-active:text-sidebar-accent-foreground" aria-label="Applications" title="Applications"><svg aria-hidden="true"><use href="#i-boxes"/></svg></button>
+  <button type="button" class="ui-sidebar-menu-button size-8 justify-center p-0 text-muted-foreground hover:text-sidebar-accent-foreground data-active:text-sidebar-accent-foreground" aria-label="Database Connections" title="Database Connections"><svg aria-hidden="true"><use href="#i-database"/></svg></button>
+  <button type="button" class="ui-sidebar-menu-button size-8 justify-center p-0 text-muted-foreground hover:text-sidebar-accent-foreground data-active:text-sidebar-accent-foreground" aria-label="Log Connections" title="Log Connections"><svg aria-hidden="true"><use href="#i-scroll-text"/></svg></button>
+  <button type="button" class="ui-sidebar-menu-button size-8 justify-center p-0 text-muted-foreground hover:text-sidebar-accent-foreground data-active:text-sidebar-accent-foreground" aria-label="Settings" title="Settings"><svg aria-hidden="true"><use href="#i-settings"/></svg></button>
+  <button type="button" class="mt-auto rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring/50" data-popup-trigger="user-menu-repositories-edit" aria-expanded="false" aria-label="Nadia Rahman: theme and log out" title="Nadia Rahman">
+    <span class="ui-avatar"><span class="ui-avatar-fallback text-xs font-medium text-foreground">NR</span></span>
+  </button>
+</nav>
+<div id="user-menu-repositories-edit" class="ui-menu fixed bottom-2 left-16 w-60" role="menu" aria-label="Account" data-popup hidden>
+  <div class="flex items-center gap-2.5 px-2 py-2">
+    <span class="ui-avatar"><span class="ui-avatar-fallback text-foreground">NR</span></span>
+    <span class="flex min-w-0 flex-col"><span class="truncate text-xs font-medium">Nadia Rahman</span><span class="truncate text-xs text-muted-foreground">nadia.rahman@halden.co.id</span></span>
+  </div>
+  <div class="ui-menu-separator"></div>
+  <div class="ui-menu-label">Theme</div>
+<button type="button" class="ui-menu-item" role="menuitemradio" aria-checked="false" data-theme-set="light"><svg aria-hidden="true"><use href="#i-sun"/></svg>Light<span class="ui-menu-indicator"><svg aria-hidden="true"><use href="#i-check"/></svg></span></button>
+<button type="button" class="ui-menu-item" role="menuitemradio" aria-checked="false" data-theme-set="dark"><svg aria-hidden="true"><use href="#i-moon"/></svg>Dark<span class="ui-menu-indicator"><svg aria-hidden="true"><use href="#i-check"/></svg></span></button>
+<button type="button" class="ui-menu-item" role="menuitemradio" aria-checked="false" data-theme-set="system"><svg aria-hidden="true"><use href="#i-monitor"/></svg>System<span class="ui-menu-indicator"><svg aria-hidden="true"><use href="#i-check"/></svg></span></button>
+  <div class="ui-menu-separator"></div>
+  <a href="login.html" class="ui-menu-item" role="menuitem"><svg aria-hidden="true"><use href="#i-log-out"/></svg>Log out</a>
+</div>
+<aside class="hidden md:flex min-h-0 flex-1 flex-col md:w-80 md:flex-none md:border-r" aria-label="Repositories">
+  <div class="flex h-12 shrink-0 items-center gap-2 border-b px-4">
+    <h2 class="text-sm font-medium">Repositories</h2><span class="text-xs tabular-nums text-muted-foreground">7</span>
+    <div class="ml-auto flex items-center"><a href="#repositories-new" class="ui-button" data-variant="ghost" data-size="icon-sm" aria-label="Connect repository" title="Connect repository"><svg aria-hidden="true"><use href="#i-plus"/></svg></a></div>
+  </div>
+  <div class="flex px-2 py-2">
+    <div class="ui-input-group flex-1">
+      <span class="ui-input-group-addon" data-align="inline-start"><svg aria-hidden="true"><use href="#i-search"/></svg></span>
+      <input class="ui-input-group-control py-0.5 pl-1.5" type="search" placeholder="Search repositories" aria-label="Search repositories">
+    </div>
+  </div>
+  <ul class="min-h-0 flex-1 overflow-y-auto px-2 pb-2" aria-label="Repositories">
+  <li><a href="#repositories-edit" class="flex items-start gap-2.5 rounded-md px-2 py-2.5 md:py-1.5 hover:bg-muted/50">
+    <span class="flex h-5 items-center"><svg class="size-3.5 text-muted-foreground" aria-hidden="true"><use href="#i-circle-check"/></svg></span>
+    <span class="flex min-w-0 flex-1 flex-col">
+      <span class="flex items-center gap-2 leading-5"><span class="truncate text-xs font-medium">halden/customer-portal</span><span class="ml-auto flex shrink-0 items-center gap-1 text-xs text-muted-foreground" title="Tracked Branch"><svg class="size-3" aria-hidden="true"><use href="#i-git-branch"/></svg>main</span></span>
+      <span class="flex items-start gap-2 text-xs leading-4"><span class="shrink-0 text-muted-foreground">Ready · 4 min ago</span><span class="ml-auto flex min-w-0 items-center gap-1 text-muted-foreground" title="Tags: frontend, customers"><svg class="size-3" aria-hidden="true"><use href="#i-tag"/></svg><span class="truncate md:hidden">frontend, customers</span><span class="hidden whitespace-nowrap md:inline">frontend +1</span></span></span>
+    </span>
+  </a></li>
+  <li><a href="#repositories-edit" class="flex items-start gap-2.5 rounded-md px-2 py-2.5 md:py-1.5 bg-muted" aria-current="true">
+    <span class="flex h-5 items-center"><svg class="size-3.5 text-muted-foreground" aria-hidden="true"><use href="#i-circle-check"/></svg></span>
+    <span class="flex min-w-0 flex-1 flex-col">
+      <span class="flex items-center gap-2 leading-5"><span class="truncate text-xs font-medium">halden/billing-service</span><span class="ml-auto flex shrink-0 items-center gap-1 text-xs text-foreground/70" title="Tracked Branch"><svg class="size-3" aria-hidden="true"><use href="#i-git-branch"/></svg>main</span></span>
+      <span class="flex items-start gap-2 text-xs leading-4"><span class="shrink-0 text-foreground/70">Ready · 4 min ago</span><span class="ml-auto flex min-w-0 items-center gap-1 text-foreground/70" title="Tags: backend, invoices, payments"><svg class="size-3" aria-hidden="true"><use href="#i-tag"/></svg><span class="truncate md:hidden">backend, invoices, payments</span><span class="hidden whitespace-nowrap md:inline">backend +2</span></span></span>
+    </span>
+  </a></li>
+  <li><a href="#repositories-edit" class="flex items-start gap-2.5 rounded-md px-2 py-2.5 md:py-1.5 hover:bg-muted/50">
+    <span class="flex h-5 items-center"><svg class="size-3.5 animate-spin text-foreground" aria-hidden="true"><use href="#i-loader-circle"/></svg></span>
+    <span class="flex min-w-0 flex-1 flex-col">
+      <span class="flex items-center gap-2 leading-5"><span class="truncate text-xs font-medium">halden/dispatch-api</span><span class="ml-auto flex shrink-0 items-center gap-1 text-xs text-muted-foreground" title="Tracked Branch"><svg class="size-3" aria-hidden="true"><use href="#i-git-branch"/></svg>main</span></span>
+      <span class="flex items-start gap-2 text-xs leading-4"><span class="shrink-0 text-muted-foreground">Syncing · started 20 s ago</span><span class="ml-auto flex min-w-0 items-center gap-1 text-muted-foreground" title="Tags: backend, orders, tracking"><svg class="size-3" aria-hidden="true"><use href="#i-tag"/></svg><span class="truncate md:hidden">backend, orders, tracking</span><span class="hidden whitespace-nowrap md:inline">backend +2</span></span></span>
+    </span>
+  </a></li>
+  <li><a href="#repositories-edit" class="flex items-start gap-2.5 rounded-md px-2 py-2.5 md:py-1.5 hover:bg-muted/50">
+    <span class="flex h-5 items-center"><svg class="size-3.5 text-muted-foreground" aria-hidden="true"><use href="#i-circle-check"/></svg></span>
+    <span class="flex min-w-0 flex-1 flex-col">
+      <span class="flex items-center gap-2 leading-5"><span class="truncate text-xs font-medium">halden/dispatch-console</span><span class="ml-auto flex shrink-0 items-center gap-1 text-xs text-muted-foreground" title="Tracked Branch"><svg class="size-3" aria-hidden="true"><use href="#i-git-branch"/></svg>main</span></span>
+      <span class="flex items-start gap-2 text-xs leading-4"><span class="shrink-0 text-muted-foreground">Ready · 1 h ago</span><span class="ml-auto flex min-w-0 items-center gap-1 text-muted-foreground" title="Tags: frontend, planning"><svg class="size-3" aria-hidden="true"><use href="#i-tag"/></svg><span class="truncate md:hidden">frontend, planning</span><span class="hidden whitespace-nowrap md:inline">frontend +1</span></span></span>
+    </span>
+  </a></li>
+  <li><a href="#repositories-edit" class="flex items-start gap-2.5 rounded-md px-2 py-2.5 md:py-1.5 hover:bg-muted/50">
+    <span class="flex h-5 items-center"><svg class="size-3.5 text-muted-foreground" aria-hidden="true"><use href="#i-circle-check"/></svg></span>
+    <span class="flex min-w-0 flex-1 flex-col">
+      <span class="flex items-center gap-2 leading-5"><span class="truncate text-xs font-medium">halden/driver-app</span><span class="ml-auto flex shrink-0 items-center gap-1 text-xs text-muted-foreground" title="Tracked Branch"><svg class="size-3" aria-hidden="true"><use href="#i-git-branch"/></svg>release/2026.11</span></span>
+      <span class="flex items-start gap-2 text-xs leading-4"><span class="shrink-0 text-muted-foreground">Ready · 12 min ago</span><span class="ml-auto flex min-w-0 items-center gap-1 text-muted-foreground" title="Tags: mobile, drivers"><svg class="size-3" aria-hidden="true"><use href="#i-tag"/></svg><span class="truncate md:hidden">mobile, drivers</span><span class="hidden whitespace-nowrap md:inline">mobile +1</span></span></span>
+    </span>
+  </a></li>
+  <li><a href="#repositories-edit" class="flex items-start gap-2.5 rounded-md px-2 py-2.5 md:py-1.5 hover:bg-muted/50" title="The GitHub token cannot read this repository.">
+    <span class="flex h-5 items-center"><svg class="size-3.5 text-destructive" aria-hidden="true"><use href="#i-circle-alert"/></svg></span>
+    <span class="flex min-w-0 flex-1 flex-col">
+      <span class="flex items-center gap-2 leading-5"><span class="truncate text-xs font-medium">halden/rates-engine</span><span class="ml-auto flex shrink-0 items-center gap-1 text-xs text-muted-foreground" title="Tracked Branch"><svg class="size-3" aria-hidden="true"><use href="#i-git-branch"/></svg>develop</span></span>
+      <span class="flex items-start gap-2 text-xs leading-4"><span class="line-clamp-2 text-muted-foreground"><span class="text-destructive">Failed</span> · The GitHub token cannot read this repository.</span></span>
+    </span>
+  </a></li>
+  <li><a href="#repositories-edit" class="flex items-start gap-2.5 rounded-md px-2 py-2.5 md:py-1.5 hover:bg-muted/50">
+    <span class="flex h-5 items-center"><svg class="size-3.5 text-muted-foreground" aria-hidden="true"><use href="#i-circle-dashed"/></svg></span>
+    <span class="flex min-w-0 flex-1 flex-col">
+      <span class="flex items-center gap-2 leading-5"><span class="truncate text-xs font-medium">halden/notifications</span><span class="ml-auto flex shrink-0 items-center gap-1 text-xs text-muted-foreground" title="Tracked Branch"><svg class="size-3" aria-hidden="true"><use href="#i-git-branch"/></svg>main</span></span>
+      <span class="flex items-start gap-2 text-xs leading-4"><span class="shrink-0 text-muted-foreground">Pending · Waiting for first sync</span><span class="ml-auto flex min-w-0 items-center gap-1 text-muted-foreground" title="Tags: backend, email"><svg class="size-3" aria-hidden="true"><use href="#i-tag"/></svg><span class="truncate md:hidden">backend, email</span><span class="hidden whitespace-nowrap md:inline">backend +1</span></span></span>
+    </span>
+  </a></li>
+</ul>
+</aside>
+<main class="flex min-h-0 min-w-0 flex-1 flex-col">
+<div class="flex h-12 shrink-0 items-center gap-2 border-b px-4">
+    <a href="#repositories" class="ui-button -ml-2 md:hidden" data-variant="ghost" data-size="icon" aria-label="Back to Repositories"><svg aria-hidden="true"><use href="#i-chevron-left"/></svg></a>
+    <h1 class="truncate text-sm font-medium">halden/billing-service</h1><span class="ui-badge" data-variant="outline"><svg aria-hidden="true"><use href="#i-circle-check"/></svg>Ready</span><span class="hidden truncate text-xs text-muted-foreground lg:inline">Last synced 4 min ago · 7d03b18</span>
+    <div class="ml-auto flex shrink-0 items-center gap-1"><button type="button" class="ui-button" data-variant="outline" data-size="sm"><svg aria-hidden="true"><use href="#i-refresh-cw"/></svg><span class="max-sm:sr-only">Sync now</span></button>
+      <div class="relative">
+        <button type="button" class="ui-button" data-variant="ghost" data-size="icon-sm" data-popup-trigger="repo-actions" aria-expanded="false" aria-label="More actions" title="More actions"><svg aria-hidden="true"><use href="#i-ellipsis"/></svg></button>
+        <div id="repo-actions" class="ui-menu absolute right-0 top-full mt-1 w-48" role="menu" data-popup hidden>
+          <button type="button" class="ui-menu-item" data-variant="destructive" role="menuitem"><svg aria-hidden="true"><use href="#i-trash-2"/></svg>Remove repository</button>
+        </div>
+      </div></div>
+  </div>
+  <div class="min-h-0 flex-1 overflow-y-auto">
+    <form class="mx-auto flex w-full max-w-xl flex-col gap-6 px-4 py-6 md:px-8 md:py-10" onsubmit="return false">
+      <p class="text-xs text-muted-foreground lg:hidden">Last synced 4 min ago · 7d03b18</p>
+      <div class="ui-field-group">
+        <div class="ui-field">
+          <label class="ui-label" for="edit-repo">GitHub repository</label>
+          <div class="ui-input-group">
+            <input id="edit-repo" class="ui-input-group-control py-0.5" value="halden/billing-service" readonly>
+            <span class="ui-input-group-addon" data-align="inline-end" title="Read-only"><svg aria-hidden="true"><use href="#i-lock"/></svg></span>
+          </div>
+        </div>
+        <div class="ui-field">
+          <label class="ui-label" for="edit-branch">Tracked Branch</label>
+          <button type="button" id="edit-branch" class="ui-select-trigger w-full"><span class="flex items-center gap-1.5"><svg class="size-3.5 text-muted-foreground" aria-hidden="true"><use href="#i-git-branch"/></svg>main</span><svg aria-hidden="true"><use href="#i-chevron-down"/></svg></button>
+          <p class="ui-field-description">The agent reads only this branch. Changing it syncs again.</p>
+        </div>
+        <div class="ui-field">
+          <label class="ui-label" for="edit-tags">Tags</label>
+          <div class="ui-input-group h-auto min-h-7 flex-wrap gap-1 p-1">
+        <span class="ui-badge pr-1" data-variant="secondary">backend<button type="button" class="flex size-3.5 items-center justify-center rounded-full hover:bg-foreground/10" aria-label="Remove Tag backend"><svg aria-hidden="true"><use href="#i-x"/></svg></button></span>
+        <span class="ui-badge pr-1" data-variant="secondary">invoices<button type="button" class="flex size-3.5 items-center justify-center rounded-full hover:bg-foreground/10" aria-label="Remove Tag invoices"><svg aria-hidden="true"><use href="#i-x"/></svg></button></span>
+        <span class="ui-badge pr-1" data-variant="secondary">payments<button type="button" class="flex size-3.5 items-center justify-center rounded-full hover:bg-foreground/10" aria-label="Remove Tag payments"><svg aria-hidden="true"><use href="#i-x"/></svg></button></span>
+        <input id="edit-tags" class="ui-input-group-control h-5 min-w-24 px-1 py-0" placeholder="Add a Tag">
+      </div>
+          <p class="ui-field-description">Tell the agent what this Repository is for. Tags never grant access.</p>
+        </div>
+        <div class="ui-field">
+          <label class="ui-label" for="edit-desc">Description <span class="font-normal text-muted-foreground">(optional)</span></label>
+          <textarea id="edit-desc" class="ui-textarea">Invoice generation, payment matching and the monthly invoice run for all customers.</textarea>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <a href="#repositories" class="ui-button">Save changes</a>
+        <a href="#repositories" class="ui-button" data-variant="outline">Cancel</a>
+      </div>
+    </form>
+  </div>
+</main>
+<nav class="relative flex h-14 shrink-0 border-t bg-sidebar md:hidden" aria-label="Main">
+  <a href="chat.html" class="flex flex-1 flex-col items-center justify-center gap-0.5 text-xs text-muted-foreground data-active:font-medium data-active:text-foreground aria-expanded:text-foreground" data-nav="chat" data-nav-also="chat-new"><span class="flex h-6 items-center"><svg class="size-5" aria-hidden="true"><use href="#i-message-square"/></svg></span>Chat</a>
+  <a href="history.html" class="flex flex-1 flex-col items-center justify-center gap-0.5 text-xs text-muted-foreground data-active:font-medium data-active:text-foreground aria-expanded:text-foreground" data-nav="history"><span class="flex h-6 items-center"><svg class="size-5" aria-hidden="true"><use href="#i-history"/></svg></span>History</a>
+  <button type="button" class="flex flex-1 flex-col items-center justify-center gap-0.5 text-xs text-muted-foreground data-active:font-medium data-active:text-foreground aria-expanded:text-foreground" data-nav="repositories" data-nav-also="repositories-empty repositories-edit repositories-new" data-popup-trigger="admin-menu-repositories-edit" aria-expanded="false"><span class="flex h-6 items-center"><svg class="size-5" aria-hidden="true"><use href="#i-shield-check"/></svg></span>Admin</button>
+  <button type="button" class="flex flex-1 flex-col items-center justify-center gap-0.5 text-xs text-muted-foreground data-active:font-medium data-active:text-foreground aria-expanded:text-foreground" data-popup-trigger="account-menu-repositories-edit" aria-expanded="false" aria-label="Account: Nadia Rahman"><span class="flex h-6 items-center"><span class="ui-avatar" data-size="sm"><span class="ui-avatar-fallback text-foreground">NR</span></span></span>Account</button>
+  <div id="admin-menu-repositories-edit" class="ui-menu absolute bottom-full left-[62.5%] mb-2 w-56 -translate-x-1/2" role="menu" aria-label="Admin" data-popup hidden>
+    <button type="button" class="ui-menu-item" role="menuitem"><svg aria-hidden="true"><use href="#i-users"/></svg>Users</button>
+    <a href="#repositories" class="ui-menu-item data-active:font-medium" role="menuitem" data-nav="repositories" data-nav-also="repositories-empty repositories-edit repositories-new"><svg aria-hidden="true"><use href="#i-folder-git-2"/></svg>Repositories</a>
+    <button type="button" class="ui-menu-item" role="menuitem"><svg aria-hidden="true"><use href="#i-boxes"/></svg>Applications</button>
+    <button type="button" class="ui-menu-item" role="menuitem"><svg aria-hidden="true"><use href="#i-database"/></svg>Database Connections</button>
+    <button type="button" class="ui-menu-item" role="menuitem"><svg aria-hidden="true"><use href="#i-scroll-text"/></svg>Log Connections</button>
+    <button type="button" class="ui-menu-item" role="menuitem"><svg aria-hidden="true"><use href="#i-settings"/></svg>Settings</button>
+  </div>
+  <div id="account-menu-repositories-edit" class="ui-menu absolute bottom-full right-2 mb-2 w-60" role="menu" aria-label="Account" data-popup hidden>
+  <div class="flex items-center gap-2.5 px-2 py-2">
+    <span class="ui-avatar"><span class="ui-avatar-fallback text-foreground">NR</span></span>
+    <span class="flex min-w-0 flex-col"><span class="truncate text-xs font-medium">Nadia Rahman</span><span class="truncate text-xs text-muted-foreground">nadia.rahman@halden.co.id</span></span>
+  </div>
+  <div class="ui-menu-separator"></div>
+  <div class="ui-menu-label">Theme</div>
+<button type="button" class="ui-menu-item" role="menuitemradio" aria-checked="false" data-theme-set="light"><svg aria-hidden="true"><use href="#i-sun"/></svg>Light<span class="ui-menu-indicator"><svg aria-hidden="true"><use href="#i-check"/></svg></span></button>
+<button type="button" class="ui-menu-item" role="menuitemradio" aria-checked="false" data-theme-set="dark"><svg aria-hidden="true"><use href="#i-moon"/></svg>Dark<span class="ui-menu-indicator"><svg aria-hidden="true"><use href="#i-check"/></svg></span></button>
+<button type="button" class="ui-menu-item" role="menuitemradio" aria-checked="false" data-theme-set="system"><svg aria-hidden="true"><use href="#i-monitor"/></svg>System<span class="ui-menu-indicator"><svg aria-hidden="true"><use href="#i-check"/></svg></span></button>
+  <div class="ui-menu-separator"></div>
+  <a href="login.html" class="ui-menu-item" role="menuitem"><svg aria-hidden="true"><use href="#i-log-out"/></svg>Log out</a>
+</div>
+</nav>
+</div>
+</section>
+
+<section data-screen="repositories-new" data-title="Connect a Repository · Agent 6" hidden>
+<div class="flex h-svh flex-col overflow-hidden md:flex-row">
+<nav class="hidden w-14 shrink-0 flex-col items-center gap-1 border-r bg-sidebar py-2 text-sidebar-foreground md:flex" aria-label="Main">
+  <a href="#repositories" class="mb-2 flex" aria-label="Agent 6" title="Agent 6"><span class="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary text-sm font-semibold leading-none text-primary-foreground">6</span></a>
+  <a href="chat.html" class="ui-sidebar-menu-button size-8 justify-center p-0 text-muted-foreground hover:text-sidebar-accent-foreground data-active:text-sidebar-accent-foreground" data-nav="chat" data-nav-also="chat-new" aria-label="Chat" title="Chat"><svg aria-hidden="true"><use href="#i-message-square"/></svg></a>
+  <a href="history.html" class="ui-sidebar-menu-button size-8 justify-center p-0 text-muted-foreground hover:text-sidebar-accent-foreground data-active:text-sidebar-accent-foreground" data-nav="history" aria-label="History" title="History"><svg aria-hidden="true"><use href="#i-history"/></svg></a>
+  <div class="ui-separator my-1.5 w-6"></div>
+  <button type="button" class="ui-sidebar-menu-button size-8 justify-center p-0 text-muted-foreground hover:text-sidebar-accent-foreground data-active:text-sidebar-accent-foreground" aria-label="Users" title="Users"><svg aria-hidden="true"><use href="#i-users"/></svg></button>
+  <a href="#repositories" class="ui-sidebar-menu-button size-8 justify-center p-0 text-muted-foreground hover:text-sidebar-accent-foreground data-active:text-sidebar-accent-foreground" data-nav="repositories" data-nav-also="repositories-empty repositories-edit repositories-new" aria-label="Repositories" title="Repositories"><svg aria-hidden="true"><use href="#i-folder-git-2"/></svg></a>
+  <button type="button" class="ui-sidebar-menu-button size-8 justify-center p-0 text-muted-foreground hover:text-sidebar-accent-foreground data-active:text-sidebar-accent-foreground" aria-label="Applications" title="Applications"><svg aria-hidden="true"><use href="#i-boxes"/></svg></button>
+  <button type="button" class="ui-sidebar-menu-button size-8 justify-center p-0 text-muted-foreground hover:text-sidebar-accent-foreground data-active:text-sidebar-accent-foreground" aria-label="Database Connections" title="Database Connections"><svg aria-hidden="true"><use href="#i-database"/></svg></button>
+  <button type="button" class="ui-sidebar-menu-button size-8 justify-center p-0 text-muted-foreground hover:text-sidebar-accent-foreground data-active:text-sidebar-accent-foreground" aria-label="Log Connections" title="Log Connections"><svg aria-hidden="true"><use href="#i-scroll-text"/></svg></button>
+  <button type="button" class="ui-sidebar-menu-button size-8 justify-center p-0 text-muted-foreground hover:text-sidebar-accent-foreground data-active:text-sidebar-accent-foreground" aria-label="Settings" title="Settings"><svg aria-hidden="true"><use href="#i-settings"/></svg></button>
+  <button type="button" class="mt-auto rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring/50" data-popup-trigger="user-menu-repositories-new" aria-expanded="false" aria-label="Nadia Rahman: theme and log out" title="Nadia Rahman">
+    <span class="ui-avatar"><span class="ui-avatar-fallback text-xs font-medium text-foreground">NR</span></span>
+  </button>
+</nav>
+<div id="user-menu-repositories-new" class="ui-menu fixed bottom-2 left-16 w-60" role="menu" aria-label="Account" data-popup hidden>
+  <div class="flex items-center gap-2.5 px-2 py-2">
+    <span class="ui-avatar"><span class="ui-avatar-fallback text-foreground">NR</span></span>
+    <span class="flex min-w-0 flex-col"><span class="truncate text-xs font-medium">Nadia Rahman</span><span class="truncate text-xs text-muted-foreground">nadia.rahman@halden.co.id</span></span>
+  </div>
+  <div class="ui-menu-separator"></div>
+  <div class="ui-menu-label">Theme</div>
+<button type="button" class="ui-menu-item" role="menuitemradio" aria-checked="false" data-theme-set="light"><svg aria-hidden="true"><use href="#i-sun"/></svg>Light<span class="ui-menu-indicator"><svg aria-hidden="true"><use href="#i-check"/></svg></span></button>
+<button type="button" class="ui-menu-item" role="menuitemradio" aria-checked="false" data-theme-set="dark"><svg aria-hidden="true"><use href="#i-moon"/></svg>Dark<span class="ui-menu-indicator"><svg aria-hidden="true"><use href="#i-check"/></svg></span></button>
+<button type="button" class="ui-menu-item" role="menuitemradio" aria-checked="false" data-theme-set="system"><svg aria-hidden="true"><use href="#i-monitor"/></svg>System<span class="ui-menu-indicator"><svg aria-hidden="true"><use href="#i-check"/></svg></span></button>
+  <div class="ui-menu-separator"></div>
+  <a href="login.html" class="ui-menu-item" role="menuitem"><svg aria-hidden="true"><use href="#i-log-out"/></svg>Log out</a>
+</div>
+<aside class="hidden md:flex min-h-0 flex-1 flex-col md:w-80 md:flex-none md:border-r" aria-label="Repositories">
+  <div class="flex h-12 shrink-0 items-center gap-2 border-b px-4">
+    <h2 class="text-sm font-medium">Repositories</h2><span class="text-xs tabular-nums text-muted-foreground">7</span>
+    <div class="ml-auto flex items-center"><a href="#repositories-new" class="ui-button bg-muted text-foreground" data-variant="ghost" data-size="icon-sm" aria-label="Connect repository" title="Connect repository"><svg aria-hidden="true"><use href="#i-plus"/></svg></a></div>
+  </div>
+  <div class="flex px-2 py-2">
+    <div class="ui-input-group flex-1">
+      <span class="ui-input-group-addon" data-align="inline-start"><svg aria-hidden="true"><use href="#i-search"/></svg></span>
+      <input class="ui-input-group-control py-0.5 pl-1.5" type="search" placeholder="Search repositories" aria-label="Search repositories">
+    </div>
+  </div>
+  <ul class="min-h-0 flex-1 overflow-y-auto px-2 pb-2" aria-label="Repositories">
+  <li><a href="#repositories-edit" class="flex items-start gap-2.5 rounded-md px-2 py-2.5 md:py-1.5 hover:bg-muted/50">
+    <span class="flex h-5 items-center"><svg class="size-3.5 text-muted-foreground" aria-hidden="true"><use href="#i-circle-check"/></svg></span>
+    <span class="flex min-w-0 flex-1 flex-col">
+      <span class="flex items-center gap-2 leading-5"><span class="truncate text-xs font-medium">halden/customer-portal</span><span class="ml-auto flex shrink-0 items-center gap-1 text-xs text-muted-foreground" title="Tracked Branch"><svg class="size-3" aria-hidden="true"><use href="#i-git-branch"/></svg>main</span></span>
+      <span class="flex items-start gap-2 text-xs leading-4"><span class="shrink-0 text-muted-foreground">Ready · 4 min ago</span><span class="ml-auto flex min-w-0 items-center gap-1 text-muted-foreground" title="Tags: frontend, customers"><svg class="size-3" aria-hidden="true"><use href="#i-tag"/></svg><span class="truncate md:hidden">frontend, customers</span><span class="hidden whitespace-nowrap md:inline">frontend +1</span></span></span>
+    </span>
+  </a></li>
+  <li><a href="#repositories-edit" class="flex items-start gap-2.5 rounded-md px-2 py-2.5 md:py-1.5 hover:bg-muted/50">
+    <span class="flex h-5 items-center"><svg class="size-3.5 text-muted-foreground" aria-hidden="true"><use href="#i-circle-check"/></svg></span>
+    <span class="flex min-w-0 flex-1 flex-col">
+      <span class="flex items-center gap-2 leading-5"><span class="truncate text-xs font-medium">halden/billing-service</span><span class="ml-auto flex shrink-0 items-center gap-1 text-xs text-muted-foreground" title="Tracked Branch"><svg class="size-3" aria-hidden="true"><use href="#i-git-branch"/></svg>main</span></span>
+      <span class="flex items-start gap-2 text-xs leading-4"><span class="shrink-0 text-muted-foreground">Ready · 4 min ago</span><span class="ml-auto flex min-w-0 items-center gap-1 text-muted-foreground" title="Tags: backend, invoices, payments"><svg class="size-3" aria-hidden="true"><use href="#i-tag"/></svg><span class="truncate md:hidden">backend, invoices, payments</span><span class="hidden whitespace-nowrap md:inline">backend +2</span></span></span>
+    </span>
+  </a></li>
+  <li><a href="#repositories-edit" class="flex items-start gap-2.5 rounded-md px-2 py-2.5 md:py-1.5 hover:bg-muted/50">
+    <span class="flex h-5 items-center"><svg class="size-3.5 animate-spin text-foreground" aria-hidden="true"><use href="#i-loader-circle"/></svg></span>
+    <span class="flex min-w-0 flex-1 flex-col">
+      <span class="flex items-center gap-2 leading-5"><span class="truncate text-xs font-medium">halden/dispatch-api</span><span class="ml-auto flex shrink-0 items-center gap-1 text-xs text-muted-foreground" title="Tracked Branch"><svg class="size-3" aria-hidden="true"><use href="#i-git-branch"/></svg>main</span></span>
+      <span class="flex items-start gap-2 text-xs leading-4"><span class="shrink-0 text-muted-foreground">Syncing · started 20 s ago</span><span class="ml-auto flex min-w-0 items-center gap-1 text-muted-foreground" title="Tags: backend, orders, tracking"><svg class="size-3" aria-hidden="true"><use href="#i-tag"/></svg><span class="truncate md:hidden">backend, orders, tracking</span><span class="hidden whitespace-nowrap md:inline">backend +2</span></span></span>
+    </span>
+  </a></li>
+  <li><a href="#repositories-edit" class="flex items-start gap-2.5 rounded-md px-2 py-2.5 md:py-1.5 hover:bg-muted/50">
+    <span class="flex h-5 items-center"><svg class="size-3.5 text-muted-foreground" aria-hidden="true"><use href="#i-circle-check"/></svg></span>
+    <span class="flex min-w-0 flex-1 flex-col">
+      <span class="flex items-center gap-2 leading-5"><span class="truncate text-xs font-medium">halden/dispatch-console</span><span class="ml-auto flex shrink-0 items-center gap-1 text-xs text-muted-foreground" title="Tracked Branch"><svg class="size-3" aria-hidden="true"><use href="#i-git-branch"/></svg>main</span></span>
+      <span class="flex items-start gap-2 text-xs leading-4"><span class="shrink-0 text-muted-foreground">Ready · 1 h ago</span><span class="ml-auto flex min-w-0 items-center gap-1 text-muted-foreground" title="Tags: frontend, planning"><svg class="size-3" aria-hidden="true"><use href="#i-tag"/></svg><span class="truncate md:hidden">frontend, planning</span><span class="hidden whitespace-nowrap md:inline">frontend +1</span></span></span>
+    </span>
+  </a></li>
+  <li><a href="#repositories-edit" class="flex items-start gap-2.5 rounded-md px-2 py-2.5 md:py-1.5 hover:bg-muted/50">
+    <span class="flex h-5 items-center"><svg class="size-3.5 text-muted-foreground" aria-hidden="true"><use href="#i-circle-check"/></svg></span>
+    <span class="flex min-w-0 flex-1 flex-col">
+      <span class="flex items-center gap-2 leading-5"><span class="truncate text-xs font-medium">halden/driver-app</span><span class="ml-auto flex shrink-0 items-center gap-1 text-xs text-muted-foreground" title="Tracked Branch"><svg class="size-3" aria-hidden="true"><use href="#i-git-branch"/></svg>release/2026.11</span></span>
+      <span class="flex items-start gap-2 text-xs leading-4"><span class="shrink-0 text-muted-foreground">Ready · 12 min ago</span><span class="ml-auto flex min-w-0 items-center gap-1 text-muted-foreground" title="Tags: mobile, drivers"><svg class="size-3" aria-hidden="true"><use href="#i-tag"/></svg><span class="truncate md:hidden">mobile, drivers</span><span class="hidden whitespace-nowrap md:inline">mobile +1</span></span></span>
+    </span>
+  </a></li>
+  <li><a href="#repositories-edit" class="flex items-start gap-2.5 rounded-md px-2 py-2.5 md:py-1.5 hover:bg-muted/50" title="The GitHub token cannot read this repository.">
+    <span class="flex h-5 items-center"><svg class="size-3.5 text-destructive" aria-hidden="true"><use href="#i-circle-alert"/></svg></span>
+    <span class="flex min-w-0 flex-1 flex-col">
+      <span class="flex items-center gap-2 leading-5"><span class="truncate text-xs font-medium">halden/rates-engine</span><span class="ml-auto flex shrink-0 items-center gap-1 text-xs text-muted-foreground" title="Tracked Branch"><svg class="size-3" aria-hidden="true"><use href="#i-git-branch"/></svg>develop</span></span>
+      <span class="flex items-start gap-2 text-xs leading-4"><span class="line-clamp-2 text-muted-foreground"><span class="text-destructive">Failed</span> · The GitHub token cannot read this repository.</span></span>
+    </span>
+  </a></li>
+  <li><a href="#repositories-edit" class="flex items-start gap-2.5 rounded-md px-2 py-2.5 md:py-1.5 hover:bg-muted/50">
+    <span class="flex h-5 items-center"><svg class="size-3.5 text-muted-foreground" aria-hidden="true"><use href="#i-circle-dashed"/></svg></span>
+    <span class="flex min-w-0 flex-1 flex-col">
+      <span class="flex items-center gap-2 leading-5"><span class="truncate text-xs font-medium">halden/notifications</span><span class="ml-auto flex shrink-0 items-center gap-1 text-xs text-muted-foreground" title="Tracked Branch"><svg class="size-3" aria-hidden="true"><use href="#i-git-branch"/></svg>main</span></span>
+      <span class="flex items-start gap-2 text-xs leading-4"><span class="shrink-0 text-muted-foreground">Pending · Waiting for first sync</span><span class="ml-auto flex min-w-0 items-center gap-1 text-muted-foreground" title="Tags: backend, email"><svg class="size-3" aria-hidden="true"><use href="#i-tag"/></svg><span class="truncate md:hidden">backend, email</span><span class="hidden whitespace-nowrap md:inline">backend +1</span></span></span>
+    </span>
+  </a></li>
+</ul>
+</aside>
+<main class="flex min-h-0 min-w-0 flex-1 flex-col">
+<div class="flex h-12 shrink-0 items-center gap-2 border-b px-4">
+    <a href="#repositories" class="ui-button -ml-2 md:hidden" data-variant="ghost" data-size="icon" aria-label="Back to Repositories"><svg aria-hidden="true"><use href="#i-chevron-left"/></svg></a>
+    <h1 class="truncate text-sm font-medium">Connect a Repository</h1>
+    
+  </div>
+  <div class="min-h-0 flex-1 overflow-y-auto">
+    <form class="mx-auto flex w-full max-w-xl flex-col gap-6 px-4 py-6 md:px-8 md:py-10" onsubmit="return false">
+      <div class="ui-field-group">
+        <div class="ui-field" data-invalid="true">
+          <label class="ui-label" for="new-repo">GitHub repository</label>
+          <input id="new-repo" class="ui-input" value="halden/rates-engine" aria-invalid="true" aria-describedby="new-repo-hint new-repo-error">
+          <p class="ui-field-description" id="new-repo-hint">Enter owner/name or a GitHub URL.</p>
+          <p class="ui-field-error" id="new-repo-error">Agent 6 cannot read halden/rates-engine with the configured GitHub token. Give the token read access to this repository, then try again.</p>
+        </div>
+        <div class="ui-field">
+          <label class="ui-label" for="new-branch">Tracked Branch</label>
+          <button type="button" id="new-branch" class="ui-select-trigger w-full" disabled><span class="flex items-center gap-1.5"><svg class="size-3.5 text-muted-foreground" aria-hidden="true"><use href="#i-git-branch"/></svg>Check the repository first</span><svg aria-hidden="true"><use href="#i-chevron-down"/></svg></button>
+          <p class="ui-field-description">The agent reads only this branch.</p>
+        </div>
+        <div class="ui-field">
+          <label class="ui-label" for="new-tags">Tags</label>
+          <div class="ui-input-group h-auto min-h-7 flex-wrap gap-1 p-1">
+        
+        <input id="new-tags" class="ui-input-group-control h-5 min-w-24 px-1 py-0" placeholder="Add a Tag">
+      </div>
+          <p class="ui-field-description">Tell the agent what this Repository is for. Tags never grant access.</p>
+        </div>
+        <div class="ui-field">
+          <label class="ui-label" for="new-desc">Description <span class="font-normal text-muted-foreground">(optional)</span></label>
+          <textarea id="new-desc" class="ui-textarea"></textarea>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <button type="submit" class="ui-button">Connect repository</button>
+        <a href="#repositories" class="ui-button" data-variant="outline">Cancel</a>
+      </div>
+    </form>
+  </div>
+</main>
+<nav class="relative flex h-14 shrink-0 border-t bg-sidebar md:hidden" aria-label="Main">
+  <a href="chat.html" class="flex flex-1 flex-col items-center justify-center gap-0.5 text-xs text-muted-foreground data-active:font-medium data-active:text-foreground aria-expanded:text-foreground" data-nav="chat" data-nav-also="chat-new"><span class="flex h-6 items-center"><svg class="size-5" aria-hidden="true"><use href="#i-message-square"/></svg></span>Chat</a>
+  <a href="history.html" class="flex flex-1 flex-col items-center justify-center gap-0.5 text-xs text-muted-foreground data-active:font-medium data-active:text-foreground aria-expanded:text-foreground" data-nav="history"><span class="flex h-6 items-center"><svg class="size-5" aria-hidden="true"><use href="#i-history"/></svg></span>History</a>
+  <button type="button" class="flex flex-1 flex-col items-center justify-center gap-0.5 text-xs text-muted-foreground data-active:font-medium data-active:text-foreground aria-expanded:text-foreground" data-nav="repositories" data-nav-also="repositories-empty repositories-edit repositories-new" data-popup-trigger="admin-menu-repositories-new" aria-expanded="false"><span class="flex h-6 items-center"><svg class="size-5" aria-hidden="true"><use href="#i-shield-check"/></svg></span>Admin</button>
+  <button type="button" class="flex flex-1 flex-col items-center justify-center gap-0.5 text-xs text-muted-foreground data-active:font-medium data-active:text-foreground aria-expanded:text-foreground" data-popup-trigger="account-menu-repositories-new" aria-expanded="false" aria-label="Account: Nadia Rahman"><span class="flex h-6 items-center"><span class="ui-avatar" data-size="sm"><span class="ui-avatar-fallback text-foreground">NR</span></span></span>Account</button>
+  <div id="admin-menu-repositories-new" class="ui-menu absolute bottom-full left-[62.5%] mb-2 w-56 -translate-x-1/2" role="menu" aria-label="Admin" data-popup hidden>
+    <button type="button" class="ui-menu-item" role="menuitem"><svg aria-hidden="true"><use href="#i-users"/></svg>Users</button>
+    <a href="#repositories" class="ui-menu-item data-active:font-medium" role="menuitem" data-nav="repositories" data-nav-also="repositories-empty repositories-edit repositories-new"><svg aria-hidden="true"><use href="#i-folder-git-2"/></svg>Repositories</a>
+    <button type="button" class="ui-menu-item" role="menuitem"><svg aria-hidden="true"><use href="#i-boxes"/></svg>Applications</button>
+    <button type="button" class="ui-menu-item" role="menuitem"><svg aria-hidden="true"><use href="#i-database"/></svg>Database Connections</button>
+    <button type="button" class="ui-menu-item" role="menuitem"><svg aria-hidden="true"><use href="#i-scroll-text"/></svg>Log Connections</button>
+    <button type="button" class="ui-menu-item" role="menuitem"><svg aria-hidden="true"><use href="#i-settings"/></svg>Settings</button>
+  </div>
+  <div id="account-menu-repositories-new" class="ui-menu absolute bottom-full right-2 mb-2 w-60" role="menu" aria-label="Account" data-popup hidden>
+  <div class="flex items-center gap-2.5 px-2 py-2">
+    <span class="ui-avatar"><span class="ui-avatar-fallback text-foreground">NR</span></span>
+    <span class="flex min-w-0 flex-col"><span class="truncate text-xs font-medium">Nadia Rahman</span><span class="truncate text-xs text-muted-foreground">nadia.rahman@halden.co.id</span></span>
+  </div>
+  <div class="ui-menu-separator"></div>
+  <div class="ui-menu-label">Theme</div>
+<button type="button" class="ui-menu-item" role="menuitemradio" aria-checked="false" data-theme-set="light"><svg aria-hidden="true"><use href="#i-sun"/></svg>Light<span class="ui-menu-indicator"><svg aria-hidden="true"><use href="#i-check"/></svg></span></button>
+<button type="button" class="ui-menu-item" role="menuitemradio" aria-checked="false" data-theme-set="dark"><svg aria-hidden="true"><use href="#i-moon"/></svg>Dark<span class="ui-menu-indicator"><svg aria-hidden="true"><use href="#i-check"/></svg></span></button>
+<button type="button" class="ui-menu-item" role="menuitemradio" aria-checked="false" data-theme-set="system"><svg aria-hidden="true"><use href="#i-monitor"/></svg>System<span class="ui-menu-indicator"><svg aria-hidden="true"><use href="#i-check"/></svg></span></button>
+  <div class="ui-menu-separator"></div>
+  <a href="login.html" class="ui-menu-item" role="menuitem"><svg aria-hidden="true"><use href="#i-log-out"/></svg>Log out</a>
+</div>
+</nav>
+</div>
+</section>
+
+<section data-screen="repositories-empty" data-title="Repositories · Agent 6" hidden>
+<div class="flex h-svh flex-col overflow-hidden md:flex-row">
+<nav class="hidden w-14 shrink-0 flex-col items-center gap-1 border-r bg-sidebar py-2 text-sidebar-foreground md:flex" aria-label="Main">
+  <a href="#repositories" class="mb-2 flex" aria-label="Agent 6" title="Agent 6"><span class="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary text-sm font-semibold leading-none text-primary-foreground">6</span></a>
+  <a href="chat.html" class="ui-sidebar-menu-button size-8 justify-center p-0 text-muted-foreground hover:text-sidebar-accent-foreground data-active:text-sidebar-accent-foreground" data-nav="chat" data-nav-also="chat-new" aria-label="Chat" title="Chat"><svg aria-hidden="true"><use href="#i-message-square"/></svg></a>
+  <a href="history.html" class="ui-sidebar-menu-button size-8 justify-center p-0 text-muted-foreground hover:text-sidebar-accent-foreground data-active:text-sidebar-accent-foreground" data-nav="history" aria-label="History" title="History"><svg aria-hidden="true"><use href="#i-history"/></svg></a>
+  <div class="ui-separator my-1.5 w-6"></div>
+  <button type="button" class="ui-sidebar-menu-button size-8 justify-center p-0 text-muted-foreground hover:text-sidebar-accent-foreground data-active:text-sidebar-accent-foreground" aria-label="Users" title="Users"><svg aria-hidden="true"><use href="#i-users"/></svg></button>
+  <a href="#repositories" class="ui-sidebar-menu-button size-8 justify-center p-0 text-muted-foreground hover:text-sidebar-accent-foreground data-active:text-sidebar-accent-foreground" data-nav="repositories" data-nav-also="repositories-empty repositories-edit repositories-new" aria-label="Repositories" title="Repositories"><svg aria-hidden="true"><use href="#i-folder-git-2"/></svg></a>
+  <button type="button" class="ui-sidebar-menu-button size-8 justify-center p-0 text-muted-foreground hover:text-sidebar-accent-foreground data-active:text-sidebar-accent-foreground" aria-label="Applications" title="Applications"><svg aria-hidden="true"><use href="#i-boxes"/></svg></button>
+  <button type="button" class="ui-sidebar-menu-button size-8 justify-center p-0 text-muted-foreground hover:text-sidebar-accent-foreground data-active:text-sidebar-accent-foreground" aria-label="Database Connections" title="Database Connections"><svg aria-hidden="true"><use href="#i-database"/></svg></button>
+  <button type="button" class="ui-sidebar-menu-button size-8 justify-center p-0 text-muted-foreground hover:text-sidebar-accent-foreground data-active:text-sidebar-accent-foreground" aria-label="Log Connections" title="Log Connections"><svg aria-hidden="true"><use href="#i-scroll-text"/></svg></button>
+  <button type="button" class="ui-sidebar-menu-button size-8 justify-center p-0 text-muted-foreground hover:text-sidebar-accent-foreground data-active:text-sidebar-accent-foreground" aria-label="Settings" title="Settings"><svg aria-hidden="true"><use href="#i-settings"/></svg></button>
+  <button type="button" class="mt-auto rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring/50" data-popup-trigger="user-menu-repositories-empty" aria-expanded="false" aria-label="Nadia Rahman: theme and log out" title="Nadia Rahman">
+    <span class="ui-avatar"><span class="ui-avatar-fallback text-xs font-medium text-foreground">NR</span></span>
+  </button>
+</nav>
+<div id="user-menu-repositories-empty" class="ui-menu fixed bottom-2 left-16 w-60" role="menu" aria-label="Account" data-popup hidden>
+  <div class="flex items-center gap-2.5 px-2 py-2">
+    <span class="ui-avatar"><span class="ui-avatar-fallback text-foreground">NR</span></span>
+    <span class="flex min-w-0 flex-col"><span class="truncate text-xs font-medium">Nadia Rahman</span><span class="truncate text-xs text-muted-foreground">nadia.rahman@halden.co.id</span></span>
+  </div>
+  <div class="ui-menu-separator"></div>
+  <div class="ui-menu-label">Theme</div>
+<button type="button" class="ui-menu-item" role="menuitemradio" aria-checked="false" data-theme-set="light"><svg aria-hidden="true"><use href="#i-sun"/></svg>Light<span class="ui-menu-indicator"><svg aria-hidden="true"><use href="#i-check"/></svg></span></button>
+<button type="button" class="ui-menu-item" role="menuitemradio" aria-checked="false" data-theme-set="dark"><svg aria-hidden="true"><use href="#i-moon"/></svg>Dark<span class="ui-menu-indicator"><svg aria-hidden="true"><use href="#i-check"/></svg></span></button>
+<button type="button" class="ui-menu-item" role="menuitemradio" aria-checked="false" data-theme-set="system"><svg aria-hidden="true"><use href="#i-monitor"/></svg>System<span class="ui-menu-indicator"><svg aria-hidden="true"><use href="#i-check"/></svg></span></button>
+  <div class="ui-menu-separator"></div>
+  <a href="login.html" class="ui-menu-item" role="menuitem"><svg aria-hidden="true"><use href="#i-log-out"/></svg>Log out</a>
+</div>
+<aside class="flex min-h-0 flex-1 flex-col md:w-80 md:flex-none md:border-r" aria-label="Repositories">
+  <div class="flex h-12 shrink-0 items-center gap-2 border-b px-4">
+    <h2 class="text-sm font-medium">Repositories</h2>
+    <div class="ml-auto flex items-center"><a href="#repositories-new" class="ui-button" data-variant="ghost" data-size="icon-sm" aria-label="Connect repository" title="Connect repository"><svg aria-hidden="true"><use href="#i-plus"/></svg></a></div>
+  </div>
+  
+  <div class="flex flex-1 flex-col p-2 md:flex-none">
+    <div class="ui-empty md:border">
+      <div class="ui-empty-header">
+        <div class="ui-empty-media" data-variant="icon"><svg aria-hidden="true"><use href="#i-folder-git-2"/></svg></div>
+        <div class="ui-empty-title">No Repositories yet</div>
+        <div class="ui-empty-description">Connect a GitHub repository so the agent can read its code.</div>
+      </div>
+      <div class="ui-empty-content md:hidden"><a href="#repositories-new" class="ui-button"><svg aria-hidden="true"><use href="#i-plus"/></svg>Connect repository</a></div>
+    </div>
+  </div>
+</aside>
+<main class="hidden md:flex min-h-0 min-w-0 flex-1 flex-col">
+  <div class="ui-empty">
+    <div class="ui-empty-header">
+      <div class="ui-empty-description">GitHub repositories the agent can read. Attach them to Applications to put them in scope.</div>
+    </div>
+    <div class="ui-empty-content"><a href="#repositories-new" class="ui-button"><svg aria-hidden="true"><use href="#i-plus"/></svg>Connect repository</a></div>
+  </div>
+</main>
+<nav class="relative flex h-14 shrink-0 border-t bg-sidebar md:hidden" aria-label="Main">
+  <a href="chat.html" class="flex flex-1 flex-col items-center justify-center gap-0.5 text-xs text-muted-foreground data-active:font-medium data-active:text-foreground aria-expanded:text-foreground" data-nav="chat" data-nav-also="chat-new"><span class="flex h-6 items-center"><svg class="size-5" aria-hidden="true"><use href="#i-message-square"/></svg></span>Chat</a>
+  <a href="history.html" class="flex flex-1 flex-col items-center justify-center gap-0.5 text-xs text-muted-foreground data-active:font-medium data-active:text-foreground aria-expanded:text-foreground" data-nav="history"><span class="flex h-6 items-center"><svg class="size-5" aria-hidden="true"><use href="#i-history"/></svg></span>History</a>
+  <button type="button" class="flex flex-1 flex-col items-center justify-center gap-0.5 text-xs text-muted-foreground data-active:font-medium data-active:text-foreground aria-expanded:text-foreground" data-nav="repositories" data-nav-also="repositories-empty repositories-edit repositories-new" data-popup-trigger="admin-menu-repositories-empty" aria-expanded="false"><span class="flex h-6 items-center"><svg class="size-5" aria-hidden="true"><use href="#i-shield-check"/></svg></span>Admin</button>
+  <button type="button" class="flex flex-1 flex-col items-center justify-center gap-0.5 text-xs text-muted-foreground data-active:font-medium data-active:text-foreground aria-expanded:text-foreground" data-popup-trigger="account-menu-repositories-empty" aria-expanded="false" aria-label="Account: Nadia Rahman"><span class="flex h-6 items-center"><span class="ui-avatar" data-size="sm"><span class="ui-avatar-fallback text-foreground">NR</span></span></span>Account</button>
+  <div id="admin-menu-repositories-empty" class="ui-menu absolute bottom-full left-[62.5%] mb-2 w-56 -translate-x-1/2" role="menu" aria-label="Admin" data-popup hidden>
+    <button type="button" class="ui-menu-item" role="menuitem"><svg aria-hidden="true"><use href="#i-users"/></svg>Users</button>
+    <a href="#repositories" class="ui-menu-item data-active:font-medium" role="menuitem" data-nav="repositories" data-nav-also="repositories-empty repositories-edit repositories-new"><svg aria-hidden="true"><use href="#i-folder-git-2"/></svg>Repositories</a>
+    <button type="button" class="ui-menu-item" role="menuitem"><svg aria-hidden="true"><use href="#i-boxes"/></svg>Applications</button>
+    <button type="button" class="ui-menu-item" role="menuitem"><svg aria-hidden="true"><use href="#i-database"/></svg>Database Connections</button>
+    <button type="button" class="ui-menu-item" role="menuitem"><svg aria-hidden="true"><use href="#i-scroll-text"/></svg>Log Connections</button>
+    <button type="button" class="ui-menu-item" role="menuitem"><svg aria-hidden="true"><use href="#i-settings"/></svg>Settings</button>
+  </div>
+  <div id="account-menu-repositories-empty" class="ui-menu absolute bottom-full right-2 mb-2 w-60" role="menu" aria-label="Account" data-popup hidden>
+  <div class="flex items-center gap-2.5 px-2 py-2">
+    <span class="ui-avatar"><span class="ui-avatar-fallback text-foreground">NR</span></span>
+    <span class="flex min-w-0 flex-col"><span class="truncate text-xs font-medium">Nadia Rahman</span><span class="truncate text-xs text-muted-foreground">nadia.rahman@halden.co.id</span></span>
+  </div>
+  <div class="ui-menu-separator"></div>
+  <div class="ui-menu-label">Theme</div>
+<button type="button" class="ui-menu-item" role="menuitemradio" aria-checked="false" data-theme-set="light"><svg aria-hidden="true"><use href="#i-sun"/></svg>Light<span class="ui-menu-indicator"><svg aria-hidden="true"><use href="#i-check"/></svg></span></button>
+<button type="button" class="ui-menu-item" role="menuitemradio" aria-checked="false" data-theme-set="dark"><svg aria-hidden="true"><use href="#i-moon"/></svg>Dark<span class="ui-menu-indicator"><svg aria-hidden="true"><use href="#i-check"/></svg></span></button>
+<button type="button" class="ui-menu-item" role="menuitemradio" aria-checked="false" data-theme-set="system"><svg aria-hidden="true"><use href="#i-monitor"/></svg>System<span class="ui-menu-indicator"><svg aria-hidden="true"><use href="#i-check"/></svg></span></button>
+  <div class="ui-menu-separator"></div>
+  <a href="login.html" class="ui-menu-item" role="menuitem"><svg aria-hidden="true"><use href="#i-log-out"/></svg>Log out</a>
+</div>
+</nav>
+</div>
+</section>
+
+<script src="assets/icons.js"></script>
+<script src="assets/kit.js"></script>
+</body>
+</html>
