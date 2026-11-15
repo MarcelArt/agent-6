@@ -258,3 +258,32 @@ export const message = sqliteTable(
     index("message_conversation_idx").on(table.conversationId, table.createdAt),
   ]
 )
+
+/**
+ * A Filed Issue, or a report that failed, on the Conversation that led to it.
+ * `messageId` is the agent answer it belongs to.
+ */
+export const filedIssue = sqliteTable(
+  "filed_issue",
+  {
+    id: text("id").primaryKey(),
+    conversationId: text("conversation_id")
+      .notNull()
+      .references(() => conversation.id, { onDelete: "cascade" }),
+    messageId: text("message_id").notNull(),
+    /** "owner/name" of the Repository, kept as text so the record outlives it. */
+    repository: text("repository").notNull(),
+    /** "code-fix" or "data-fix". */
+    kind: text("kind").notNull(),
+    title: text("title").notNull(),
+    /** "new", "comment" (added to an existing issue) or "failed". */
+    outcome: text("outcome").notNull(),
+    /** Null when the outcome is "failed". */
+    issueNumber: integer("issue_number"),
+    url: text("url"),
+    /** Why reporting failed, for Admins. Null otherwise. */
+    error: text("error"),
+    createdAt: timestamp("created_at").notNull(),
+  },
+  (table) => [index("filed_issue_conversation_idx").on(table.conversationId)]
+)

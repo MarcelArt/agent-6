@@ -11,12 +11,41 @@ export type ChatApplication = {
   description: string
   ready: boolean
 }
+/** At most this many new issues per Conversation. Comments on existing issues do not count. */
+export const MAX_NEW_ISSUES = 2
+export type IssueKind = "code-fix" | "data-fix"
+export const issueKindLabels: Record<IssueKind, string> = {
+  "code-fix": "Code Fix",
+  "data-fix": "Data Fix",
+}
+/** A Filed Issue as stored. `number` and `url` are null when reporting failed. */
+export type FiledIssueRecord = {
+  repository: string
+  kind: IssueKind
+  title: string
+  outcome: "new" | "comment" | "failed"
+  number: number | null
+  url: string | null
+  error: string | null
+}
+/**
+ * What an agent answer shows about reporting to the team. Clients get only
+ * the bare notice; `issue` and failures are sent to Admins alone.
+ */
+export type Report =
+  | {
+      id: string
+      outcome: "new" | "comment"
+      issue?: { repository: string; number: number; url: string }
+    }
+  | { id: string; outcome: "failed"; repository: string; reason: string }
 export type ChatMessage = {
   id: string
   role: "user" | "assistant"
   content: string
   status: "queued" | "pending" | "complete" | "error"
   createdAt: number
+  reports: Array<Report>
 }
 export type Conversation = {
   id: string

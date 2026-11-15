@@ -341,6 +341,36 @@ describe("Conversations", () => {
       applicationId
     )
   })
+  it("shows a Filed Issue under the answer that led to it, without issue details for a Client", async () => {
+    run.mockImplementationOnce(({ conversationId, messageId }) => {
+      conversations.recordFiledIssue(conversationId, messageId, {
+        repository: "halden/portal",
+        kind: "code-fix",
+        title: "Invoice download fails",
+        outcome: "new",
+        number: 7,
+        url: "https://github.com/halden/portal/issues/7",
+        error: null,
+      })
+      return Promise.resolve({
+        text: "The team has been informed.",
+        history: [],
+      })
+    })
+    const conversation = await create()
+    const done = (
+      await events(
+        await management.reply(client, conversation.id, { start: true })
+      )
+    ).at(-1)
+    expect(done).toMatchObject({ type: "done" })
+    const saved = await management.get(client, conversation.id)
+    expect(saved.messages.map((message) => message.reports)).toEqual([
+      [],
+      [{ id: expect.any(String), outcome: "new" }],
+    ])
+    expect(JSON.stringify([done, saved])).not.toContain("issues/7")
+  })
   it("re-resolves Attachments on a follow-up", async () => {
     const conversation = await create()
     await events(

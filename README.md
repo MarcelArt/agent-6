@@ -30,7 +30,7 @@ Set `GITHUB_TOKEN` to a GitHub token that can read the contents of the repositor
     |---|---|---|
     | Contents | Read-only | Cloning and syncing, and listing branches |
     | Metadata | Read-only | Checking that the repository exists (GitHub selects this one itself) |
-    | Issues | Read and write | Filing issues. Not used yet; only needed once issue filing is built (step 10) |
+    | Issues | Read and write | Filing issues, commenting on them and creating the labels. See [Issue filing](#issue-filing) |
 
 - Classic token: the `repo` scope. If the organization uses SAML single sign-on, also authorize the token for that organization.
 
@@ -53,6 +53,14 @@ Set `OPENAI_API_KEY` and `OPENAI_MODEL` to enable answers. Optionally set `OPENA
 At `/chat`, choose an Application with at least one ready Repository and ask a question. The Application stays fixed for that Conversation. Answers stream as plain prose; messages and the SDK's tool history are saved so a reload or follow-up keeps context. Only the owner can open or continue a Conversation, including when the other user is an Admin.
 
 Before the first reply, Agent 6 refreshes attached clones older than three minutes. If syncing fails it can still read the existing clone. Its code tools list, search, and read attached code; symlinks, `.git`, and paths outside a clone are refused. Reads return at most 200 lines / 24 KB, searches return at most 50 results with a bounded scan, and oversized or binary files are skipped. Replies stop after 12 model turns or 90 seconds and offer **Try again** when they fail. Browsing past Conversations arrives in step 14; save a Conversation's URL to reopen it meanwhile.
+
+## Issue filing
+
+When the agent has located a fault that needs a Code Fix or a Data Fix, it files a GitHub issue in the attached Repository where the fault lives and tells the user that the team has been informed. The issue holds the kind, what the user experienced, the evidence (paths with line numbers at the synced commit, queries, log lines), a potential fix and a link back to the Conversation. Every issue gets the `agent-6` label plus `code-fix` or `data-fix`; Agent 6 creates the labels when a Repository lacks them. GitHub only keeps labels set by a user with write access to the repository, so give the token's user that access; without the `agent-6` label Agent 6 cannot find its issue again.
+
+Before filing, the agent looks at the open `agent-6` issues of that Repository. If one describes the same fault, it adds a comment with the new occurrence instead of filing another. A Conversation can create at most two new issues. The tool refuses Repositories that are not attached to the Conversation's Application, and blanks emails, phone numbers and credentials in the text; the agent is also told to leave out names and other personal data.
+
+The Filed Issue is saved on the Conversation and shown under the answer as "Reported to the team". Admins see it as a link to the issue; Clients see no number and no link. If reporting fails (for example the token lacks the Issues permission), the user still gets an answer, and an Admin who opens the Conversation sees "Reporting to the team failed" with the reason.
 
 ## Database Connections
 

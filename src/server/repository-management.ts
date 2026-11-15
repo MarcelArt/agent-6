@@ -119,6 +119,7 @@ function fromGitHubError(error: unknown, fullName: string): unknown {
       return new RepositoryError(
         "GitHub is limiting requests from this token right now. Wait a few minutes, then try again."
       )
+    case "rejected":
     case "unreachable":
       return new RepositoryError(
         "GitHub could not be reached from the server. Check its network connection, then try again."

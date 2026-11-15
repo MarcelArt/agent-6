@@ -1,10 +1,15 @@
 import { Fragment, useCallback, useEffect, useRef, useState } from "react"
 import { Link } from "@tanstack/react-router"
-import { AppWindowIcon, ChevronLeftIcon, CircleAlertIcon } from "lucide-react"
+import {
+  AppWindowIcon,
+  ChevronLeftIcon,
+  CircleAlertIcon,
+  CircleDotIcon,
+} from "lucide-react"
 import { ChatSidebar } from "./chat-sidebar"
 import { Composer } from "./composer"
 import { DetailPane, PaneTitle } from "@/components/shell/panes"
-import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Bubble, BubbleContent } from "@/components/ui/bubble"
 import { Button } from "@/components/ui/button"
@@ -20,7 +25,37 @@ import {
 } from "@/components/ui/message-scroller"
 import { Spinner } from "@/components/ui/spinner"
 import { getConversation } from "@/server/chat.functions"
-import type { ChatEvent, Conversation, ReplyInput } from "@/lib/chat"
+import type { ChatEvent, Conversation, ReplyInput, Report } from "@/lib/chat"
+
+/** The Filed Issue notice under an agent answer. Only Admins receive `issue` and failures. */
+function ReportNotice({ report }: { report: Report }) {
+  if (report.outcome === "failed")
+    return (
+      <Alert variant="destructive" className="w-fit">
+        <CircleAlertIcon />
+        <AlertTitle>Reporting to the team failed</AlertTitle>
+        <AlertDescription>
+          {report.reason} ({report.repository})
+        </AlertDescription>
+      </Alert>
+    )
+  return (
+    <Alert className="w-fit">
+      <CircleDotIcon />
+      <AlertTitle>Reported to the team</AlertTitle>
+      <AlertDescription>
+        {report.issue ? (
+          <a href={report.issue.url} target="_blank" rel="noreferrer">
+            {report.outcome === "comment" ? "Added to " : ""}Filed Issue #
+            {report.issue.number} in {report.issue.repository}
+          </a>
+        ) : (
+          "The developers have what they need to fix this."
+        )}
+      </AlertDescription>
+    </Alert>
+  )
+}
 
 const day = (timestamp: number) =>
   new Date(timestamp).toISOString().slice(0, 10)
@@ -257,6 +292,9 @@ export function ConversationView({
                               </Bubble>
                             )
                           )}
+                          {message.reports.map((report) => (
+                            <ReportNotice key={report.id} report={report} />
+                          ))}
                         </MessageContent>
                       </Message>
                     </MessageScrollerItem>

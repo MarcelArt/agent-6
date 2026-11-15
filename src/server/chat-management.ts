@@ -72,7 +72,8 @@ export function createChatManagement(
       return conversations.create(owner.id, applicationId, parsed.data)
     },
     async get(headers: Headers, id: string) {
-      return conversations.get(id, (await user(headers)).id)
+      const reader = await user(headers)
+      return conversations.get(id, reader.id, reader.role === "admin")
     },
     async reply(headers: Headers, id: string, input: ReplyInput) {
       const owner = await user(headers)
@@ -82,6 +83,8 @@ export function createChatManagement(
           "Please write a shorter message and try again."
         )
       const claim = conversations.begin(id, owner.id, parsed.data)
+      const current = () =>
+        conversations.get(id, owner.id, owner.role === "admin")
       let connected = true
       const encoder = new TextEncoder()
       const stream = new ReadableStream<Uint8Array>({
@@ -109,7 +112,7 @@ export function createChatManagement(
             let content = ""
             emit({
               type: "snapshot",
-              conversation: conversations.get(id, owner.id),
+              conversation: current(),
             })
             emit({ type: "progress" })
             try {
@@ -136,6 +139,8 @@ export function createChatManagement(
                   abort.signal.throwIfAborted()
                   return (deps.run ?? createSupportRun(getConfig()))({
                     scope: applicationScope,
+                    conversationId: id,
+                    messageId: claim.assistantId,
                     history: claim.history,
                     question: claim.question,
                     signal: abort.signal,
@@ -174,7 +179,7 @@ export function createChatManagement(
               clearTimeout(timer)
               emit({
                 type: "done",
-                conversation: conversations.get(id, owner.id),
+                conversation: current(),
               })
               if (connected) controller.close()
             }

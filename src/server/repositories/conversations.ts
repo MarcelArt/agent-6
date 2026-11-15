@@ -6,13 +6,20 @@ import { getDb } from "./db"
 import {
   application,
   conversation,
+  filedIssue,
   message,
   repository,
   repositoryAttachment,
 } from "./schema"
 import type { Db } from "./db"
 import type { AgentInputItem } from "@openai/agents"
-import type { ChatMessage, Conversation, ReplyInput } from "@/lib/chat"
+import type {
+  ChatMessage,
+  Conversation,
+  FiledIssueRecord,
+  ReplyInput,
+  Report,
+} from "@/lib/chat"
 import { REPLY_FAILED, REPLY_TIME_LIMIT_MS } from "@/lib/chat"
 
 export class ConversationError extends Error {
@@ -35,7 +42,44 @@ export function createConversationsRepository(db: Db = getDb()) {
       throw new ConversationError("This Conversation is not available.", 404)
     return found
   }
-  function messages(id: string): Array<ChatMessage> {
+  function messages(id: string, admin = false): Array<ChatMessage> {
+    const reports = new Map<string, Array<Report>>()
+    for (const row of db
+      .select()
+      .from(filedIssue)
+      .where(eq(filedIssue.conversationId, id))
+      .orderBy(asc(filedIssue.createdAt), asc(sql`rowid`))
+      .all()) {
+      // Issue details and failures never reach a Client's browser.
+      const report: Report | null =
+        row.outcome === "failed"
+          ? admin
+            ? {
+                id: row.id,
+                outcome: "failed",
+                repository: row.repository,
+                reason: row.error ?? "",
+              }
+            : null
+          : {
+              id: row.id,
+              outcome: row.outcome as "new" | "comment",
+              ...(admin && row.issueNumber !== null && row.url
+                ? {
+                    issue: {
+                      repository: row.repository,
+                      number: row.issueNumber,
+                      url: row.url,
+                    },
+                  }
+                : {}),
+            }
+      if (report)
+        reports.set(row.messageId, [
+          ...(reports.get(row.messageId) ?? []),
+          report,
+        ])
+    }
     return db
       .select()
       .from(message)
@@ -48,6 +92,7 @@ export function createConversationsRepository(db: Db = getDb()) {
         content: row.content,
         status: row.status as ChatMessage["status"],
         createdAt: row.createdAt.getTime(),
+        reports: reports.get(row.id) ?? [],
       }))
   }
   function recover(id: string, userId: string) {
@@ -70,7 +115,8 @@ export function createConversationsRepository(db: Db = getDb()) {
       { behavior: "immediate" }
     )
   }
-  function get(id: string, userId: string): Conversation {
+  /** `admin` adds what only Admins may see about Filed Issues. */
+  function get(id: string, userId: string, admin = false): Conversation {
     recover(id, userId)
     const found = owned(id, userId)
     const app = db
@@ -78,7 +124,12 @@ export function createConversationsRepository(db: Db = getDb()) {
       .from(application)
       .where(eq(application.id, found.applicationId))
       .get()!
-    return { id, title: found.title, application: app, messages: messages(id) }
+    return {
+      id,
+      title: found.title,
+      application: app,
+      messages: messages(id, admin),
+    }
   }
   function queue(id: string, content: string, now: Date) {
     db.insert(message)
@@ -179,6 +230,11 @@ export function createConversationsRepository(db: Db = getDb()) {
             .set({ id: assistantId, status: "pending", content: "" })
             .where(eq(message.id, assistant.id))
             .run()
+          // What a failed attempt already reported stays with the answer.
+          db.update(filedIssue)
+            .set({ messageId: assistantId })
+            .where(eq(filedIssue.messageId, assistant.id))
+            .run()
           db.update(conversation)
             .set({
               runningUntil: new Date(Date.now() + REPLY_TIME_LIMIT_MS + 5000),
@@ -195,6 +251,42 @@ export function createConversationsRepository(db: Db = getDb()) {
         },
         { behavior: "immediate" }
       )
+    },
+    /** Filed Issues and failed reports of a Conversation, oldest first. */
+    filedIssues(id: string): Array<FiledIssueRecord & { messageId: string }> {
+      return db
+        .select()
+        .from(filedIssue)
+        .where(eq(filedIssue.conversationId, id))
+        .orderBy(asc(filedIssue.createdAt), asc(sql`rowid`))
+        .all()
+        .map((row) => ({
+          messageId: row.messageId,
+          repository: row.repository,
+          kind: row.kind as FiledIssueRecord["kind"],
+          title: row.title,
+          outcome: row.outcome as FiledIssueRecord["outcome"],
+          number: row.issueNumber,
+          url: row.url,
+          error: row.error,
+        }))
+    },
+    recordFiledIssue(id: string, messageId: string, record: FiledIssueRecord) {
+      db.insert(filedIssue)
+        .values({
+          id: randomUUID(),
+          conversationId: id,
+          messageId,
+          repository: record.repository,
+          kind: record.kind,
+          title: record.title,
+          outcome: record.outcome,
+          issueNumber: record.number,
+          url: record.url,
+          error: record.error,
+          createdAt: new Date(),
+        })
+        .run()
     },
     markRefreshed(id: string) {
       db.update(conversation)

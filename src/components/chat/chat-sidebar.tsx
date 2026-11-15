@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router"
-import { MessageSquareIcon } from "lucide-react"
+import { CircleDotIcon, MessageSquareIcon } from "lucide-react"
 import { ListPane, PaneHeader, PaneTitle } from "@/components/shell/panes"
 import { Button } from "@/components/ui/button"
 import {
@@ -36,8 +36,21 @@ export function ChatSidebar({ conversation }: { conversation?: Conversation }) {
               className="flex flex-col gap-1 rounded-md bg-muted px-2 py-2 text-xs"
             >
               <span className="truncate font-medium">{conversation.title}</span>
-              <span className="truncate text-foreground/70">
-                {conversation.application.name}
+              <span className="flex items-center gap-1.5 text-foreground/70">
+                <span className="truncate">
+                  {conversation.application.name}
+                </span>
+                {conversation.messages.some((message) =>
+                  message.reports.some((report) => report.outcome !== "failed")
+                ) && (
+                  <span
+                    className="flex shrink-0 items-center gap-1 text-foreground"
+                    title="Reported to the team"
+                  >
+                    <CircleDotIcon className="size-3" aria-hidden="true" />
+                    <span className="sr-only">Reported to the team</span>
+                  </span>
+                )}
               </span>
             </Link>
           </li>
