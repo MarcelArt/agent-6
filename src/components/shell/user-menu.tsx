@@ -1,5 +1,11 @@
-import { useRouter } from "@tanstack/react-router"
-import { LogOutIcon, MonitorIcon, MoonIcon, SunIcon } from "lucide-react"
+import { Link, useRouter } from "@tanstack/react-router"
+import {
+  LogOutIcon,
+  MonitorIcon,
+  MoonIcon,
+  SunIcon,
+  UserRoundIcon,
+} from "lucide-react"
 import type { SessionUser } from "@/lib/roles"
 import type { ThemeMode } from "@/lib/theme"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
@@ -29,7 +35,7 @@ export function initials(name: string): string {
 
 /**
  * Content of the user menu: who is logged in, the only theme control in the
- * app, and Log out.
+ * app, the account page and Log out.
  */
 export function UserMenuContent({
   user,
@@ -89,6 +95,10 @@ export function UserMenuContent({
         </DropdownMenuRadioGroup>
       </DropdownMenuGroup>
       <DropdownMenuSeparator />
+      <DropdownMenuItem render={<Link to="/chat/account" />}>
+        <UserRoundIcon />
+        Account
+      </DropdownMenuItem>
       <DropdownMenuItem onClick={() => void logOut()}>
         <LogOutIcon />
         Log out

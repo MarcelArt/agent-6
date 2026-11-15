@@ -28,7 +28,9 @@ export const chatNav: Array<NavItem> = [
     to: "/chat",
     icon: MessageSquareIcon,
     isActive: (pathname) =>
-      under("/chat")(pathname) && !under("/chat/history")(pathname),
+      under("/chat")(pathname) &&
+      !under("/chat/history")(pathname) &&
+      !under("/chat/account")(pathname),
   },
   {
     label: "History",

@@ -24,7 +24,8 @@ const roles = {
  * own database, with the roles `admin` and `client`.
  *
  * Nobody can register themselves. Users are created with
- * `auth.api.createUser`, by an Admin (step 04) or by `first-admin.ts`.
+ * `auth.api.createUser`, by an Admin (`user-management.ts`) or by
+ * `first-admin.ts`.
  */
 export function createAuth(
   db: Db,

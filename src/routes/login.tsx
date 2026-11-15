@@ -48,7 +48,9 @@ function LoginPage() {
         setError(
           result.error.status === 401
             ? "The email or password is not correct."
-            : "Agent 6 could not sign you in. Try again in a moment."
+            : result.error.code === "BANNED_USER"
+              ? "This account is disabled. Ask your Admin to enable it."
+              : "Agent 6 could not sign you in. Try again in a moment."
         )
         setPending(false)
         return

@@ -20,6 +20,7 @@ Every logged-in screen is one full-height frame (`flex h-svh`) of up to three pa
   - separator;
   - the label "Theme" and a radio group with Light, Dark and System (icons sun, moon, monitor);
   - separator;
+  - Account (the page where a user changes their own password, `/chat/account`);
   - Log out.
 
   This is the only theme control in the app. Login has its own (see 6).
@@ -38,6 +39,7 @@ Every pane state is a URL. The table shows desktop. At phone width only one pane
 | `/admin/<section>`, `/new`, `/$id` | Same pattern for Users, Applications, Database Connections, Log Connections, and Conversations (step 14, read-only detail) | |
 | `/chat` | Conversations | Application picker (new Conversation) |
 | `/chat/$conversationId` | Conversations, that row selected | The Conversation |
+| `/chat/account` | none | The logged-in user's own account: name, email, role, and the change-password form |
 | `/chat/history` (suggested name) | Conversations | Empty hint "Select a Conversation to reopen it" + "New conversation" |
 
 List filters and search live in search params and survive a reload.
@@ -107,6 +109,9 @@ List filters and search live in search params and survive a reload.
 ### Extending the pattern
 
 Applications, Database Connections, Log Connections and Users use the same list and form.
+- The shared parts are in `src/components/records/`: `record-list.tsx` (header, search, rows, pagination, empty state) and `record-detail.tsx` (header, form, actions, hint, confirmation). Users (`src/routes/admin/users/`) is the worked example.
+- A list longer than one page gets a footer (`h-10 border-t px-4`, muted `text-xs`): "21–40 of 43" and ghost `icon-sm` previous and next links. The page is a search param.
+- Users: the status icon is muted `circle-check` (Active) or muted `ban` (Disabled). Disable is the destructive action in the "…" menu; a disabled user gets an outline "Enable user" button instead.
 - Sub-lists inside a record (an Application's Attachments) are a FieldSet in the form: rows with a "…" menu, and an "Add" button that opens a Dialog.
 - Secrets (passwords, auth headers) are never shown again after saving. Their field shows "Saved" and offers "Replace".
 

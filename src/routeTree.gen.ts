@@ -19,9 +19,13 @@ import { Route as AdminDatabaseConnectionsRouteImport } from './routes/admin/dat
 import { Route as AdminLogConnectionsRouteImport } from './routes/admin/log-connections'
 import { Route as AdminRepositoriesRouteImport } from './routes/admin/repositories'
 import { Route as AdminSettingsRouteImport } from './routes/admin/settings'
-import { Route as AdminUsersRouteImport } from './routes/admin/users'
+import { Route as AdminUsersRouteRouteImport } from './routes/admin/users/route'
 import { Route as ChatIndexRouteImport } from './routes/chat/index'
+import { Route as ChatAccountRouteImport } from './routes/chat/account'
 import { Route as ChatHistoryRouteImport } from './routes/chat/history'
+import { Route as AdminUsersIndexRouteImport } from './routes/admin/users/index'
+import { Route as AdminUsersUserIdRouteImport } from './routes/admin/users/$userId'
+import { Route as AdminUsersNewRouteImport } from './routes/admin/users/new'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 
 const IndexRoute = IndexRouteImport.update({
@@ -75,7 +79,7 @@ const AdminSettingsRoute = AdminSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => AdminRouteRoute,
 } as any)
-const AdminUsersRoute = AdminUsersRouteImport.update({
+const AdminUsersRouteRoute = AdminUsersRouteRouteImport.update({
   id: '/users',
   path: '/users',
   getParentRoute: () => AdminRouteRoute,
@@ -85,10 +89,30 @@ const ChatIndexRoute = ChatIndexRouteImport.update({
   path: '/',
   getParentRoute: () => ChatRouteRoute,
 } as any)
+const ChatAccountRoute = ChatAccountRouteImport.update({
+  id: '/account',
+  path: '/account',
+  getParentRoute: () => ChatRouteRoute,
+} as any)
 const ChatHistoryRoute = ChatHistoryRouteImport.update({
   id: '/history',
   path: '/history',
   getParentRoute: () => ChatRouteRoute,
+} as any)
+const AdminUsersIndexRoute = AdminUsersIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminUsersRouteRoute,
+} as any)
+const AdminUsersUserIdRoute = AdminUsersUserIdRouteImport.update({
+  id: '/$userId',
+  path: '/$userId',
+  getParentRoute: () => AdminUsersRouteRoute,
+} as any)
+const AdminUsersNewRoute = AdminUsersNewRouteImport.update({
+  id: '/new',
+  path: '/new',
+  getParentRoute: () => AdminUsersRouteRoute,
 } as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
@@ -101,16 +125,20 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRouteRouteWithChildren
   '/chat': typeof ChatRouteRouteWithChildren
   '/login': typeof LoginRoute
+  '/admin/users': typeof AdminUsersRouteRouteWithChildren
   '/admin/applications': typeof AdminApplicationsRoute
   '/admin/database-connections': typeof AdminDatabaseConnectionsRoute
   '/admin/log-connections': typeof AdminLogConnectionsRoute
   '/admin/repositories': typeof AdminRepositoriesRoute
   '/admin/settings': typeof AdminSettingsRoute
-  '/admin/users': typeof AdminUsersRoute
+  '/chat/account': typeof ChatAccountRoute
   '/chat/history': typeof ChatHistoryRoute
   '/admin/': typeof AdminIndexRoute
   '/chat/': typeof ChatIndexRoute
+  '/admin/users/$userId': typeof AdminUsersUserIdRoute
+  '/admin/users/new': typeof AdminUsersNewRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/admin/users/': typeof AdminUsersIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -120,11 +148,14 @@ export interface FileRoutesByTo {
   '/admin/log-connections': typeof AdminLogConnectionsRoute
   '/admin/repositories': typeof AdminRepositoriesRoute
   '/admin/settings': typeof AdminSettingsRoute
-  '/admin/users': typeof AdminUsersRoute
+  '/chat/account': typeof ChatAccountRoute
   '/chat/history': typeof ChatHistoryRoute
   '/admin': typeof AdminIndexRoute
   '/chat': typeof ChatIndexRoute
+  '/admin/users/$userId': typeof AdminUsersUserIdRoute
+  '/admin/users/new': typeof AdminUsersNewRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/admin/users': typeof AdminUsersIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -132,16 +163,20 @@ export interface FileRoutesById {
   '/admin': typeof AdminRouteRouteWithChildren
   '/chat': typeof ChatRouteRouteWithChildren
   '/login': typeof LoginRoute
+  '/admin/users': typeof AdminUsersRouteRouteWithChildren
   '/admin/applications': typeof AdminApplicationsRoute
   '/admin/database-connections': typeof AdminDatabaseConnectionsRoute
   '/admin/log-connections': typeof AdminLogConnectionsRoute
   '/admin/repositories': typeof AdminRepositoriesRoute
   '/admin/settings': typeof AdminSettingsRoute
-  '/admin/users': typeof AdminUsersRoute
+  '/chat/account': typeof ChatAccountRoute
   '/chat/history': typeof ChatHistoryRoute
   '/admin/': typeof AdminIndexRoute
   '/chat/': typeof ChatIndexRoute
+  '/admin/users/$userId': typeof AdminUsersUserIdRoute
+  '/admin/users/new': typeof AdminUsersNewRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/admin/users/': typeof AdminUsersIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -150,16 +185,20 @@ export interface FileRouteTypes {
     | '/admin'
     | '/chat'
     | '/login'
+    | '/admin/users'
     | '/admin/applications'
     | '/admin/database-connections'
     | '/admin/log-connections'
     | '/admin/repositories'
     | '/admin/settings'
-    | '/admin/users'
+    | '/chat/account'
     | '/chat/history'
     | '/admin/'
     | '/chat/'
+    | '/admin/users/$userId'
+    | '/admin/users/new'
     | '/api/auth/$'
+    | '/admin/users/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -169,27 +208,34 @@ export interface FileRouteTypes {
     | '/admin/log-connections'
     | '/admin/repositories'
     | '/admin/settings'
-    | '/admin/users'
+    | '/chat/account'
     | '/chat/history'
     | '/admin'
     | '/chat'
+    | '/admin/users/$userId'
+    | '/admin/users/new'
     | '/api/auth/$'
+    | '/admin/users'
   id:
     | '__root__'
     | '/'
     | '/admin'
     | '/chat'
     | '/login'
+    | '/admin/users'
     | '/admin/applications'
     | '/admin/database-connections'
     | '/admin/log-connections'
     | '/admin/repositories'
     | '/admin/settings'
-    | '/admin/users'
+    | '/chat/account'
     | '/chat/history'
     | '/admin/'
     | '/chat/'
+    | '/admin/users/$userId'
+    | '/admin/users/new'
     | '/api/auth/$'
+    | '/admin/users/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -276,7 +322,7 @@ declare module '@tanstack/react-router' {
       id: '/admin/users'
       path: '/users'
       fullPath: '/admin/users'
-      preLoaderRoute: typeof AdminUsersRouteImport
+      preLoaderRoute: typeof AdminUsersRouteRouteImport
       parentRoute: typeof AdminRouteRoute
     }
     '/chat/': {
@@ -286,12 +332,40 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ChatIndexRouteImport
       parentRoute: typeof ChatRouteRoute
     }
+    '/chat/account': {
+      id: '/chat/account'
+      path: '/account'
+      fullPath: '/chat/account'
+      preLoaderRoute: typeof ChatAccountRouteImport
+      parentRoute: typeof ChatRouteRoute
+    }
     '/chat/history': {
       id: '/chat/history'
       path: '/history'
       fullPath: '/chat/history'
       preLoaderRoute: typeof ChatHistoryRouteImport
       parentRoute: typeof ChatRouteRoute
+    }
+    '/admin/users/': {
+      id: '/admin/users/'
+      path: '/'
+      fullPath: '/admin/users/'
+      preLoaderRoute: typeof AdminUsersIndexRouteImport
+      parentRoute: typeof AdminUsersRouteRoute
+    }
+    '/admin/users/$userId': {
+      id: '/admin/users/$userId'
+      path: '/$userId'
+      fullPath: '/admin/users/$userId'
+      preLoaderRoute: typeof AdminUsersUserIdRouteImport
+      parentRoute: typeof AdminUsersRouteRoute
+    }
+    '/admin/users/new': {
+      id: '/admin/users/new'
+      path: '/new'
+      fullPath: '/admin/users/new'
+      preLoaderRoute: typeof AdminUsersNewRouteImport
+      parentRoute: typeof AdminUsersRouteRoute
     }
     '/api/auth/$': {
       id: '/api/auth/$'
@@ -303,23 +377,39 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AdminUsersRouteRouteChildren {
+  AdminUsersUserIdRoute: typeof AdminUsersUserIdRoute
+  AdminUsersNewRoute: typeof AdminUsersNewRoute
+  AdminUsersIndexRoute: typeof AdminUsersIndexRoute
+}
+
+const AdminUsersRouteRouteChildren: AdminUsersRouteRouteChildren = {
+  AdminUsersUserIdRoute: AdminUsersUserIdRoute,
+  AdminUsersNewRoute: AdminUsersNewRoute,
+  AdminUsersIndexRoute: AdminUsersIndexRoute,
+}
+
+const AdminUsersRouteRouteWithChildren = AdminUsersRouteRoute._addFileChildren(
+  AdminUsersRouteRouteChildren,
+)
+
 interface AdminRouteRouteChildren {
+  AdminUsersRouteRoute: typeof AdminUsersRouteRouteWithChildren
   AdminApplicationsRoute: typeof AdminApplicationsRoute
   AdminDatabaseConnectionsRoute: typeof AdminDatabaseConnectionsRoute
   AdminLogConnectionsRoute: typeof AdminLogConnectionsRoute
   AdminRepositoriesRoute: typeof AdminRepositoriesRoute
   AdminSettingsRoute: typeof AdminSettingsRoute
-  AdminUsersRoute: typeof AdminUsersRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
 
 const AdminRouteRouteChildren: AdminRouteRouteChildren = {
+  AdminUsersRouteRoute: AdminUsersRouteRouteWithChildren,
   AdminApplicationsRoute: AdminApplicationsRoute,
   AdminDatabaseConnectionsRoute: AdminDatabaseConnectionsRoute,
   AdminLogConnectionsRoute: AdminLogConnectionsRoute,
   AdminRepositoriesRoute: AdminRepositoriesRoute,
   AdminSettingsRoute: AdminSettingsRoute,
-  AdminUsersRoute: AdminUsersRoute,
   AdminIndexRoute: AdminIndexRoute,
 }
 
@@ -328,11 +418,13 @@ const AdminRouteRouteWithChildren = AdminRouteRoute._addFileChildren(
 )
 
 interface ChatRouteRouteChildren {
+  ChatAccountRoute: typeof ChatAccountRoute
   ChatHistoryRoute: typeof ChatHistoryRoute
   ChatIndexRoute: typeof ChatIndexRoute
 }
 
 const ChatRouteRouteChildren: ChatRouteRouteChildren = {
+  ChatAccountRoute: ChatAccountRoute,
   ChatHistoryRoute: ChatHistoryRoute,
   ChatIndexRoute: ChatIndexRoute,
 }
