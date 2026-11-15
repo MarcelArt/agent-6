@@ -1,10 +1,12 @@
 import { Fragment, useCallback, useEffect, useRef, useState } from "react"
-import { Link } from "@tanstack/react-router"
+import { Link, useNavigate } from "@tanstack/react-router"
 import {
   AppWindowIcon,
   ChevronLeftIcon,
   CircleAlertIcon,
   CircleDotIcon,
+  ImageIcon,
+  ImageOffIcon,
 } from "lucide-react"
 import { ChatSidebar } from "./chat-sidebar"
 import { Composer } from "./composer"
@@ -13,6 +15,12 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Bubble, BubbleContent } from "@/components/ui/bubble"
 import { Button } from "@/components/ui/button"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { Message, MessageContent, MessageHeader } from "@/components/ui/message"
 import { Marker, MarkerContent } from "@/components/ui/marker"
 import {
@@ -25,6 +33,7 @@ import {
 } from "@/components/ui/message-scroller"
 import { Spinner } from "@/components/ui/spinner"
 import { getConversation } from "@/server/chat.functions"
+import { imageUrl } from "@/lib/chat"
 import type { ChatEvent, Conversation, ReplyInput, Report } from "@/lib/chat"
 
 /** The Filed Issue notice under an agent answer. Only Admins receive `issue` and failures. */
@@ -68,10 +77,14 @@ const time = (timestamp: number) =>
 export function ConversationView({
   initial,
   userName,
+  openImage,
 }: {
   initial: Conversation
   userName: string
+  /** Id of the picture shown larger, from the URL. */
+  openImage?: string
 }) {
+  const navigate = useNavigate()
   const [conversation, setConversation] = useState(initial)
   const [busy, setBusy] = useState(false)
   const [networkError, setNetworkError] = useState<string>()
@@ -81,6 +94,9 @@ export function ConversationView({
   const id = initial.id
   const last = conversation.messages.at(-1)
   const pending = last?.status === "pending" || last?.status === "queued"
+  const enlarged = conversation.messages
+    .flatMap((message) => message.images)
+    .find((image) => image.id === openImage)
   const refresh = useCallback(async () => {
     const latest = await getConversation({ data: { conversationId: id } })
     if (mounted.current) setConversation(latest)
@@ -292,6 +308,47 @@ export function ConversationView({
                               </Bubble>
                             )
                           )}
+                          {message.images.map((image) => (
+                            <Link
+                              key={image.id}
+                              data-slot="message-image"
+                              to="/chat/$conversationId"
+                              params={{ conversationId: id }}
+                              search={{ image: image.id }}
+                              className="block w-64 overflow-hidden rounded-lg border bg-card text-left outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 sm:w-72"
+                              aria-label={`Open ${image.name} larger`}
+                              title="Open larger"
+                            >
+                              <img
+                                src={imageUrl(image.id)}
+                                alt=""
+                                width={image.width}
+                                height={image.height}
+                                className="max-h-72 w-full bg-muted object-cover object-top"
+                              />
+                              <span className="flex items-center gap-1.5 border-t px-2.5 py-1.5 text-xs">
+                                <ImageIcon
+                                  className="size-3.5 shrink-0 text-muted-foreground"
+                                  aria-hidden="true"
+                                />
+                                <span className="truncate font-medium">
+                                  {image.name}
+                                </span>
+                              </span>
+                            </Link>
+                          ))}
+                          {message.imagesUnread && (
+                            <Alert className="w-fit">
+                              <ImageOffIcon />
+                              <AlertTitle>
+                                The picture could not be viewed
+                              </AlertTitle>
+                              <AlertDescription>
+                                Agent 6 is not set up to look at pictures, so
+                                this answer is based on your text only.
+                              </AlertDescription>
+                            </Alert>
+                          )}
                           {message.reports.map((report) => (
                             <ReportNotice key={report.id} report={report} />
                           ))}
@@ -347,10 +404,38 @@ export function ConversationView({
                 ? "Retry the answer to continue…"
                 : undefined
             }
-            onSend={(message) => send({ message })}
+            onSend={(message, images) => send({ message, images })}
           />
         </div>
       </DetailPane>
+      <Dialog
+        open={!!enlarged}
+        onOpenChange={(open) => {
+          if (!open)
+            void navigate({
+              to: "/chat/$conversationId",
+              params: { conversationId: id },
+              replace: true,
+            })
+        }}
+      >
+        {enlarged && (
+          <DialogContent className="sm:max-w-4xl">
+            <DialogHeader>
+              <DialogTitle className="truncate pr-8">
+                {enlarged.name}
+              </DialogTitle>
+            </DialogHeader>
+            <img
+              src={imageUrl(enlarged.id)}
+              alt={`Picture sent in this Conversation: ${enlarged.name}`}
+              width={enlarged.width}
+              height={enlarged.height}
+              className="max-h-[75dvh] w-full rounded-md object-contain"
+            />
+          </DialogContent>
+        )}
+      </Dialog>
     </>
   )
 }

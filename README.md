@@ -54,6 +54,12 @@ At `/chat`, choose an Application with at least one ready Repository and ask a q
 
 Before the first reply, Agent 6 refreshes attached clones older than three minutes. If syncing fails it can still read the existing clone. Its code tools list, search, and read attached code; symlinks, `.git`, and paths outside a clone are refused. Reads return at most 200 lines / 24 KB, searches return at most 50 results with a bounded scan, and oversized or binary files are skipped. Replies stop after 12 model turns or 90 seconds and offer **Try again** when they fail. Browsing past Conversations arrives in step 14; save a Conversation's URL to reopen it meanwhile.
 
+### Pictures
+
+A message can carry up to 4 pictures (PNG, JPEG or WebP, 10 MB each), added with the **Attach image** button, by pasting or by dropping them on the message box. The server decides the type from the file's content, not its name. Originals are stored in `DATA_DIR/uploads/` and served only through `/api/uploads/<id>` to the Conversation's owner. The model gets a copy scaled down to at most 1568 pixels on its longest side, and the pictures stay in the Conversation's context for follow-ups. Pictures that were picked but never sent are removed after a day.
+
+If the model server refuses a request that contains pictures, Agent 6 answers the text alone and says under the answer that the picture could not be viewed. Use a model with image input to avoid this.
+
 ## Issue filing
 
 When the agent has located a fault that needs a Code Fix or a Data Fix, it files a GitHub issue in the attached Repository where the fault lives and tells the user that the team has been informed. The issue holds the kind, what the user experienced, the evidence (paths with line numbers at the synced commit, queries, log lines), a potential fix and a link back to the Conversation. Every issue gets the `agent-6` label plus `code-fix` or `data-fix`; Agent 6 creates the labels when a Repository lacks them. GitHub only keeps labels set by a user with write access to the repository, so give the token's user that access; without the `agent-6` label Agent 6 cannot find its issue again.

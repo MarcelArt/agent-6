@@ -57,6 +57,13 @@
       "when": 1794744122872,
       "tag": "0007_outgoing_silver_fox",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1794747080320,
+      "tag": "0008_calm_famine",
+      "breakpoints": true
     }
   ]
 }

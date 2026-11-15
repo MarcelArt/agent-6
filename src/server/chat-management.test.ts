@@ -9,11 +9,15 @@ import { openDb } from "./repositories/db"
 import { createApplicationsRepository } from "./repositories/applications"
 import { createRepositoriesRepository } from "./repositories/repositories"
 import { createConversationsRepository } from "./repositories/conversations"
+import sharp from "sharp"
 import { createSupportRun } from "./support-agent"
+import { createUploads } from "./uploads"
+import { createUploadsRepository } from "./repositories/uploads"
 import { AuthorizationError } from "./session"
 import { REPLY_FAILED, REPLY_LIMIT } from "@/lib/chat"
 import type { Auth } from "./auth"
 import type { SupportRun } from "./support-agent"
+import type { Uploads } from "./uploads"
 import type { ensureFresh } from "./repository-sync"
 import type { ChatEvent } from "@/lib/chat"
 
@@ -25,6 +29,7 @@ let applications: ReturnType<typeof createApplicationsRepository>
 let repositories: ReturnType<typeof createRepositoriesRepository>
 let applicationId: string, repositoryId: string
 let management: ReturnType<typeof createChatManagement>
+let uploads: Uploads
 let fresh: ReturnType<typeof vi.fn<typeof ensureFresh>>
 let run: ReturnType<typeof vi.fn<SupportRun>>
 let getScope: (
@@ -66,6 +71,12 @@ beforeEach(async () => {
   }
   ;[client, other] = sessions
   conversations = createConversationsRepository(db)
+  uploads = createUploads({
+    auth,
+    conversations,
+    uploads: createUploadsRepository(db),
+    dir: join(directory, "uploads"),
+  })
   applications = createApplicationsRepository(db)
   repositories = createRepositoriesRepository(db)
   const application = applications.create({
@@ -123,6 +134,7 @@ beforeEach(async () => {
     conversations,
     getScope,
     fresh,
+    uploads,
     run,
   })
 })
@@ -137,6 +149,21 @@ async function events(response: Response): Promise<ChatEvent[]> {
     .split("\n")
     .map((line) => JSON.parse(line) as ChatEvent)
 }
+let shots = 0
+const screenshot = async (headers = client) =>
+  uploads.add(headers, {
+    name: "error.png",
+    bytes: await sharp({
+      create: {
+        width: 40,
+        height: 30,
+        channels: 3,
+        background: { r: 200, g: 0, b: shots++ },
+      },
+    })
+      .png()
+      .toBuffer(),
+  })
 const create = () =>
   management.create(client, applicationId, "How do I download an invoice?")
 
@@ -217,6 +244,7 @@ describe("Conversations", () => {
       ),
       getScope,
       fresh,
+      uploads,
       run,
     })
     expect((await reopened.get(client, conversation.id)).messages).toHaveLength(
@@ -278,6 +306,7 @@ describe("Conversations", () => {
       conversations,
       getScope,
       fresh,
+      uploads,
       run,
       timeLimitMs: 20,
     })
@@ -386,6 +415,84 @@ describe("Conversations", () => {
   })
 })
 
+describe("Pictures", () => {
+  it("keeps pictures on their message, passes them to the agent, and stores references instead of bytes", async () => {
+    const first = await screenshot(),
+      second = await screenshot()
+    run.mockImplementation(async ({ history, question, images }) => ({
+      text: "That error means the invoice has no price.",
+      history: [
+        ...history,
+        {
+          role: "user",
+          content: [
+            { type: "input_text", text: question },
+            ...(images ?? []).map((image) => ({
+              type: "input_image" as const,
+              image,
+            })),
+          ],
+        },
+      ],
+    }))
+    const conversation = await management.create(
+      client,
+      applicationId,
+      "What does this mean?",
+      [second.id, first.id]
+    )
+    expect(conversation.messages[0].images).toEqual([second, first])
+    await events(
+      await management.reply(client, conversation.id, { start: true })
+    )
+    expect(run.mock.calls[0][0].images).toHaveLength(2)
+    expect(run.mock.calls[0][0].images?.[0]).toMatch(/^data:image\/png;base64,/)
+    const owner = (await auth.api.getSession({ headers: client }))!.user.id
+    const saved = conversations.owned(conversation.id, owner).history
+    expect(saved).not.toContain("base64")
+    expect(saved).toContain(`upload:${second.id}`)
+    // A follow-up without pictures still shows the earlier ones to the model.
+    await events(
+      await management.reply(client, conversation.id, { message: "Sure?" })
+    )
+    expect(JSON.stringify(run.mock.calls[1][0].history)).toContain(
+      "data:image/png;base64,"
+    )
+    expect(run.mock.calls[1][0].images).toEqual([])
+    expect(
+      (await management.get(client, conversation.id)).messages[0].images
+    ).toEqual([second, first])
+  })
+  it("accepts a picture without text, and refuses someone else's, a reused or too many pictures", async () => {
+    const mine = await screenshot()
+    const conversation = await management.create(client, applicationId, "", [
+      mine.id,
+    ])
+    expect(conversation).toMatchObject({
+      title: "Picture",
+      messages: [{ content: "", images: [mine] }, {}],
+    })
+    await expect(
+      management.create(client, applicationId, "Again", [mine.id])
+    ).rejects.toThrow(/attach it again/)
+    const theirs = await screenshot(other)
+    await expect(
+      management.create(client, applicationId, "Look", [theirs.id])
+    ).rejects.toThrow(/attach it again/)
+    await expect(
+      management.create(
+        client,
+        applicationId,
+        "Look",
+        Array.from({ length: 5 }, () => "x")
+      )
+    ).rejects.toThrow(/at most 4 pictures/)
+    await expect(
+      management.create(client, applicationId, "", [])
+    ).rejects.toThrow()
+  })
+})
+
 describe("OpenAI-compatible Chat Completions", () => {
   function sdk() {
     return createChatManagement({
@@ -393,6 +500,7 @@ describe("OpenAI-compatible Chat Completions", () => {
       conversations,
       getScope,
       fresh,
+      uploads,
       run: createSupportRun({
         dataDir: directory,
         encryptionKey: "unused",
@@ -479,6 +587,67 @@ describe("OpenAI-compatible Chat Completions", () => {
       "Help the billing team."
     )
     expect(JSON.stringify(requests[0].messages)).toContain("frontend")
+  })
+  it("sends pictures as image input, and answers the text alone when the model refuses pictures", async () => {
+    const requests: Array<{ messages: Array<{ content: unknown }> }> = []
+    let vision = true
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (_url: string, init: RequestInit) => {
+        const body = JSON.parse(init.body as string)
+        requests.push(body)
+        if (!vision && JSON.stringify(body.messages).includes("image_url"))
+          return new Response(
+            JSON.stringify({
+              error: { message: "This model does not support image input." },
+            }),
+            { status: 400, headers: { "Content-Type": "application/json" } }
+          )
+        return completion(
+          { role: "assistant", content: "The invoice has no price." },
+          "stop"
+        )
+      })
+    )
+    const service = sdk()
+    const seen = await service.create(client, applicationId, "What is this?", [
+      (await screenshot()).id,
+    ])
+    await events(await service.reply(client, seen.id, { start: true }))
+    expect(requests[0].messages.at(-1)?.content).toEqual([
+      { type: "text", text: "What is this?" },
+      {
+        type: "image_url",
+        image_url: { url: expect.stringMatching(/^data:image\/png;base64,/) },
+      },
+    ])
+    expect((await service.get(client, seen.id)).messages.at(-1)).toMatchObject({
+      status: "complete",
+      imagesUnread: false,
+    })
+
+    vision = false
+    requests.length = 0
+    const unseen = await service.create(client, applicationId, "And this?", [
+      (await screenshot()).id,
+    ])
+    await events(await service.reply(client, unseen.id, { start: true }))
+    expect(requests).toHaveLength(2)
+    expect(JSON.stringify(requests[1].messages)).not.toContain("image_url")
+    expect(JSON.stringify(requests[1].messages)).toContain("And this?")
+    expect(
+      (await service.get(client, unseen.id)).messages.at(-1)
+    ).toMatchObject({
+      status: "complete",
+      content: "The invoice has no price.",
+      imagesUnread: true,
+    })
+    // The follow-up is not refused again: the pictures left the history.
+    await events(await service.reply(client, unseen.id, { message: "Sure?" }))
+    expect(requests).toHaveLength(3)
+    expect(
+      (await service.get(client, unseen.id)).messages.at(-1)
+    ).toMatchObject({ status: "complete", imagesUnread: false })
   })
   it("turns a wrong API key into a saved friendly error, then retries", async () => {
     const fetcher = vi

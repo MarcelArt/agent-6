@@ -11,21 +11,34 @@ import {
 } from "./repositories/conversations"
 import { ensureFresh } from "./repository-sync"
 import { createSupportRun } from "./support-agent"
+import { createUploads } from "./uploads"
 import type { Auth } from "./auth"
 import type { ConversationsRepository } from "./repositories/conversations"
 import type { SupportRun } from "./support-agent"
+import type { Uploads } from "./uploads"
 import type { ApplicationScope } from "@/lib/applications"
 import type { ChatEvent, ReplyInput } from "@/lib/chat"
 import {
+  MAX_IMAGES_PER_MESSAGE,
   MAX_MESSAGE_LENGTH,
   REPLY_FAILED,
   REPLY_LIMIT,
   REPLY_TIME_LIMIT_MS,
 } from "@/lib/chat"
 
-export const chatMessageInput = z.string().trim().min(1).max(MAX_MESSAGE_LENGTH)
+/** A message needs text, pictures or both. */
+export const chatMessageInput = z
+  .object({
+    message: z.string().trim().max(MAX_MESSAGE_LENGTH),
+    images: z
+      .array(z.string().min(1).max(64))
+      .max(MAX_IMAGES_PER_MESSAGE)
+      .optional(),
+  })
+  .strict()
+  .refine((input) => input.message || input.images?.length)
 export const replyInput = z.union([
-  z.object({ message: chatMessageInput }).strict(),
+  chatMessageInput,
   z.object({ retry: z.literal(true) }).strict(),
   z.object({ start: z.literal(true) }).strict(),
 ])
@@ -40,6 +53,7 @@ export function createChatManagement(
     ) => Promise<ApplicationScope | null>
     fresh?: typeof ensureFresh
     run?: SupportRun
+    uploads?: Pick<Uploads, "modelInput">
     timeLimitMs?: number
   } = {}
 ) {
@@ -55,12 +69,17 @@ export function createChatManagement(
       await user(headers)
       return conversations.applications()
     },
-    async create(headers: Headers, applicationId: string, text: string) {
+    async create(
+      headers: Headers,
+      applicationId: string,
+      text: string,
+      images: Array<string> = []
+    ) {
       const owner = await user(headers)
-      const parsed = chatMessageInput.safeParse(text)
+      const parsed = chatMessageInput.safeParse({ message: text, images })
       if (!parsed.success)
         throw new ConversationError(
-          `Write a message of up to ${MAX_MESSAGE_LENGTH} characters.`
+          `Write a message of up to ${MAX_MESSAGE_LENGTH} characters, with at most ${MAX_IMAGES_PER_MESSAGE} pictures.`
         )
       const application = conversations
         .applications()
@@ -69,7 +88,12 @@ export function createChatManagement(
         throw new ConversationError(
           "This Application is not ready for questions yet. Please choose another Application."
         )
-      return conversations.create(owner.id, applicationId, parsed.data)
+      return conversations.create(
+        owner.id,
+        applicationId,
+        parsed.data.message,
+        parsed.data.images
+      )
     },
     async get(headers: Headers, id: string) {
       const reader = await user(headers)
@@ -137,12 +161,19 @@ export function createChatManagement(
                     conversations.markRefreshed(id)
                   }
                   abort.signal.throwIfAborted()
-                  return (deps.run ?? createSupportRun(getConfig()))({
+                  const prepared = await (
+                    deps.uploads ?? createUploads({ conversations })
+                  ).modelInput(claim.history, claim.images)
+                  abort.signal.throwIfAborted()
+                  const answer = await (
+                    deps.run ?? createSupportRun(getConfig())
+                  )({
                     scope: applicationScope,
                     conversationId: id,
                     messageId: claim.assistantId,
-                    history: claim.history,
+                    history: prepared.history,
                     question: claim.question,
+                    images: prepared.images,
                     signal: abort.signal,
                     onText(text) {
                       if (abort.signal.aborted) return
@@ -159,13 +190,15 @@ export function createChatManagement(
                       emit({ type: "progress" })
                     },
                   })
+                  return { ...answer, history: prepared.store(answer.history) }
                 })(),
               ])
               conversations.finish(
                 id,
                 claim.assistantId,
                 result.text,
-                result.history
+                result.history,
+                result.imagesUnread
               )
             } catch (error) {
               conversations.finish(

@@ -39,6 +39,21 @@ export type Report =
       issue?: { repository: string; number: number; url: string }
     }
   | { id: string; outcome: "failed"; repository: string; reason: string }
+export const MAX_IMAGES_PER_MESSAGE = 4
+export const MAX_IMAGE_BYTES = 10 * 1024 * 1024
+export const IMAGE_TYPES = ["image/png", "image/jpeg", "image/webp"] as const
+export type ImageType = (typeof IMAGE_TYPES)[number]
+export const IMAGE_TOO_LARGE = `This picture is too large. Pictures can be up to ${MAX_IMAGE_BYTES / 1024 / 1024} MB.`
+export const IMAGE_NOT_SUPPORTED =
+  "This file is not a picture Agent 6 can read. Use a PNG, JPEG or WebP image."
+/** A picture on a message. Its bytes are served to the Conversation's owner only. */
+export type ChatImage = {
+  id: string
+  name: string
+  width: number
+  height: number
+}
+export const imageUrl = (id: string) => `/api/uploads/${encodeURIComponent(id)}`
 export type ChatMessage = {
   id: string
   role: "user" | "assistant"
@@ -46,6 +61,10 @@ export type ChatMessage = {
   status: "queued" | "pending" | "complete" | "error"
   createdAt: number
   reports: Array<Report>
+  /** Pictures the user sent with this message. */
+  images: Array<ChatImage>
+  /** On an agent answer: the model could not take pictures, so only the text was answered. */
+  imagesUnread: boolean
 }
 export type Conversation = {
   id: string
@@ -59,4 +78,7 @@ export type ChatEvent =
   | { type: "delta"; text: string }
   | { type: "done"; conversation: Conversation }
 
-export type ReplyInput = { message: string } | { retry: true } | { start: true }
+export type ReplyInput =
+  | { message: string; images?: Array<string> }
+  | { retry: true }
+  | { start: true }

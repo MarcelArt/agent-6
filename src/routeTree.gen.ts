@@ -41,6 +41,8 @@ import { Route as AdminUsersUserIdRouteImport } from './routes/admin/users/$user
 import { Route as AdminUsersNewRouteImport } from './routes/admin/users/new'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as ApiChatConversationIdRouteImport } from './routes/api/chat/$conversationId'
+import { Route as ApiUploadsIndexRouteImport } from './routes/api/uploads/index'
+import { Route as ApiUploadsUploadIdRouteImport } from './routes/api/uploads/$uploadId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -211,6 +213,16 @@ const ApiChatConversationIdRoute = ApiChatConversationIdRouteImport.update({
   path: '/api/chat/$conversationId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiUploadsIndexRoute = ApiUploadsIndexRouteImport.update({
+  id: '/api/uploads/',
+  path: '/api/uploads/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiUploadsUploadIdRoute = ApiUploadsUploadIdRouteImport.update({
+  id: '/api/uploads/$uploadId',
+  path: '/api/uploads/$uploadId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -240,11 +252,13 @@ export interface FileRoutesByFullPath {
   '/admin/users/new': typeof AdminUsersNewRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/chat/$conversationId': typeof ApiChatConversationIdRoute
+  '/api/uploads/$uploadId': typeof ApiUploadsUploadIdRoute
   '/admin/applications/': typeof AdminApplicationsIndexRoute
   '/admin/database-connections/': typeof AdminDatabaseConnectionsIndexRoute
   '/admin/log-connections/': typeof AdminLogConnectionsIndexRoute
   '/admin/repositories/': typeof AdminRepositoriesIndexRoute
   '/admin/users/': typeof AdminUsersIndexRoute
+  '/api/uploads/': typeof ApiUploadsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -267,11 +281,13 @@ export interface FileRoutesByTo {
   '/admin/users/new': typeof AdminUsersNewRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/chat/$conversationId': typeof ApiChatConversationIdRoute
+  '/api/uploads/$uploadId': typeof ApiUploadsUploadIdRoute
   '/admin/applications': typeof AdminApplicationsIndexRoute
   '/admin/database-connections': typeof AdminDatabaseConnectionsIndexRoute
   '/admin/log-connections': typeof AdminLogConnectionsIndexRoute
   '/admin/repositories': typeof AdminRepositoriesIndexRoute
   '/admin/users': typeof AdminUsersIndexRoute
+  '/api/uploads': typeof ApiUploadsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -302,11 +318,13 @@ export interface FileRoutesById {
   '/admin/users/new': typeof AdminUsersNewRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/chat/$conversationId': typeof ApiChatConversationIdRoute
+  '/api/uploads/$uploadId': typeof ApiUploadsUploadIdRoute
   '/admin/applications/': typeof AdminApplicationsIndexRoute
   '/admin/database-connections/': typeof AdminDatabaseConnectionsIndexRoute
   '/admin/log-connections/': typeof AdminLogConnectionsIndexRoute
   '/admin/repositories/': typeof AdminRepositoriesIndexRoute
   '/admin/users/': typeof AdminUsersIndexRoute
+  '/api/uploads/': typeof ApiUploadsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -338,11 +356,13 @@ export interface FileRouteTypes {
     | '/admin/users/new'
     | '/api/auth/$'
     | '/api/chat/$conversationId'
+    | '/api/uploads/$uploadId'
     | '/admin/applications/'
     | '/admin/database-connections/'
     | '/admin/log-connections/'
     | '/admin/repositories/'
     | '/admin/users/'
+    | '/api/uploads/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -365,11 +385,13 @@ export interface FileRouteTypes {
     | '/admin/users/new'
     | '/api/auth/$'
     | '/api/chat/$conversationId'
+    | '/api/uploads/$uploadId'
     | '/admin/applications'
     | '/admin/database-connections'
     | '/admin/log-connections'
     | '/admin/repositories'
     | '/admin/users'
+    | '/api/uploads'
   id:
     | '__root__'
     | '/'
@@ -399,11 +421,13 @@ export interface FileRouteTypes {
     | '/admin/users/new'
     | '/api/auth/$'
     | '/api/chat/$conversationId'
+    | '/api/uploads/$uploadId'
     | '/admin/applications/'
     | '/admin/database-connections/'
     | '/admin/log-connections/'
     | '/admin/repositories/'
     | '/admin/users/'
+    | '/api/uploads/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -413,6 +437,8 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiChatConversationIdRoute: typeof ApiChatConversationIdRoute
+  ApiUploadsUploadIdRoute: typeof ApiUploadsUploadIdRoute
+  ApiUploadsIndexRoute: typeof ApiUploadsIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -641,6 +667,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiChatConversationIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/uploads/': {
+      id: '/api/uploads/'
+      path: '/api/uploads'
+      fullPath: '/api/uploads/'
+      preLoaderRoute: typeof ApiUploadsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/uploads/$uploadId': {
+      id: '/api/uploads/$uploadId'
+      path: '/api/uploads/$uploadId'
+      fullPath: '/api/uploads/$uploadId'
+      preLoaderRoute: typeof ApiUploadsUploadIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -784,6 +824,8 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiChatConversationIdRoute: ApiChatConversationIdRoute,
+  ApiUploadsUploadIdRoute: ApiUploadsUploadIdRoute,
+  ApiUploadsIndexRoute: ApiUploadsIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

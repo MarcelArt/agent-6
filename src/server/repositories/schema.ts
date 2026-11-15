@@ -252,10 +252,47 @@ export const message = sqliteTable(
     role: text("role").notNull(),
     content: text("content").notNull(),
     status: text("status").notNull(),
+    /** Agent answer given without the pictures because the model refused them. */
+    imagesUnread: integer("images_unread", { mode: "boolean" })
+      .notNull()
+      .default(false),
     createdAt: timestamp("created_at").notNull(),
   },
   (table) => [
     index("message_conversation_idx").on(table.conversationId, table.createdAt),
+  ]
+)
+
+/**
+ * An uploaded picture. The bytes live in `DATA_DIR/uploads/<id>`, with a
+ * downscaled copy for the model in `<id>.model` when `modelType` is set.
+ * `messageId` is null until the message it was picked for is sent.
+ */
+export const upload = sqliteTable(
+  "upload",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    messageId: text("message_id").references(() => message.id, {
+      onDelete: "cascade",
+    }),
+    /** Order within the message. */
+    position: integer("position").notNull().default(0),
+    name: text("name").notNull(),
+    /** Detected from the content: "image/png", "image/jpeg" or "image/webp". */
+    type: text("type").notNull(),
+    size: integer("size").notNull(),
+    width: integer("width").notNull(),
+    height: integer("height").notNull(),
+    /** Type of the copy sent to the model; null when the original is sent. */
+    modelType: text("model_type"),
+    createdAt: timestamp("created_at").notNull(),
+  },
+  (table) => [
+    index("upload_message_idx").on(table.messageId),
+    index("upload_user_idx").on(table.userId),
   ]
 )
 

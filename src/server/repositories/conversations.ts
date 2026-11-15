@@ -1,7 +1,7 @@
 import "@tanstack/react-start/server-only"
 
 import { randomUUID } from "node:crypto"
-import { and, asc, eq, sql } from "drizzle-orm"
+import { and, asc, eq, isNull, sql } from "drizzle-orm"
 import { getDb } from "./db"
 import {
   application,
@@ -10,10 +10,12 @@ import {
   message,
   repository,
   repositoryAttachment,
+  upload,
 } from "./schema"
 import type { Db } from "./db"
 import type { AgentInputItem } from "@openai/agents"
 import type {
+  ChatImage,
   ChatMessage,
   Conversation,
   FiledIssueRecord,
@@ -80,6 +82,19 @@ export function createConversationsRepository(db: Db = getDb()) {
           report,
         ])
     }
+    const images = new Map<string, Array<ChatImage>>()
+    for (const row of db
+      .select({ upload })
+      .from(upload)
+      .innerJoin(message, eq(message.id, upload.messageId))
+      .where(eq(message.conversationId, id))
+      .orderBy(asc(upload.position))
+      .all()
+      .map((found) => found.upload))
+      images.set(row.messageId!, [
+        ...(images.get(row.messageId!) ?? []),
+        { id: row.id, name: row.name, width: row.width, height: row.height },
+      ])
     return db
       .select()
       .from(message)
@@ -93,6 +108,8 @@ export function createConversationsRepository(db: Db = getDb()) {
         status: row.status as ChatMessage["status"],
         createdAt: row.createdAt.getTime(),
         reports: reports.get(row.id) ?? [],
+        images: images.get(row.id) ?? [],
+        imagesUnread: row.imagesUnread,
       }))
   }
   function recover(id: string, userId: string) {
@@ -131,11 +148,19 @@ export function createConversationsRepository(db: Db = getDb()) {
       messages: messages(id, admin),
     }
   }
-  function queue(id: string, content: string, now: Date) {
+  /** Adds the user's message with the pictures they picked, and the answer to write. */
+  function queue(
+    id: string,
+    userId: string,
+    content: string,
+    images: Array<string>,
+    now: Date
+  ) {
+    const messageId = randomUUID()
     db.insert(message)
       .values([
         {
-          id: randomUUID(),
+          id: messageId,
           conversationId: id,
           role: "user",
           content,
@@ -152,6 +177,25 @@ export function createConversationsRepository(db: Db = getDb()) {
         },
       ])
       .run()
+    images.forEach((imageId, position) => {
+      // Only the user's own pictures, and each on one message only.
+      const linked = db
+        .update(upload)
+        .set({ messageId, position })
+        .where(
+          and(
+            eq(upload.id, imageId),
+            eq(upload.userId, userId),
+            isNull(upload.messageId)
+          )
+        )
+        .returning({ id: upload.id })
+        .all()
+      if (!linked.length)
+        throw new ConversationError(
+          "A picture could not be added. Please attach it again."
+        )
+    })
   }
   return {
     owned,
@@ -180,7 +224,12 @@ export function createConversationsRepository(db: Db = getDb()) {
         .orderBy(asc(sql`lower(${application.name})`), asc(application.id))
         .all()
     },
-    create(userId: string, applicationId: string, content: string) {
+    create(
+      userId: string,
+      applicationId: string,
+      content: string,
+      images: Array<string> = []
+    ) {
       const id = randomUUID(),
         now = new Date()
       db.transaction(() => {
@@ -189,12 +238,12 @@ export function createConversationsRepository(db: Db = getDb()) {
             id,
             userId,
             applicationId,
-            title: content.replace(/\s+/g, " ").slice(0, 70),
+            title: content.replace(/\s+/g, " ").slice(0, 70) || "Picture",
             createdAt: now,
             updatedAt: now,
           })
           .run()
-        queue(id, content, now)
+        queue(id, userId, content, images, now)
       })
       return get(id, userId)
     },
@@ -214,7 +263,7 @@ export function createConversationsRepository(db: Db = getDb()) {
                 "Please retry the last answer first.",
                 409
               )
-            queue(id, input.message, new Date())
+            queue(id, userId, input.message, input.images ?? [], new Date())
             rows = messages(id)
           } else if ("retry" in input) {
             if (last?.status !== "error")
@@ -227,7 +276,12 @@ export function createConversationsRepository(db: Db = getDb()) {
           // never write into a later attempt at the same answer.
           const assistantId = "retry" in input ? randomUUID() : assistant.id
           db.update(message)
-            .set({ id: assistantId, status: "pending", content: "" })
+            .set({
+              id: assistantId,
+              status: "pending",
+              content: "",
+              imagesUnread: false,
+            })
             .where(eq(message.id, assistant.id))
             .run()
           // What a failed attempt already reported stays with the answer.
@@ -246,6 +300,7 @@ export function createConversationsRepository(db: Db = getDb()) {
             conversation: found,
             assistantId,
             question: question.content,
+            images: question.images.map((image) => image.id),
             history: JSON.parse(found.history) as Array<AgentInputItem>,
           }
         },
@@ -304,12 +359,17 @@ export function createConversationsRepository(db: Db = getDb()) {
       id: string,
       assistantId: string,
       content: string,
-      history?: Array<AgentInputItem>
+      history?: Array<AgentInputItem>,
+      imagesUnread = false
     ) {
       db.transaction(() => {
         const updated = db
           .update(message)
-          .set({ content, status: history ? "complete" : "error" })
+          .set({
+            content,
+            status: history ? "complete" : "error",
+            imagesUnread,
+          })
           .where(
             and(eq(message.id, assistantId), eq(message.status, "pending"))
           )

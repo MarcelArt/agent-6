@@ -138,13 +138,13 @@ function Page() {
             <Composer
               disabled={!ready || creating}
               hint={ready ? undefined : "Choose an Application first…"}
-              onSend={async (message) => {
+              onSend={async (message, images) => {
                 if (!selected) return false
                 setCreating(true)
                 setError(undefined)
                 try {
                   const result = await createConversation({
-                    data: { applicationId: selected, message },
+                    data: { applicationId: selected, message, images },
                   })
                   if (!result.ok) {
                     setError(result.message)

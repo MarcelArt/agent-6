@@ -6,6 +6,7 @@ import { ensureFirstAdmin } from "./first-admin"
 import { getDb } from "./repositories/db"
 import { createUsersRepository } from "./repositories/users"
 import { getRepositorySync } from "./repository-sync"
+import { createUploads } from "./uploads"
 import { TOKEN_MISSING_MESSAGE } from "@/lib/repositories"
 
 /** A configuration problem stops the process with a readable message. */
@@ -49,4 +50,7 @@ export async function startServer(): Promise<void> {
   if (!getConfig().githubToken)
     console.warn(`\nWarning: ${TOKEN_MISSING_MESSAGE}\n`)
   getRepositorySync().resume()
+  void createUploads()
+    .sweep()
+    .catch(() => {})
 }

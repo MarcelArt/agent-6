@@ -9,7 +9,13 @@ export const listChatApplications = createServerFn({ method: "GET" }).handler(
   () => createChatManagement().applications(getRequestHeaders())
 )
 export const createConversation = createServerFn({ method: "POST" })
-  .validator(z.object({ applicationId: z.string(), message: z.string() }))
+  .validator(
+    z.object({
+      applicationId: z.string(),
+      message: z.string(),
+      images: z.array(z.string()).optional(),
+    })
+  )
   .handler(async ({ data }) => {
     try {
       return {
@@ -17,7 +23,8 @@ export const createConversation = createServerFn({ method: "POST" })
         conversation: await createChatManagement().create(
           getRequestHeaders(),
           data.applicationId,
-          data.message
+          data.message,
+          data.images
         ),
       }
     } catch (error) {
