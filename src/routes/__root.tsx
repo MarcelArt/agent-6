@@ -4,20 +4,24 @@ import {
   Outlet,
   Scripts,
   createRootRoute,
-  useRouter,
 } from "@tanstack/react-router"
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools"
 import { TanStackDevtools } from "@tanstack/react-devtools"
-import { CircleAlertIcon, CompassIcon } from "lucide-react"
-import type { ErrorComponentProps } from "@tanstack/react-router"
+import { CompassIcon } from "lucide-react"
 
 import appCss from "../styles.css?url"
+import { ErrorPage } from "@/components/shell/error-page"
 import { FullPageMessage } from "@/components/shell/full-page-message"
-import { Button, buttonVariants } from "@/components/ui/button"
+import { buttonVariants } from "@/components/ui/button"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { themeScript } from "@/lib/theme"
+import { getCurrentUser } from "@/server/session.functions"
 
 export const Route = createRootRoute({
+  // Runs before every page, on the server for the first one. Routes read
+  // `context.user` to decide who may see them; server functions check the
+  // session again themselves.
+  beforeLoad: async () => ({ user: await getCurrentUser() }),
   head: () => ({
     meta: [
       {
@@ -40,7 +44,7 @@ export const Route = createRootRoute({
   }),
   component: RootComponent,
   notFoundComponent: NotFound,
-  errorComponent: RootError,
+  errorComponent: ErrorPage,
   shellComponent: RootDocument,
 })
 
@@ -62,32 +66,6 @@ function NotFound() {
       <Link to="/chat" className={buttonVariants()}>
         Go to chat
       </Link>
-    </FullPageMessage>
-  )
-}
-
-function RootError({ error, reset }: ErrorComponentProps) {
-  const router = useRouter()
-  const message = error instanceof Error ? error.message : ""
-  return (
-    <FullPageMessage
-      icon={<CircleAlertIcon className="text-destructive" />}
-      title="Something went wrong"
-      description={
-        message
-          ? `Agent 6 could not show this page: ${message}`
-          : "Agent 6 could not show this page."
-      }
-    >
-      <Button
-        variant="outline"
-        onClick={() => {
-          reset()
-          void router.invalidate()
-        }}
-      >
-        Try again
-      </Button>
     </FullPageMessage>
   )
 }

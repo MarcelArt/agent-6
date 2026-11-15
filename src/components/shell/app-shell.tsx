@@ -1,9 +1,10 @@
 import { Link, useLocation } from "@tanstack/react-router"
-import { ShieldCheckIcon, UserIcon } from "lucide-react"
+import { ShieldCheckIcon } from "lucide-react"
 import { cn } from "cn"
 import { adminNav, chatNav } from "./nav"
-import { UserMenuContent } from "./user-menu"
+import { UserMenuContent, initials } from "./user-menu"
 import type { NavItem } from "./nav"
+import type { SessionUser } from "@/lib/roles"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { buttonVariants } from "@/components/ui/button"
 import {
@@ -23,28 +24,41 @@ import {
  * The frame of every logged-in screen: rail (bottom tab bar on phone) plus
  * the panes of the current route. See docs/design/DESIGN.md, sections 1 and 7.
  */
-export function AppShell({ children }: { children: React.ReactNode }) {
+export function AppShell({
+  user,
+  children,
+}: {
+  user: SessionUser
+  children: React.ReactNode
+}) {
   const pathname = useLocation({ select: (location) => location.pathname })
   return (
     <div className="flex h-svh flex-col overflow-hidden md:flex-row">
-      <Rail pathname={pathname} />
+      <Rail user={user} pathname={pathname} />
       {children}
-      <TabBar pathname={pathname} />
+      <TabBar user={user} pathname={pathname} />
     </div>
   )
 }
 
-function UserAvatar({ size }: { size?: "sm" }) {
+function UserAvatar({ user, size }: { user: SessionUser; size?: "sm" }) {
   return (
     <Avatar size={size}>
-      <AvatarFallback className="text-foreground">
-        <UserIcon className={size === "sm" ? "size-3.5" : "size-4"} />
+      <AvatarFallback
+        className={cn(
+          "font-medium text-foreground",
+          size === "sm" ? "text-[0.625rem]" : "text-xs"
+        )}
+      >
+        {initials(user.name)}
       </AvatarFallback>
     </Avatar>
   )
 }
 
-function Rail({ pathname }: { pathname: string }) {
+type ShellProps = { user: SessionUser; pathname: string }
+
+function Rail({ user, pathname }: ShellProps) {
   return (
     <nav
       aria-label="Main"
@@ -56,18 +70,22 @@ function Rail({ pathname }: { pathname: string }) {
       {chatNav.map((item) => (
         <RailItem key={item.to} item={item} pathname={pathname} />
       ))}
-      <Separator className="my-1.5 w-6!" />
-      {adminNav.map((item) => (
-        <RailItem key={item.to} item={item} pathname={pathname} />
-      ))}
+      {user.role === "admin" && (
+        <>
+          <Separator className="my-1.5 w-6!" />
+          {adminNav.map((item) => (
+            <RailItem key={item.to} item={item} pathname={pathname} />
+          ))}
+        </>
+      )}
       <DropdownMenu>
         <DropdownMenuTrigger
-          aria-label="Account: theme"
+          aria-label={`Account: ${user.name}`}
           className="mt-auto rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
         >
-          <UserAvatar />
+          <UserAvatar user={user} />
         </DropdownMenuTrigger>
-        <UserMenuContent side="right" align="end" sideOffset={20} />
+        <UserMenuContent user={user} side="right" align="end" sideOffset={20} />
       </DropdownMenu>
     </nav>
   )
@@ -115,7 +133,7 @@ function RailItem({ item, pathname }: { item: NavItem; pathname: string }) {
 const tabClass =
   "flex flex-1 flex-col items-center justify-center gap-0.5 text-xs text-muted-foreground outline-none focus-visible:bg-sidebar-accent aria-expanded:text-foreground data-active:font-medium data-active:text-foreground"
 
-function TabBar({ pathname }: { pathname: string }) {
+function TabBar({ user, pathname }: ShellProps) {
   const inAdmin = adminNav.some((item) => item.isActive(pathname))
   return (
     <nav
@@ -140,46 +158,48 @@ function TabBar({ pathname }: { pathname: string }) {
           </Link>
         )
       })}
-      <DropdownMenu>
-        <DropdownMenuTrigger
-          className={tabClass}
-          data-active={inAdmin ? "" : undefined}
-        >
-          <span className="flex h-6 items-center">
-            <ShieldCheckIcon className="size-5" />
-          </span>
-          Admin
-        </DropdownMenuTrigger>
-        <DropdownMenuContent side="top" align="center" className="w-56">
-          {adminNav.map((item) => {
-            const active = item.isActive(pathname)
-            return (
-              <DropdownMenuItem
-                key={item.to}
-                className={cn(active && "font-medium")}
-                render={
-                  <Link
-                    to={item.to}
-                    activeOptions={{ exact: true }}
-                    aria-current={active ? "page" : undefined}
-                  />
-                }
-              >
-                <item.icon />
-                {item.label}
-              </DropdownMenuItem>
-            )
-          })}
-        </DropdownMenuContent>
-      </DropdownMenu>
+      {user.role === "admin" && (
+        <DropdownMenu>
+          <DropdownMenuTrigger
+            className={tabClass}
+            data-active={inAdmin ? "" : undefined}
+          >
+            <span className="flex h-6 items-center">
+              <ShieldCheckIcon className="size-5" />
+            </span>
+            Admin
+          </DropdownMenuTrigger>
+          <DropdownMenuContent side="top" align="center" className="w-56">
+            {adminNav.map((item) => {
+              const active = item.isActive(pathname)
+              return (
+                <DropdownMenuItem
+                  key={item.to}
+                  className={cn(active && "font-medium")}
+                  render={
+                    <Link
+                      to={item.to}
+                      activeOptions={{ exact: true }}
+                      aria-current={active ? "page" : undefined}
+                    />
+                  }
+                >
+                  <item.icon />
+                  {item.label}
+                </DropdownMenuItem>
+              )
+            })}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      )}
       <DropdownMenu>
         <DropdownMenuTrigger className={tabClass}>
           <span className="flex h-6 items-center">
-            <UserAvatar size="sm" />
+            <UserAvatar user={user} size="sm" />
           </span>
           Account
         </DropdownMenuTrigger>
-        <UserMenuContent side="top" align="end" sideOffset={8} />
+        <UserMenuContent user={user} side="top" align="end" sideOffset={8} />
       </DropdownMenu>
     </nav>
   )

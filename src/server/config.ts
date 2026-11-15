@@ -25,6 +25,31 @@ const schema = z.object({
       error:
         "must be 32 bytes encoded as base64. Generate one with: openssl rand -base64 32",
     }),
+  BETTER_AUTH_SECRET: z
+    .string({
+      error: "is required. Generate one with: openssl rand -base64 32",
+    })
+    .trim()
+    .min(
+      32,
+      "must be at least 32 characters. Generate one with: openssl rand -base64 32"
+    ),
+  BETTER_AUTH_URL: z
+    .string({
+      error:
+        "is required. Set it to the address people open Agent 6 at, for example http://localhost:3000",
+    })
+    .trim()
+    .pipe(
+      z.url({
+        protocol: /^https?$/,
+        error:
+          "must be an http or https address, for example http://localhost:3000",
+      })
+    ),
+  // Only used while no user exists; see `first-admin.ts`, which validates them.
+  ADMIN_EMAIL: z.string().trim().optional(),
+  ADMIN_PASSWORD: z.string().optional(),
 })
 
 export type Config = {
@@ -32,6 +57,13 @@ export type Config = {
   dataDir: string
   /** Base64 of the 32-byte key used by `secrets.ts`. */
   encryptionKey: string
+  /** Secret Better Auth signs session cookies with. */
+  authSecret: string
+  /** Address people open Agent 6 at. */
+  baseUrl: string
+  /** Credentials of the first Admin. Only used while no user exists. */
+  adminEmail?: string
+  adminPassword?: string
 }
 
 export class ConfigError extends Error {
@@ -60,6 +92,10 @@ export function parseConfig(env: Record<string, string | undefined>): Config {
   return {
     dataDir: result.data.DATA_DIR,
     encryptionKey: result.data.ENCRYPTION_KEY,
+    authSecret: result.data.BETTER_AUTH_SECRET,
+    baseUrl: result.data.BETTER_AUTH_URL,
+    adminEmail: result.data.ADMIN_EMAIL || undefined,
+    adminPassword: result.data.ADMIN_PASSWORD || undefined,
   }
 }
 

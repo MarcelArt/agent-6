@@ -1,8 +1,9 @@
 import handler, { createServerEntry } from "@tanstack/react-start/server-entry"
-import { startup } from "./server/startup"
+import { startServer } from "./server/startup"
 
-// Validate configuration and migrate the database before serving anything.
-startup()
+// Validate configuration, migrate the database and create the first Admin
+// before serving anything.
+await startServer()
 
 export default createServerEntry({
   fetch(request, opts) {
