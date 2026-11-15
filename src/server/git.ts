@@ -1,8 +1,7 @@
 import "@tanstack/react-start/server-only"
 
 import { execFile } from "node:child_process"
-import { existsSync } from "node:fs"
-import { mkdir } from "node:fs/promises"
+import { mkdir, rm } from "node:fs/promises"
 import { devNull } from "node:os"
 import { join } from "node:path"
 
@@ -77,13 +76,18 @@ export function createGit(token?: string): Git {
     signal?: AbortSignal
   ): Promise<string> {
     return new Promise((resolve, reject) => {
-      execFile(
+      const child = execFile(
         "git",
         args,
         { cwd, env, signal, timeout: TIMEOUT_MS, maxBuffer: 4 * 1024 * 1024 },
         (error, stdout, stderr) => {
           if (!error) return resolve(stdout.trim())
-          reject(new GitError(explain(error, redact(String(stderr)))))
+          const fail = () =>
+            reject(new GitError(explain(error, redact(String(stderr)))))
+          // Abort invokes the callback before git exits. Wait before reusing the clone.
+          if (child.exitCode === null && child.signalCode === null)
+            child.once("close", fail)
+          else fail()
         }
       )
     })
@@ -92,9 +96,19 @@ export function createGit(token?: string): Git {
   return {
     async sync({ dir, url, branch, signal }) {
       await mkdir(dir, { recursive: true })
-      if (!existsSync(join(dir, ".git"))) {
-        await run(dir, ["init", "--quiet"], signal)
-      }
+      // One process and one sync per clone: these can only be left by a killed git.
+      for (const lock of [
+        "index.lock",
+        "config.lock",
+        "shallow.lock",
+        "HEAD.lock",
+        "packed-refs.lock",
+        "FETCH_HEAD.lock",
+        "refs/agent6/tracked.lock",
+      ])
+        await rm(join(dir, ".git", lock), { force: true })
+      // Reinitializing is safe for an existing clone and repairs a killed first init.
+      await run(dir, ["init", "--quiet"], signal)
       try {
         await run(
           dir,

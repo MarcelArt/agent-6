@@ -15,6 +15,7 @@ import { createGuardrailClassifier } from "./guardrail"
 import { createUploads } from "./uploads"
 import { createSettingsRepository } from "./repositories/settings"
 import { readLanguageSettings } from "./preferred-language"
+import { replies } from "./reply-lifecycle"
 import type { SettingsRepository } from "./repositories/settings"
 import type { Auth } from "./auth"
 import type { ConversationsRepository } from "./repositories/conversations"
@@ -130,7 +131,13 @@ export function createChatManagement(
       const language = readLanguageSettings(
         deps.settings ?? createSettingsRepository()
       )
+      if (replies.stopping)
+        throw new ConversationError(
+          "Agent 6 is restarting. Please try again.",
+          503
+        )
       const claim = conversations.begin(id, owner.id, parsed.data)
+      const finishReply = replies.begin()
       const current = () =>
         conversations.get(id, owner.id, owner.role === "admin")
       let connected = true
@@ -311,9 +318,11 @@ export function createChatManagement(
                 type: "done",
                 conversation: current(),
               })
+              finishReply()
               if (connected) controller.close()
             }
           })().catch(() => {
+            finishReply()
             if (connected) controller.close()
           })
         },

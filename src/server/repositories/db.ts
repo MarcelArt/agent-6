@@ -25,6 +25,17 @@ export function openDb(file: string) {
 
 let cached: Db | undefined
 
+/** Called only once background work has stopped. SQLite checkpoints its WAL on close. */
+export function closeDb(): void {
+  cached?.$client.close()
+  cached = undefined
+}
+
+/** A minimal live database check; callers must not expose database details. */
+export function checkDb(): void {
+  getDb().$client.prepare("SELECT 1").get()
+}
+
 /** Agent 6's own database at `DATA_DIR/agent6.db`, created and migrated on first use. */
 export function getDb(): Db {
   if (!cached) {

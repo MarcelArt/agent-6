@@ -145,6 +145,7 @@ describe("Applications and Attachments", () => {
           return repositories.findById(id)
         },
         resume() {},
+        async shutdown() {},
         async sync() {},
         async remove(id) {
           removed.push(id)

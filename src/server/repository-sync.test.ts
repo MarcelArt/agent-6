@@ -161,6 +161,26 @@ describe("sync", () => {
     expect(sync.isSyncing(ready.id)).toBe(false)
   })
 
+  it("stops on shutdown, preserves resumable status and refuses new syncs", async () => {
+    const { id } = connect()
+    void sync.sync(id)
+    await sync.shutdown()
+    expect(sync.isSyncing(id)).toBe(false)
+    expect(repositories.findById(id)?.status).toBe("syncing")
+    await sync.sync(id)
+    expect(calls).toHaveLength(1)
+    const restarted = createRepositorySync({
+      repositories,
+      git: fakeGit,
+      dataDir,
+    })
+    restarted.resume()
+    expect(calls).toHaveLength(2)
+    calls[1].finish("recovered")
+    await restarted.sync(id)
+    expect(repositories.findById(id)?.status).toBe("ready")
+  })
+
   it("stops a running sync and deletes the clone on removal", async () => {
     const { id } = connect()
     mkdirSync(sync.cloneDir(id), { recursive: true })
@@ -298,5 +318,32 @@ describe("git", () => {
     expect(error).toBeInstanceOf(GitError)
     expect(error.message).toMatch(/branch gone does not exist/)
     expect(error.message).not.toContain(TOKEN)
+  })
+
+  it("recovers stale git locks left by an interrupted checkout or fetch", async () => {
+    commit("a.txt", "one")
+    const dir = join(dataDir, "repos", "interrupted")
+    const options = { dir, url: `file://${upstream}`, branch: "main" }
+    const client = createGit(TOKEN)
+    await client.sync(options)
+    writeFileSync(join(dir, ".git", "index.lock"), "interrupted checkout")
+    writeFileSync(join(dir, ".git", "shallow.lock"), "interrupted fetch")
+    const next = commit("a.txt", "two")
+    expect(await client.sync(options)).toBe(next)
+    expect(readFileSync(join(dir, "a.txt"), "utf8")).toBe("two")
+  })
+
+  it("repairs a first initialization interrupted before HEAD was written", async () => {
+    const commitId = commit("a.txt", "one")
+    const dir = join(dataDir, "repos", "partial-init")
+    mkdirSync(join(dir, ".git"), { recursive: true })
+    writeFileSync(join(dir, ".git", "config.lock"), "interrupted init")
+    expect(
+      await createGit(TOKEN).sync({
+        dir,
+        url: `file://${upstream}`,
+        branch: "main",
+      })
+    ).toBe(commitId)
   })
 })

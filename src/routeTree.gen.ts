@@ -21,6 +21,7 @@ import { Route as AdminLogConnectionsRouteRouteImport } from './routes/admin/log
 import { Route as AdminRepositoriesRouteRouteImport } from './routes/admin/repositories/route'
 import { Route as AdminSettingsRouteImport } from './routes/admin/settings'
 import { Route as AdminUsersRouteRouteImport } from './routes/admin/users/route'
+import { Route as ApiHealthRouteImport } from './routes/api/health'
 import { Route as ChatIndexRouteImport } from './routes/chat/index'
 import { Route as ChatConversationIdRouteImport } from './routes/chat/$conversationId'
 import { Route as ChatAccountRouteImport } from './routes/chat/account'
@@ -108,6 +109,11 @@ const AdminUsersRouteRoute = AdminUsersRouteRouteImport.update({
   id: '/users',
   path: '/users',
   getParentRoute: () => AdminRouteRoute,
+} as any)
+const ApiHealthRoute = ApiHealthRouteImport.update({
+  id: '/api/health',
+  path: '/api/health',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ChatIndexRoute = ChatIndexRouteImport.update({
   id: '/',
@@ -255,6 +261,7 @@ export interface FileRoutesByFullPath {
   '/admin/repositories': typeof AdminRepositoriesRouteRouteWithChildren
   '/admin/users': typeof AdminUsersRouteRouteWithChildren
   '/admin/settings': typeof AdminSettingsRoute
+  '/api/health': typeof ApiHealthRoute
   '/chat/$conversationId': typeof ChatConversationIdRoute
   '/chat/account': typeof ChatAccountRoute
   '/chat/history': typeof ChatHistoryRoute
@@ -286,6 +293,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/admin/settings': typeof AdminSettingsRoute
+  '/api/health': typeof ApiHealthRoute
   '/chat/$conversationId': typeof ChatConversationIdRoute
   '/chat/account': typeof ChatAccountRoute
   '/chat/history': typeof ChatHistoryRoute
@@ -326,6 +334,7 @@ export interface FileRoutesById {
   '/admin/repositories': typeof AdminRepositoriesRouteRouteWithChildren
   '/admin/users': typeof AdminUsersRouteRouteWithChildren
   '/admin/settings': typeof AdminSettingsRoute
+  '/api/health': typeof ApiHealthRoute
   '/chat/$conversationId': typeof ChatConversationIdRoute
   '/chat/account': typeof ChatAccountRoute
   '/chat/history': typeof ChatHistoryRoute
@@ -367,6 +376,7 @@ export interface FileRouteTypes {
     | '/admin/repositories'
     | '/admin/users'
     | '/admin/settings'
+    | '/api/health'
     | '/chat/$conversationId'
     | '/chat/account'
     | '/chat/history'
@@ -398,6 +408,7 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/admin/settings'
+    | '/api/health'
     | '/chat/$conversationId'
     | '/chat/account'
     | '/chat/history'
@@ -437,6 +448,7 @@ export interface FileRouteTypes {
     | '/admin/repositories'
     | '/admin/users'
     | '/admin/settings'
+    | '/api/health'
     | '/chat/$conversationId'
     | '/chat/account'
     | '/chat/history'
@@ -470,6 +482,7 @@ export interface RootRouteChildren {
   AdminRouteRoute: typeof AdminRouteRouteWithChildren
   ChatRouteRoute: typeof ChatRouteRouteWithChildren
   LoginRoute: typeof LoginRoute
+  ApiHealthRoute: typeof ApiHealthRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiChatConversationIdRoute: typeof ApiChatConversationIdRoute
   ApiUploadsUploadIdRoute: typeof ApiUploadsUploadIdRoute
@@ -561,6 +574,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/users'
       preLoaderRoute: typeof AdminUsersRouteRouteImport
       parentRoute: typeof AdminRouteRoute
+    }
+    '/api/health': {
+      id: '/api/health'
+      path: '/api/health'
+      fullPath: '/api/health'
+      preLoaderRoute: typeof ApiHealthRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/chat/': {
       id: '/chat/'
@@ -897,6 +917,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRouteRoute: AdminRouteRouteWithChildren,
   ChatRouteRoute: ChatRouteRouteWithChildren,
   LoginRoute: LoginRoute,
+  ApiHealthRoute: ApiHealthRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiChatConversationIdRoute: ApiChatConversationIdRoute,
   ApiUploadsUploadIdRoute: ApiUploadsUploadIdRoute,

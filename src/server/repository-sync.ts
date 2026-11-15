@@ -25,6 +25,7 @@ export function createRepositorySync(deps: {
 }) {
   const { repositories, git } = deps
   const now = deps.now ?? (() => new Date())
+  let stopping = false
   /** The sync in flight for each Repository. At most one per Repository. */
   const running = new Map<
     string,
@@ -42,14 +43,18 @@ export function createRepositorySync(deps: {
       const branch = repository.trackedBranch
       repositories.markSyncing(id, now())
       try {
+        signal.throwIfAborted()
         const commit = await git.sync({
           dir: cloneDir(id),
           url: `https://github.com/${repository.fullName}.git`,
           branch,
           signal,
         })
+        signal.throwIfAborted()
         repositories.markReady(id, now(), commit)
       } catch (error) {
+        // Keep status "syncing" so startup resumes a sync interrupted by shutdown.
+        if (signal.aborted && stopping) return
         if (!(error instanceof GitError)) console.error(error)
         repositories.markFailed(
           id,
@@ -70,6 +75,7 @@ export function createRepositorySync(deps: {
    * on the Repository.
    */
   function sync(id: string): Promise<void> {
+    if (stopping) return Promise.resolve()
     const current = running.get(id)
     if (current) return current.done
     const abort = new AbortController()
@@ -136,6 +142,14 @@ export function createRepositorySync(deps: {
     /** Starts the syncs a restart cut off, or that never started. */
     resume(): void {
       for (const id of repositories.unfinishedIds()) void sync(id)
+    },
+
+    /** Stop git children and leave interrupted syncs available for startup to resume. */
+    async shutdown(): Promise<void> {
+      stopping = true
+      const current = [...running.values()]
+      for (const { abort } of current) abort.abort()
+      await Promise.all(current.map(({ done }) => done))
     },
   }
 }
