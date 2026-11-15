@@ -3,15 +3,18 @@ import { DetailHeader } from "@/components/records/record-detail"
 import { buttonVariants } from "@/components/ui/button"
 import { UserForm } from "@/components/users/user-form"
 import { createUser } from "@/server/users.functions"
+import { getOAuthSettings } from "@/server/oauth.functions"
 
 export const Route = createFileRoute("/admin/users/new")({
   head: () => ({ meta: [{ title: "New user · Agent 6" }] }),
+  loader: () => getOAuthSettings(),
   component: Page,
 })
 
 function Page() {
   const search = Route.useSearch()
   const router = useRouter()
+  const oauth = Route.useLoaderData()
   return (
     <>
       <DetailHeader
@@ -20,6 +23,7 @@ function Page() {
         backLink={<Link to="/admin/users" search={search} />}
       />
       <UserForm
+        oauthEnabled={oauth.enabled}
         save={(values) => createUser({ data: values })}
         onSaved={async (user) => {
           await router.invalidate()

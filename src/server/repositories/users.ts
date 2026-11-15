@@ -65,6 +65,15 @@ export function createUsersRepository(db: Db = getDb()) {
       return row && toManagedUser(row)
     },
 
+    findByEmail(email: string): ManagedUser | undefined {
+      const row = db
+        .select()
+        .from(user)
+        .where(eq(user.email, email.toLowerCase()))
+        .get()
+      return row && toManagedUser(row)
+    },
+
     /** Whether a user other than `exceptId` already has this email. */
     emailTaken(email: string, exceptId?: string): boolean {
       const row = db

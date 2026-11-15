@@ -49,6 +49,14 @@ let getScope: (
   ReturnType<typeof createApplicationManagement>["getApplicationScope"]
 >
 
+function startSignal() {
+  let resolve!: () => void
+  const promise = new Promise<void>((done) => {
+    resolve = done
+  })
+  return { promise, resolve }
+}
+
 beforeEach(async () => {
   directory = mkdtempSync(join(tmpdir(), "agent6-chat-"))
   const db = openDb(join(directory, "agent6.db"))
@@ -315,8 +323,13 @@ describe("Conversations", () => {
     expect(run).toHaveBeenCalledTimes(1)
   })
   it("saves a friendly timeout and permits a retry without repeating the user message", async () => {
-    run.mockImplementationOnce(() => new Promise(() => {}))
+    const started = startSignal()
+    run.mockImplementationOnce(() => {
+      started.resolve()
+      return new Promise(() => {})
+    })
     const limited = createChatManagement({
+      settings,
       auth,
       conversations,
       getScope,
@@ -327,7 +340,14 @@ describe("Conversations", () => {
       timeLimitMs: 20,
     })
     const conversation = await create()
-    await events(await limited.reply(client, conversation.id, { start: true }))
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] })
+    const response = await limited.reply(client, conversation.id, {
+      start: true,
+    })
+    await started.promise
+    await vi.advanceTimersByTimeAsync(20)
+    await events(response)
+    vi.useRealTimers()
     expect(
       (await management.get(client, conversation.id)).messages.at(-1)
     ).toMatchObject({ status: "error", content: REPLY_LIMIT })
@@ -505,7 +525,11 @@ describe("Guardrail wiring", () => {
 
   it("localizes timeouts and expired replies without making another model call", async () => {
     settings.set("preferredLanguage", "Indonesian")
-    run.mockImplementation(() => new Promise(() => {}))
+    const started = startSignal()
+    run.mockImplementation(() => {
+      started.resolve()
+      return new Promise(() => {})
+    })
     const service = createChatManagement({
       auth,
       conversations,
@@ -523,7 +547,14 @@ describe("Guardrail wiring", () => {
       "How do I download an invoice?"
     )
     expect(conversation.title).toBe(INDONESIAN_AGENT_MESSAGES.conversationTitle)
-    await events(await service.reply(client, conversation.id, { start: true }))
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] })
+    const response = await service.reply(client, conversation.id, {
+      start: true,
+    })
+    await started.promise
+    await vi.advanceTimersByTimeAsync(20)
+    await events(response)
+    vi.useRealTimers()
     expect(
       (await service.get(client, conversation.id)).messages.at(-1)?.content
     ).toBe(INDONESIAN_AGENT_MESSAGES.replyLimit)
@@ -643,13 +674,16 @@ describe("Guardrail wiring", () => {
   })
   it("refuses a stalled check at the deadline and ignores a late acceptance", async () => {
     let decide!: (allowed: boolean) => void
+    const started = startSignal()
     classify.mockImplementationOnce(
       () =>
         new Promise((resolve) => {
           decide = resolve
+          started.resolve()
         })
     )
     const limited = createChatManagement({
+      settings,
       auth,
       conversations,
       getScope,
@@ -660,7 +694,14 @@ describe("Guardrail wiring", () => {
       timeLimitMs: 20,
     })
     const conversation = await create()
-    await events(await limited.reply(client, conversation.id, { start: true }))
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] })
+    const response = await limited.reply(client, conversation.id, {
+      start: true,
+    })
+    await started.promise
+    await vi.advanceTimersByTimeAsync(20)
+    await events(response)
+    vi.useRealTimers()
     expect(
       (await limited.get(client, conversation.id)).messages.at(-1)
     ).toMatchObject({ refused: true, content: GUARDRAIL_FAILED })

@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { createFileRoute, redirect, useRouter } from "@tanstack/react-router"
-import { MonitorIcon, MoonIcon, SunIcon } from "lucide-react"
+import { KeyRoundIcon, MonitorIcon, MoonIcon, SunIcon } from "lucide-react"
 import { z } from "zod"
 import type { ThemeMode } from "@/lib/theme"
 import { ProductMark } from "@/components/shell/app-shell"
@@ -10,16 +10,23 @@ import {
   FieldError,
   FieldGroup,
   FieldLabel,
+  FieldSeparator,
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { authClient } from "@/lib/auth-client"
 import { safeRedirect } from "@/lib/login-redirect"
 import { useTheme } from "@/lib/theme"
+import { OAUTH_PROVIDER_ID, oauthLoginError } from "@/lib/oauth"
+import { getLoginProvider } from "@/server/oauth.functions"
 
 export const Route = createFileRoute("/login")({
   // `redirect` is the address the person asked for before they were sent here.
-  validateSearch: z.object({ redirect: z.string().optional() }),
+  validateSearch: z.object({
+    redirect: z.string().optional(),
+    error: z.string().optional(),
+  }),
+  loader: () => getLoginProvider(),
   beforeLoad: ({ context, search }) => {
     // Already logged in: nothing to do here.
     if (context.user) throw redirect({ href: safeRedirect(search.redirect) })
@@ -31,8 +38,30 @@ export const Route = createFileRoute("/login")({
 function LoginPage() {
   const search = Route.useSearch()
   const router = useRouter()
-  const [error, setError] = useState<string>()
+  const provider = Route.useLoaderData()
+  const [error, setError] = useState<string | undefined>(
+    oauthLoginError(search.error)
+  )
   const [pending, setPending] = useState(false)
+
+  async function signInProvider() {
+    setError(undefined)
+    setPending(true)
+    try {
+      const errorURL = new URL("/login", window.location.origin)
+      errorURL.searchParams.set("redirect", safeRedirect(search.redirect))
+      const answer = await authClient.signIn.social({
+        provider: OAUTH_PROVIDER_ID,
+        callbackURL: safeRedirect(search.redirect),
+        errorCallbackURL: errorURL.href,
+      })
+      if (!answer.error) return
+      setError(oauthLoginError(answer.error.code ?? "provider_unavailable"))
+    } catch {
+      setError(oauthLoginError("provider_unavailable"))
+    }
+    setPending(false)
+  }
 
   async function signIn(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -127,6 +156,22 @@ function LoginPage() {
           <Button type="submit" size="lg" className="w-full" disabled={pending}>
             {pending ? "Signing in…" : "Sign in"}
           </Button>
+          {provider && (
+            <>
+              <FieldSeparator>or</FieldSeparator>
+              <Button
+                type="button"
+                variant="outline"
+                size="lg"
+                className="w-full"
+                disabled={pending}
+                onClick={() => void signInProvider()}
+              >
+                <KeyRoundIcon />
+                Sign in with {provider.displayName}
+              </Button>
+            </>
+          )}
           <p className="text-center text-xs text-muted-foreground">
             Accounts are created by your Admin.
           </p>

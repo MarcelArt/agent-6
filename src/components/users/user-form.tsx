@@ -52,12 +52,14 @@ const roleHelp: Record<Role, string> = {
  */
 export function UserForm({
   user,
+  oauthEnabled = false,
   problem: outsideProblem,
   save,
   onSaved,
   cancel,
 }: {
   user?: ManagedUser
+  oauthEnabled?: boolean
   /** A problem from an action outside the form, such as Disable. */
   problem?: Problem
   save: (values: UserFormValues) => Promise<UserResult>
@@ -183,7 +185,7 @@ export function UserForm({
                 New password <Optional />
               </span>
             ) : (
-              "Password"
+              <span>Password {oauthEnabled && <Optional />}</span>
             )}
           </FieldLabel>
           <Input
@@ -191,7 +193,7 @@ export function UserForm({
             name="password"
             type="password"
             autoComplete="new-password"
-            required={!user}
+            required={!user && !oauthEnabled}
             minLength={MIN_PASSWORD_LENGTH}
             maxLength={MAX_PASSWORD_LENGTH}
             aria-invalid={invalid("password")}
@@ -200,7 +202,9 @@ export function UserForm({
           <FieldDescription id="user-password-hint">
             {user
               ? `Leave empty to keep the current password. A new one needs at least ${MIN_PASSWORD_LENGTH} characters.`
-              : `At least ${MIN_PASSWORD_LENGTH} characters. Agent 6 sends no email, so give the password to the person yourself.`}
+              : oauthEnabled
+                ? "Leave empty for someone who will sign in through your organization’s provider. Their verified provider email must match this email."
+                : `At least ${MIN_PASSWORD_LENGTH} characters. Agent 6 sends no email, so give the password to the person yourself.`}
           </FieldDescription>
           {errorOf("password")}
         </Field>

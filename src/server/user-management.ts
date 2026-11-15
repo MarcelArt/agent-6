@@ -5,6 +5,7 @@ import { z } from "zod"
 import { getAuth } from "./auth"
 import { createUsersRepository } from "./repositories/users"
 import { requireAdmin, requireSession } from "./session"
+import { readOAuthSettings } from "./oauth-settings"
 import type { Auth } from "./auth"
 import type { UsersRepository } from "./repositories/users"
 import type { Role } from "@/lib/roles"
@@ -140,7 +141,11 @@ function oneAtATime<T>(work: () => Promise<T>): Promise<T> {
 }
 
 export function createUserManagement(
-  deps: { auth?: Auth; users?: UsersRepository } = {}
+  deps: {
+    auth?: Auth
+    users?: UsersRepository
+    oauthEnabled?: () => boolean
+  } = {}
 ) {
   const auth = deps.auth ?? getAuth()
   const users = deps.users ?? createUsersRepository()
@@ -195,10 +200,13 @@ export function createUserManagement(
     async create(headers: Headers, input: UserInput): Promise<ManagedUser> {
       await requireAdmin({ auth, headers })
       const { name, email, role, password } = validInput(input)
-      if (!password) {
+      if (
+        !password &&
+        !(deps.oauthEnabled ?? (() => readOAuthSettings().enabled))()
+      ) {
         throw new UserManagementError("Enter a password.", "password")
       }
-      validPassword(password)
+      if (password) validPassword(password)
       return oneAtATime(async () => {
         refuseTakenEmail(email)
         try {

@@ -49,7 +49,7 @@ beforeEach(async () => {
     baseUrl: "http://localhost:3000",
   })
   users = createUsersRepository(db)
-  management = createUserManagement({ auth, users })
+  management = createUserManagement({ auth, users, oauthEnabled: () => false })
   const created = await auth.api.createUser({
     body: { ...ADMIN, name: "Admin", role: "admin" },
   })
