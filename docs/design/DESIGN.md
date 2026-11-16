@@ -47,6 +47,7 @@ List filters and search live in search params and survive a reload.
 ## 2. Spacing, density, width
 
 - **Density is dense.**
+  - The root font size is `112.5%` (18px with the browser's default settings). Rem-based type, controls, and spacing scale together for readability while respecting the user's preferred font size.
   - Admin text: `text-xs` (the preset's size).
   - Titles: `text-sm font-medium`.
   - Controls: preset `h-7`; header actions `size="sm"`.
