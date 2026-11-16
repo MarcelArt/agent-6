@@ -66,7 +66,7 @@ _Avoid_: Filter, moderation
 A fault that can only be resolved by changing a Repository's code.
 
 **Data Fix**:
-A fault that can only be resolved by a developer correcting data in an Application's database.
+A fault, or a correction a user asks for, that can only be resolved by a developer correcting data in an Application's database.
 
 **Filed Issue**:
 A GitHub issue the agent created for a Code Fix or Data Fix, recorded on the Conversation that led to it.
