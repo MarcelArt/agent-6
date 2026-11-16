@@ -322,6 +322,144 @@ describe("Conversations", () => {
     })
     expect(run).toHaveBeenCalledTimes(1)
   })
+  it("keeps a disconnected investigation alive beyond 90 seconds and exposes safe activity on reload", async () => {
+    const started = startSignal()
+    let finish!: () => void
+    run.mockImplementationOnce(async ({ onActivity, signal }) => {
+      onActivity?.({
+        id: "query-1",
+        name: "query_database",
+        input: "private SQL and credentials",
+        status: "started",
+      })
+      started.resolve()
+      await new Promise<void>((resolve) => {
+        finish = resolve
+      })
+      expect(signal.aborted).toBe(false)
+      onActivity?.({
+        id: "query-1",
+        name: "query_database",
+        input: "private SQL and credentials",
+        status: "complete",
+      })
+      return { text: "Investigation finished.", history: [] }
+    })
+    const conversation = await create()
+    vi.useFakeTimers({
+      toFake: [
+        "Date",
+        "setTimeout",
+        "clearTimeout",
+        "setInterval",
+        "clearInterval",
+      ],
+    })
+    try {
+      const response = await management.reply(client, conversation.id, {
+        start: true,
+      })
+      await started.promise
+      await response.body!.cancel()
+      await vi.advanceTimersByTimeAsync(180_000)
+      const reloaded = await management.get(client, conversation.id)
+      expect(reloaded.messages.at(-1)?.status).toBe("pending")
+      expect(reloaded.messages.at(-1)?.activity).toContainEqual(
+        expect.objectContaining({
+          label: "Checking application data",
+          status: "started",
+        })
+      )
+      expect(JSON.stringify(reloaded)).not.toContain("private SQL")
+      finish()
+      await vi.waitFor(async () =>
+        expect(
+          (await management.get(client, conversation.id)).messages.at(-1)
+            ?.status
+        ).toBe("complete")
+      )
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+  it("only lets the owner stop a run, cancels its signal and ignores late output", async () => {
+    const started = startSignal()
+    let finish!: () => void
+    let signal!: AbortSignal
+    run.mockImplementationOnce(async (input) => {
+      signal = input.signal
+      started.resolve()
+      await new Promise<void>((resolve) => {
+        finish = resolve
+      })
+      input.onText("Late text")
+      return { text: "Late answer", history: [] }
+    })
+    const conversation = await create()
+    const response = await management.reply(client, conversation.id, {
+      start: true,
+    })
+    await started.promise
+    await expect(management.stop(other, conversation.id)).rejects.toMatchObject(
+      { status: 404 }
+    )
+    expect(signal.aborted).toBe(false)
+    const stopped = await management.stop(client, conversation.id)
+    expect(stopped.messages.at(-1)).toMatchObject({
+      status: "error",
+      content: "Investigation stopped. You can try again.",
+    })
+    expect(signal.aborted).toBe(true)
+    await events(response)
+    finish()
+    await Promise.resolve()
+    await events(
+      await management.reply(client, conversation.id, { retry: true })
+    )
+    expect(
+      (await management.get(client, conversation.id)).messages.at(-1)?.content
+    ).not.toContain("Late")
+  })
+  it("streams public activity without exposing tool inputs", async () => {
+    run.mockImplementationOnce(async ({ onActivity }) => {
+      onActivity?.({
+        id: "read-1",
+        name: "read_file",
+        input: "secret-path",
+        status: "started",
+      })
+      onActivity?.({
+        id: "read-1",
+        name: "read_file",
+        input: "secret-path",
+        status: "complete",
+      })
+      return { text: "Done", history: [] }
+    })
+    const conversation = await create()
+    const streamed = await events(
+      await management.reply(client, conversation.id, { start: true })
+    )
+    expect(streamed).toContainEqual(
+      expect.objectContaining({
+        type: "activity",
+        activity: expect.objectContaining({
+          label: "Reading application code",
+          status: "started",
+        }),
+      })
+    )
+    expect(streamed).toContainEqual(
+      expect.objectContaining({
+        type: "activity",
+        activity: expect.objectContaining({
+          label: "Reading application code",
+          status: "complete",
+        }),
+      })
+    )
+    expect(JSON.stringify(streamed)).not.toContain("secret-path")
+  })
   it("saves a friendly timeout and permits a retry without repeating the user message", async () => {
     const started = startSignal()
     run.mockImplementationOnce(() => {
@@ -851,8 +989,8 @@ describe("Pictures", () => {
   })
 })
 
-describe("OpenAI-compatible Chat Completions", () => {
-  function sdk() {
+describe("Support model protocols", () => {
+  function sdk(model = "compatible-model") {
     return createChatManagement({
       settings,
       auth,
@@ -867,7 +1005,7 @@ describe("OpenAI-compatible Chat Completions", () => {
         authSecret: "unused",
         baseUrl: "http://localhost:3000",
         openaiApiKey: "wrong-key",
-        openaiModel: "compatible-model",
+        openaiModel: model,
         openaiBaseUrl: "http://compatible.test/v1",
       }),
     })
@@ -878,6 +1016,155 @@ describe("OpenAI-compatible Chat Completions", () => {
       { headers: { "Content-Type": "text/event-stream" } }
     )
   }
+  it("uses Responses for gpt-6.1-sol tools and replays local history on follow-up", async () => {
+    const requests: Array<Record<string, unknown>> = []
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url: string, init: RequestInit) => {
+        const body = JSON.parse(init.body as string)
+        requests.push(body)
+        if (String(url).endsWith("/chat/completions"))
+          return new Response(
+            JSON.stringify({
+              error: {
+                message:
+                  "Function tools with reasoning_effort are not supported for gpt-6.1-sol in /v1/chat/completions.",
+                param: "reasoning_effort",
+              },
+            }),
+            { status: 400, headers: { "Content-Type": "application/json" } }
+          )
+        expect(String(url)).toBe("http://compatible.test/v1/responses")
+        expect(body.store).toBe(false)
+        expect(body).not.toHaveProperty("previous_response_id")
+        expect(body).not.toHaveProperty("conversation")
+        expect(body.include).toContain("reasoning.encrypted_content")
+        const text = "Open Billing to find your invoice."
+        const output =
+          requests.length === 1
+            ? [
+                {
+                  id: "reason-1",
+                  type: "reasoning",
+                  summary: [],
+                  encrypted_content: "opaque-private-reasoning",
+                },
+                {
+                  id: "tool-1",
+                  type: "function_call",
+                  call_id: "read-1",
+                  name: "read_file",
+                  arguments: JSON.stringify({
+                    repositoryId,
+                    path: "billing.ts",
+                    startLine: 1,
+                    endLine: 20,
+                  }),
+                  status: "completed",
+                },
+              ]
+            : [
+                {
+                  id: `msg-${requests.length}`,
+                  type: "message",
+                  role: "assistant",
+                  status: "completed",
+                  content: [{ type: "output_text", text, annotations: [] }],
+                },
+              ]
+        const events = [
+          ...(requests.length === 1
+            ? []
+            : [
+                {
+                  type: "response.output_text.delta",
+                  delta: text,
+                  item_id: `msg-${requests.length}`,
+                  output_index: 0,
+                  content_index: 0,
+                },
+              ]),
+          {
+            type: "response.completed",
+            response: {
+              id: `resp-${requests.length}`,
+              object: "response",
+              status: "completed",
+              output,
+              usage: { input_tokens: 10, output_tokens: 10, total_tokens: 20 },
+            },
+          },
+        ]
+        return new Response(
+          events.map((event) => `data: ${JSON.stringify(event)}\n\n`).join(""),
+          { headers: { "Content-Type": "text/event-stream" } }
+        )
+      })
+    )
+    const conversation = await create()
+    const service = sdk("gpt-6.1-sol")
+    const streamed = await events(
+      await service.reply(client, conversation.id, { start: true })
+    )
+    expect(
+      (await management.get(client, conversation.id)).messages.at(-1)
+    ).toMatchObject({
+      status: "complete",
+      content: "Open Billing to find your invoice.",
+    })
+    expect(streamed).toContainEqual({
+      type: "delta",
+      text: "Open Billing to find your invoice.",
+    })
+    expect(JSON.stringify(streamed)).not.toContain("opaque-private-reasoning")
+    await events(
+      await service.reply(client, conversation.id, { message: "And then?" })
+    )
+    expect(requests).toHaveLength(3)
+    expect(JSON.stringify(requests[2].input)).toContain("function_call_output")
+    expect(JSON.stringify(requests[2].input)).toContain(
+      "opaque-private-reasoning"
+    )
+  })
+  it("finishes investigations that require more than twelve model turns", async () => {
+    let requests = 0
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => {
+        requests++
+        if (requests <= 13)
+          return completion(
+            {
+              tool_calls: [
+                {
+                  index: 0,
+                  id: `call-${requests}`,
+                  type: "function",
+                  function: {
+                    name: "list_directory",
+                    arguments: JSON.stringify({ repositoryId, path: "." }),
+                  },
+                },
+              ],
+            },
+            "tool_calls"
+          )
+        return completion(
+          { content: "Found the answer after checking the code." },
+          "stop"
+        )
+      })
+    )
+    const conversation = await create()
+    await events(await sdk().reply(client, conversation.id, { start: true }))
+    expect(requests).toBe(14)
+    expect(
+      (await management.get(client, conversation.id)).messages.at(-1)
+    ).toMatchObject({
+      status: "complete",
+      content: "Found the answer after checking the code.",
+    })
+  })
   it("builds an Indonesian run with a translated title and Interactive Question while keeping developer issues in English", async () => {
     settings.set("preferredLanguage", "Indonesian")
     let requests = 0
@@ -1014,7 +1301,11 @@ describe("OpenAI-compatible Chat Completions", () => {
       "Help the billing team."
     )
     expect(JSON.stringify(requests[0].messages)).toContain("frontend")
-    expect(conversations.audit(conversation.id).activities).toMatchObject([
+    expect(
+      conversations
+        .audit(conversation.id)
+        .activities.filter((item) => item.name === "read_file")
+    ).toMatchObject([
       {
         name: "read_file",
         status: "complete",
@@ -1071,7 +1362,11 @@ describe("OpenAI-compatible Chat Completions", () => {
       conversation = await create()
     await events(await service.reply(client, conversation.id, { start: true }))
     const failed = conversations.audit(conversation.id)
-    expect(failed.activities).toMatchObject([
+    expect(
+      failed.activities.filter(
+        (item) => item.name === "read_file" || item.name === "Agent run"
+      )
+    ).toMatchObject([
       {
         name: "read_file",
         status: "error",
@@ -1082,7 +1377,11 @@ describe("OpenAI-compatible Chat Completions", () => {
     expect(JSON.stringify(failed)).not.toContain("secret credential")
     await events(await service.reply(client, conversation.id, { retry: true }))
     const retried = conversations.audit(conversation.id)
-    expect(retried.activities).toHaveLength(2)
+    expect(
+      retried.activities.filter(
+        (item) => item.name === "read_file" || item.name === "Agent run"
+      )
+    ).toHaveLength(2)
     expect(retried.activities[0].messageId).toBe(retried.messages.at(-1)?.id)
   })
   it("sends pictures as image input, and answers the text alone when the model refuses pictures", async () => {
@@ -1183,38 +1482,6 @@ describe("OpenAI-compatible Chat Completions", () => {
     expect(
       (await service.get(client, conversation.id)).messages.at(-1)?.status
     ).toBe("complete")
-  })
-  it("stops a model that keeps calling tools at the turn limit", async () => {
-    let calls = 0
-    vi.stubGlobal(
-      "fetch",
-      vi.fn(async () =>
-        completion(
-          {
-            role: "assistant",
-            tool_calls: [
-              {
-                index: 0,
-                id: `call-${++calls}`,
-                type: "function",
-                function: {
-                  name: "list_directory",
-                  arguments: JSON.stringify({ repositoryId, path: "." }),
-                },
-              },
-            ],
-          },
-          "tool_calls"
-        )
-      )
-    )
-    const service = sdk(),
-      conversation = await create()
-    await events(await service.reply(client, conversation.id, { start: true }))
-    expect(calls).toBe(12)
-    expect(
-      (await service.get(client, conversation.id)).messages.at(-1)
-    ).toMatchObject({ status: "error", content: REPLY_LIMIT })
   })
   it("ends the turn on ask_question, saves the question, and sends the answer back with the tool history", async () => {
     const requests: Array<{ messages: Array<Record<string, unknown>> }> = []

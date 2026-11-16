@@ -15,6 +15,8 @@ import { createGuardrailClassifier } from "./guardrail"
 import { createUploads } from "./uploads"
 import { createSettingsRepository } from "./repositories/settings"
 import { readLanguageSettings } from "./preferred-language"
+import { publicActivity } from "./reply-activity"
+import type { ToolActivity } from "@/lib/conversation-history"
 import { replies } from "./reply-lifecycle"
 import type { SettingsRepository } from "./repositories/settings"
 import type { Auth } from "./auth"
@@ -29,7 +31,6 @@ import {
   MAX_MESSAGE_LENGTH,
   MAX_QUESTIONS_IN_A_ROW,
   MAX_QUESTION_OPTIONS,
-  REPLY_TIME_LIMIT_MS,
 } from "@/lib/chat"
 
 /** A message needs text, pictures or both. */
@@ -121,6 +122,21 @@ export function createChatManagement(
       const reader = await user(headers)
       return conversations.get(id, reader.id, reader.role === "admin")
     },
+    async stop(headers: Headers, id: string) {
+      const owner = await user(headers)
+      const language = readLanguageSettings(
+        deps.settings ?? createSettingsRepository()
+      )
+      const assistantId = conversations.stop(
+        id,
+        owner.id,
+        language.preferredLanguage === "Indonesian"
+          ? "Pemeriksaan dihentikan. Anda dapat mencoba lagi."
+          : "Investigation stopped. You can try again."
+      )
+      if (assistantId) replies.cancel(assistantId)
+      return conversations.get(id, owner.id)
+    },
     async reply(headers: Headers, id: string, input: ReplyInput) {
       const owner = await user(headers)
       const parsed = replyInput.safeParse(input)
@@ -137,7 +153,8 @@ export function createChatManagement(
           503
         )
       const claim = conversations.begin(id, owner.id, parsed.data)
-      const finishReply = replies.begin()
+      const abort = new AbortController()
+      const finishReply = replies.begin(claim.assistantId, () => abort.abort())
       const current = () =>
         conversations.get(id, owner.id, owner.role === "admin")
       let connected = true
@@ -154,16 +171,47 @@ export function createChatManagement(
             }
           }
           // Keep saving after a browser disconnect/reload; the next page polls
-          // the persisted reply. The deadline bounds this independent work.
+          // the persisted reply. Renew the lease while this worker is alive.
           void (async () => {
-            const abort = new AbortController()
             let timer: ReturnType<typeof setTimeout> | undefined
-            const deadline = new Promise<never>((_, reject) => {
-              timer = setTimeout(() => {
-                abort.abort()
-                reject(new Error("Reply deadline"))
-              }, deps.timeLimitMs ?? REPLY_TIME_LIMIT_MS)
+            // Optional injected deadline for controlled callers/tests; production has no cap.
+            if (deps.timeLimitMs !== undefined)
+              timer = setTimeout(
+                () => abort.abort("deadline"),
+                deps.timeLimitMs
+              )
+            const cancelled = new Promise<never>((_, reject) => {
+              abort.signal.addEventListener(
+                "abort",
+                () => reject(new Error("Reply cancelled")),
+                { once: true }
+              )
             })
+            const heartbeat = setInterval(() => {
+              try {
+                if (!conversations.renew(id, claim.assistantId)) abort.abort()
+                emit({ type: "progress" })
+              } catch {
+                abort.abort()
+              }
+            }, 5000)
+            function activity(item: ToolActivity) {
+              if (abort.signal.aborted) return
+              const recorded = {
+                ...item,
+                id: `${claim.assistantId}:${item.id}`,
+                createdAt: item.createdAt ?? Date.now(),
+              }
+              conversations.recordActivity(claim.assistantId, recorded)
+              emit({
+                type: "activity",
+                messageId: claim.assistantId,
+                activity: publicActivity(recorded),
+              })
+            }
+            function stage(name: string, status: ToolActivity["status"]) {
+              activity({ id: name, name, status, input: "" })
+            }
             let content = ""
             const guardrail = { passed: false }
             emit({
@@ -173,7 +221,7 @@ export function createChatManagement(
             emit({ type: "progress" })
             try {
               const result = await Promise.race([
-                deadline,
+                cancelled,
                 (async () => {
                   const applicationScope = await scope(
                     headers,
@@ -181,6 +229,7 @@ export function createChatManagement(
                   )
                   if (!applicationScope)
                     throw new Error("Application unavailable")
+                  stage("guardrail_check", "started")
                   const allowed = await (
                     deps.classify ?? createGuardrailClassifier(getConfig())
                   )(
@@ -196,9 +245,11 @@ export function createChatManagement(
                     abort.signal
                   )
                   abort.signal.throwIfAborted()
+                  stage("guardrail_check", "complete")
                   if (allowed !== true) return { refused: true as const }
                   guardrail.passed = true
                   if (!claim.conversation.refreshedAt) {
+                    stage("refresh_repositories", "started")
                     await Promise.allSettled(
                       applicationScope.attachments
                         .filter((item) => item.kind === "repository")
@@ -207,13 +258,17 @@ export function createChatManagement(
                         )
                     )
                     abort.signal.throwIfAborted()
+                    stage("refresh_repositories", "complete")
                     conversations.markRefreshed(id)
                   }
                   abort.signal.throwIfAborted()
+                  stage("prepare_message", "started")
                   const prepared = await (
                     deps.uploads ?? createUploads({ conversations })
                   ).modelInput(claim.history, claim.images)
                   abort.signal.throwIfAborted()
+                  stage("prepare_message", "complete")
+                  stage("investigate", "started")
                   const answer = await (
                     deps.run ?? createSupportRun(getConfig())
                   )({
@@ -241,14 +296,10 @@ export function createChatManagement(
                     onProgress() {
                       emit({ type: "progress" })
                     },
-                    onActivity(activity) {
-                      if (!abort.signal.aborted)
-                        conversations.recordActivity(claim.assistantId, {
-                          ...activity,
-                          id: `${claim.assistantId}:${activity.id}`,
-                        })
-                    },
+                    onActivity: activity,
                   })
+                  abort.signal.throwIfAborted()
+                  stage("investigate", "complete")
                   return { ...answer, history: prepared.store(answer.history) }
                 })(),
               ])
@@ -286,7 +337,9 @@ export function createChatManagement(
                 status: "error",
                 createdAt: Date.now(),
                 error: abort.signal.aborted
-                  ? "The reply reached its time limit."
+                  ? abort.signal.reason === "deadline"
+                    ? "The reply reached its time limit."
+                    : "The reply was interrupted."
                   : error instanceof MaxTurnsExceededError
                     ? "The agent reached its turn limit."
                     : error &&
@@ -307,13 +360,15 @@ export function createChatManagement(
                 conversations.finish(
                   id,
                   claim.assistantId,
-                  error instanceof MaxTurnsExceededError || abort.signal.aborted
+                  error instanceof MaxTurnsExceededError ||
+                    abort.signal.reason === "deadline"
                     ? language.messages.replyLimit
                     : language.messages.replyFailed
                 )
               }
             } finally {
               clearTimeout(timer)
+              clearInterval(heartbeat)
               emit({
                 type: "done",
                 conversation: current(),

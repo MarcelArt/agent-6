@@ -34,7 +34,8 @@ import {
   MessageScrollerButton,
 } from "@/components/ui/message-scroller"
 import { Spinner } from "@/components/ui/spinner"
-import { getConversation } from "@/server/chat.functions"
+import { ReplyActivityPanel } from "./reply-activity"
+import { getConversation, stopConversationReply } from "@/server/chat.functions"
 import { imageUrl } from "@/lib/chat"
 import { ENGLISH_AGENT_MESSAGES } from "@/lib/preferred-language"
 import { cn } from "@/lib/utils"
@@ -96,6 +97,7 @@ export function ConversationView({
   const router = useRouter()
   const [conversation, setConversation] = useState(initial)
   const [busy, setBusy] = useState(false)
+  const [stopping, setStopping] = useState(false)
   const [networkError, setNetworkError] = useState<string>()
   // What is ticked on the open Interactive Question; gone once it is sent.
   const [picks, setPicks] = useState(NO_PICKS)
@@ -163,6 +165,20 @@ export function ConversationView({
               if (!mounted.current) continue
               if (event.type === "snapshot" || event.type === "done")
                 setConversation(event.conversation)
+              if (event.type === "activity")
+                setConversation((current) => ({
+                  ...current,
+                  messages: current.messages.map((message) => {
+                    if (message.id !== event.messageId) return message
+                    const activity = [...(message.activity ?? [])]
+                    const index = activity.findIndex(
+                      (item) => item.id === event.activity.id
+                    )
+                    if (index < 0) activity.push(event.activity)
+                    else activity[index] = event.activity
+                    return { ...message, activity }
+                  }),
+                }))
               if (event.type === "delta")
                 setConversation((current) => ({
                   ...current,
@@ -341,6 +357,36 @@ export function ConversationView({
                               {time(message.createdAt)}
                             </time>
                           </MessageHeader>
+                          {!audit && message.role === "assistant" && (
+                            <ReplyActivityPanel
+                              message={message}
+                              stopping={stopping}
+                              onStop={
+                                message.status === "pending"
+                                  ? () => {
+                                      setStopping(true)
+                                      void stopConversationReply({
+                                        data: { conversationId: id },
+                                      })
+                                        .then((latest) => {
+                                          if (mounted.current)
+                                            setConversation(latest)
+                                        })
+                                        .catch(() => {
+                                          if (mounted.current)
+                                            setNetworkError(
+                                              "Could not stop the investigation. Please try again."
+                                            )
+                                        })
+                                        .finally(() => {
+                                          if (mounted.current)
+                                            setStopping(false)
+                                        })
+                                    }
+                                  : undefined
+                              }
+                            />
+                          )}
                           {message.status === "error" ? (
                             <Alert variant="destructive">
                               <CircleAlertIcon />
@@ -461,7 +507,7 @@ export function ConversationView({
                     </MessageScrollerItem>
                   </Fragment>
                 ))}
-                {(pending || busy) && (
+                {(pending || busy) && last?.role !== "assistant" && (
                   <Marker role="status">
                     <Spinner aria-hidden="true" />
                     <MarkerContent>{agentMessages.progress}</MarkerContent>

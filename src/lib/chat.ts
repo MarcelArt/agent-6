@@ -1,8 +1,8 @@
 import type { AgentMessages } from "./preferred-language"
 
 export const MAX_MESSAGE_LENGTH = 8000
-export const REPLY_TIME_LIMIT_MS = 90_000
-export const REPLY_MAX_TURNS = 12
+/** Renewed while the worker is alive; this is not a reply duration limit. */
+export const REPLY_LEASE_MS = 30_000
 export const REPLY_FAILED =
   "I couldn’t finish answering just now. Please try again."
 export const REPLY_LIMIT =
@@ -80,12 +80,19 @@ export type AskedQuestion = {
 export type InteractiveQuestion = AskedQuestion & {
   answer: { choices: Array<number>; other: boolean } | null
 }
+export type ReplyActivity = {
+  id: string
+  label: string
+  status: "started" | "complete" | "error"
+  createdAt?: number
+}
 export type ChatMessage = {
   id: string
   role: "user" | "assistant"
   content: string
   status: "queued" | "pending" | "complete" | "error"
   createdAt: number
+  activity?: Array<ReplyActivity>
   reports: Array<Report>
   /** Pictures the user sent with this message. */
   images: Array<ChatImage>
@@ -106,6 +113,7 @@ export type Conversation = {
 export type ChatEvent =
   | { type: "snapshot"; conversation: Conversation }
   | { type: "progress" }
+  | { type: "activity"; messageId: string; activity: ReplyActivity }
   | { type: "delta"; text: string }
   | { type: "done"; conversation: Conversation }
 

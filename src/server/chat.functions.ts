@@ -46,3 +46,9 @@ export const getConversation = createServerFn({ method: "GET" })
       throw error
     }
   })
+
+export const stopConversationReply = createServerFn({ method: "POST" })
+  .validator(z.object({ conversationId: z.string() }))
+  .handler(({ data }) =>
+    createChatManagement().stop(getRequestHeaders(), data.conversationId)
+  )

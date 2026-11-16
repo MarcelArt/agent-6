@@ -22,7 +22,6 @@ import {
   MAX_NEW_ISSUES,
   MAX_QUESTION_OPTIONS,
   MIN_QUESTION_OPTIONS,
-  REPLY_MAX_TURNS,
   SOMETHING_ELSE,
 } from "@/lib/chat"
 import { MATCH_OPERATORS } from "@/lib/log-connections"
@@ -228,7 +227,9 @@ export function createSupportRun(config: Config): SupportRun {
         }
       }
     }
-    // Explicit client/provider: never uses Responses-only history or remote sessions.
+    // This model rejects function tools on Chat Completions, including when
+    // reasoning_effort is "none". Other providers retain the compatible API.
+    const useResponses = config.openaiModel === "gpt-6.1-sol"
     const provider = new OpenAIProvider({
       openAIClient: new OpenAI({
         apiKey: config.openaiApiKey,
@@ -236,7 +237,7 @@ export function createSupportRun(config: Config): SupportRun {
         maxRetries: 0,
         timeout: 80_000,
       }),
-      useResponses: false,
+      useResponses,
     })
     // Set by ask_question; the turn then ends and waits for the user.
     const questions: Array<{ text: string; asked: AskedQuestion }> = []
@@ -249,6 +250,16 @@ export function createSupportRun(config: Config): SupportRun {
           ? "\nAt the start of this run, call set_conversation_title with a short, plain title in the Preferred Language describing the person's Application support request. Do this before answering or asking an Interactive Question. Never include personal data or secrets in the title."
           : ""),
       model: config.openaiModel,
+      // Replay history locally, including opaque reasoning state, without relying
+      // on provider-stored responses. Reasoning never enters the client projection.
+      ...(useResponses
+        ? {
+            modelSettings: {
+              store: false,
+              providerData: { include: ["reasoning.encrypted_content"] },
+            },
+          }
+        : {}),
       // The question and its tool call stay in the saved history, so the
       // answer continues from the database, also after a restart.
       toolUseBehavior: () =>
@@ -430,7 +441,7 @@ export function createSupportRun(config: Config): SupportRun {
       const auditItems: Array<unknown> = []
       const result = await runner.run(agent, input, {
         stream: true,
-        maxTurns: REPLY_MAX_TURNS,
+        maxTurns: null,
         signal,
       })
       // A rejection can precede consumption of the async iterator.

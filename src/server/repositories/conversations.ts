@@ -17,6 +17,7 @@ import {
 } from "./schema"
 import type { Db } from "./db"
 import { guardrailContext } from "../guardrail"
+import { publicActivity } from "../reply-activity"
 import { auditText, historyActivities } from "../conversation-audit"
 import type {
   ConversationAudit,
@@ -35,7 +36,7 @@ import type {
   ReplyInput,
   Report,
 } from "@/lib/chat"
-import { REPLY_TIME_LIMIT_MS } from "@/lib/chat"
+import { REPLY_LEASE_MS } from "@/lib/chat"
 
 export class ConversationError extends Error {
   constructor(
@@ -129,6 +130,9 @@ export function createConversationsRepository(db: Db = getDb()) {
         status: row.status as ChatMessage["status"],
         createdAt: row.createdAt.getTime(),
         reports: reports.get(row.id) ?? [],
+        activity: (JSON.parse(row.activity) as Array<ToolActivity>).map(
+          publicActivity
+        ),
         images: images.get(row.id) ?? [],
         imagesUnread: row.imagesUnread,
         refused: row.refused,
@@ -267,6 +271,22 @@ export function createConversationsRepository(db: Db = getDb()) {
         .returning({ id: message.id })
         .all()
       if (!updated.length) return
+      // A later retry must not show unfinished steps from this attempt as running.
+      const saved = db
+        .select({ activity: message.activity })
+        .from(message)
+        .where(eq(message.id, assistantId))
+        .get()!
+      const activity = (JSON.parse(saved.activity) as Array<ToolActivity>).map(
+        (item) =>
+          item.status === "started"
+            ? { ...item, status: "error" as const }
+            : item
+      )
+      db.update(message)
+        .set({ activity: JSON.stringify(activity) })
+        .where(eq(message.id, assistantId))
+        .run()
       if (title && history)
         db.update(conversation)
           .set({ title: title.next })
@@ -456,6 +476,42 @@ export function createConversationsRepository(db: Db = getDb()) {
         activities: [...old, ...activities],
       }
     },
+    renew(id: string, assistantId: string) {
+      return db.transaction(() => {
+        const pending = db
+          .select({ id: message.id })
+          .from(message)
+          .where(
+            and(
+              eq(message.id, assistantId),
+              eq(message.conversationId, id),
+              eq(message.status, "pending")
+            )
+          )
+          .get()
+        if (!pending) return false
+        db.update(conversation)
+          .set({ runningUntil: new Date(Date.now() + REPLY_LEASE_MS) })
+          .where(eq(conversation.id, id))
+          .run()
+        return true
+      })
+    },
+    stop(id: string, userId: string, content: string) {
+      return db.transaction(() => {
+        owned(id, userId)
+        const pending = db
+          .select({ id: message.id })
+          .from(message)
+          .where(
+            and(eq(message.conversationId, id), eq(message.status, "pending"))
+          )
+          .get()
+        if (!pending) return
+        finish(id, pending.id, content)
+        return pending.id
+      })
+    },
     recordActivity(assistantId: string, item: ToolActivity) {
       const safe = {
         ...item,
@@ -608,7 +664,7 @@ export function createConversationsRepository(db: Db = getDb()) {
             .run()
           db.update(conversation)
             .set({
-              runningUntil: new Date(Date.now() + REPLY_TIME_LIMIT_MS + 5000),
+              runningUntil: new Date(Date.now() + REPLY_LEASE_MS),
               updatedAt: new Date(),
             })
             .where(eq(conversation.id, id))
