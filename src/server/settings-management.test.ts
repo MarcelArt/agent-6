@@ -3,6 +3,9 @@ import { createAuth } from "./auth"
 import { openDb } from "./repositories/db"
 import { createSettingsRepository } from "./repositories/settings"
 import { createSettingsManagement } from "./settings-management"
+import { createDecisionSettingsManagement } from "./decision-settings"
+import type { Config } from "./config"
+import type { requestDecisions } from "./decision-ai"
 import {
   readLanguageSettings,
   translateAgentMessages,
@@ -113,6 +116,120 @@ describe("Preferred Language settings", () => {
     expect(failed).toMatchObject({ ok: false })
     expect(JSON.stringify(failed)).not.toContain("secret model details")
     expect(readLanguageSettings(settings).preferredLanguage).toBe("Indonesian")
+  })
+})
+
+describe("Decision AI settings", () => {
+  const configured = (): Config => ({
+    dataDir: "/tmp",
+    encryptionKey: "unused",
+    authSecret: "unused",
+    baseUrl: "http://localhost:3000",
+    decisionAi: {
+      status: "configured",
+      provider: "typesafe",
+      apiKey: "private-decision-key",
+      model: "jev-latest",
+      baseUrl: "http://decision.test/v1",
+      minProbability: 0.7,
+      minMargin: 0.15,
+    },
+  })
+  it("defaults on, persists off across provider changes, and retains preference while configuration is absent", async () => {
+    const config = configured()
+    const service = createDecisionSettingsManagement({ auth, settings, config })
+    expect(await service.get(admin)).toMatchObject({
+      status: "configured",
+      enabled: true,
+    })
+    expect(JSON.stringify(await service.get(admin))).not.toContain(
+      "private-decision-key"
+    )
+    await service.save(admin, false)
+    const absent = createDecisionSettingsManagement({
+      auth,
+      settings,
+      config: { ...config, decisionAi: undefined },
+    })
+    expect(await absent.get(admin)).toMatchObject({
+      status: "unconfigured",
+      enabled: false,
+    })
+    expect(await absent.save(admin, true)).toMatchObject({ ok: false })
+    expect(config.decisionAi?.status).toBe("configured")
+    if (config.decisionAi?.status === "configured")
+      config.decisionAi.provider = "openai"
+    expect(await service.get(admin)).toMatchObject({
+      provider: "openai",
+      enabled: false,
+    })
+    await service.save(admin, true)
+    expect(await service.get(admin)).toMatchObject({ enabled: true })
+  })
+  it("tests with synthetic input while off without changing the preference", async () => {
+    const request = vi
+      .fn<typeof requestDecisions>()
+      .mockResolvedValue({ support: { type: "predicate", probability: 0.9 } })
+    const service = createDecisionSettingsManagement({
+      auth,
+      settings,
+      config: configured(),
+      request,
+    })
+    await service.save(admin, false)
+    expect(await service.test(admin)).toMatchObject({ ok: true })
+    expect(request.mock.calls[0][1]).toMatch(/Synthetic connection test/)
+    expect(await service.get(admin)).toMatchObject({ enabled: false })
+    request.mockRejectedValueOnce(new Error("private error body"))
+    expect(JSON.stringify(await service.test(admin))).not.toContain(
+      "private error body"
+    )
+  })
+  it("denies Clients and anonymous callers before reads, writes or test requests", async () => {
+    const request = vi.fn<typeof requestDecisions>()
+    const service = createDecisionSettingsManagement({
+      auth,
+      settings,
+      config: configured(),
+      request,
+    })
+    for (const headers of [client, new Headers()]) {
+      await expect(service.get(headers)).rejects.toBeInstanceOf(
+        AuthorizationError
+      )
+      await expect(service.save(headers, false)).rejects.toBeInstanceOf(
+        AuthorizationError
+      )
+      await expect(service.test(headers)).rejects.toBeInstanceOf(
+        AuthorizationError
+      )
+    }
+    expect(request).not.toHaveBeenCalled()
+    expect(settings.all()).toEqual({})
+  })
+  it("reports invalid configuration without testing or losing the saved preference", async () => {
+    settings.set("decisionAiEnabled", "false")
+    const request = vi.fn<typeof requestDecisions>()
+    const service = createDecisionSettingsManagement({
+      auth,
+      settings,
+      request,
+      config: {
+        ...configured(),
+        decisionAi: {
+          status: "invalid",
+          problems: ["DECISION_AI_MODEL is required."],
+        },
+      },
+    })
+    expect(await service.get(admin)).toMatchObject({
+      status: "invalid",
+      enabled: false,
+      problems: ["DECISION_AI_MODEL is required."],
+    })
+    expect(await service.test(admin)).toMatchObject({ ok: false })
+    expect(request).not.toHaveBeenCalled()
+    expect(settings.get("decisionAiEnabled")).toBe("false")
   })
 })
 

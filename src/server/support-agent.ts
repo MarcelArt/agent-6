@@ -3,6 +3,8 @@ import "@tanstack/react-start/server-only"
 import { Agent, OpenAIProvider, Runner, tool } from "@openai/agents"
 import OpenAI from "openai"
 import { z } from "zod"
+import { createHash } from "node:crypto"
+import { createDecisionSession } from "./decision-ai"
 import { createDatabaseTools } from "./database-tools"
 import { DatabaseQueryError } from "./postgres"
 import { createLogTools } from "./log-tools"
@@ -30,6 +32,7 @@ export type SupportRun = (options: {
   scope: ApplicationScope
   language?: LanguageSettings
   needsTitle?: boolean
+  decisionAiEnabled?: boolean
   conversationId: string
   /** The agent answer being written; Filed Issues are recorded on it. */
   messageId: string
@@ -162,6 +165,7 @@ export function createSupportRun(config: Config): SupportRun {
       messages: ENGLISH_AGENT_MESSAGES,
     },
     needsTitle = false,
+    decisionAiEnabled = true,
     conversationId,
     messageId,
     history,
@@ -175,6 +179,19 @@ export function createSupportRun(config: Config): SupportRun {
   }) => {
     if (!config.openaiApiKey || !config.openaiModel)
       throw new Error("Model is not configured")
+    const decisions =
+      decisionAiEnabled && config.decisionAi?.status === "configured"
+        ? createDecisionSession({
+            config: config.decisionAi,
+            scope,
+            question,
+            history,
+            signal,
+            onActivity,
+          })
+        : undefined
+    const initialAdvice = await decisions?.resources()
+    const reviewedIssues = new Set<string>()
     const code = createCodeTools(
       scope.attachments
         .filter((item) => item.kind === "repository")
@@ -246,6 +263,9 @@ export function createSupportRun(config: Config): SupportRun {
       name: "Application support",
       instructions:
         supportInstructions(scope, new Date(), language.preferredLanguage) +
+        (decisions
+          ? `\nDecision AI provides advisory recommendations only. It never grants access, proves a fault, authorizes filing, or replaces your investigation. Prioritize recommended resources, but inspect any other attached resource when relevant. Empty, uncertain or failed advice means use your normal investigation. Initial resource advice: ${JSON.stringify(initialAdvice)}. Use review_investigation with relevant evidence excerpts when new evidence changes which resources to inspect. If file_issue returns decisionAdvice without reporting, reconsider its classification and destination using actual evidence. You may retain your original choice when evidence supports it; repeat the same file_issue call after review to proceed. If you change destination, first check existing issues there. Never tell the user a report was sent unless reported is true.`
+          : "") +
         (needsTitle
           ? "\nAt the start of this run, call set_conversation_title with a short, plain title in the Preferred Language describing the person's Application support request. Do this before answering or asking an Interactive Question. Never include personal data or secrets in the title."
           : ""),
@@ -271,6 +291,17 @@ export function createSupportRun(config: Config): SupportRun {
             }
           : { isFinalOutput: false, isInterrupted: undefined },
       tools: [
+        ...(decisions
+          ? [
+              tool({
+                name: "review_investigation",
+                description:
+                  "Request revised advisory resource rankings when new evidence changes the investigation. Send only relevant excerpts without secrets or personal data. Advice does not restrict other attached resources. Calls are bounded; continue normally when unavailable or uncertain.",
+                parameters: z.object({ evidence: z.string().max(24000) }),
+                execute: ({ evidence }) => decisions.resources(evidence),
+              }),
+            ]
+          : []),
         ...(needsTitle
           ? [
               tool({
@@ -422,11 +453,32 @@ export function createSupportRun(config: Config): SupportRun {
               ),
             existingIssueNumber: z.number().int().nullable(),
           }),
-          execute: (input) =>
-            safe(
+          execute: async (input) => {
+            const fingerprint = createHash("sha256")
+              .update(JSON.stringify(input))
+              .digest("hex")
+            if (decisions && !reviewedIssues.has(fingerprint)) {
+              const advice = await decisions.fault(JSON.stringify(input))
+              reviewedIssues.add(fingerprint)
+              if (
+                !("fallback" in advice) &&
+                !advice.uncertain &&
+                ((advice.repositoryId &&
+                  advice.repositoryId !== input.repositoryId) ||
+                  (advice.classification &&
+                    advice.classification !== input.kind))
+              )
+                return {
+                  reported: false,
+                  decisionAdvice: advice,
+                  note: "Review this advisory recommendation against your evidence. No report has been sent. You may keep your evidence-supported choice by repeating the same call. For a changed destination, check existing issues there first.",
+                }
+            }
+            return safe(
               () => issues.file(input),
               "The report could not be sent. Do not say the team has been informed."
-            ),
+            )
+          },
         }),
       ],
     })

@@ -63,7 +63,10 @@ export function historyActivities(items: Array<unknown>): Array<ToolActivity> {
       calls.set(row.callId, {
         id: row.callId,
         name: auditText(row.name),
-        input: auditText(row.arguments),
+        input:
+          row.name === "review_investigation"
+            ? "[Evidence omitted]"
+            : auditText(row.arguments),
         status: "started",
       })
     if (row.type === "function_call_result") {

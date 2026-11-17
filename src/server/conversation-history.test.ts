@@ -319,3 +319,29 @@ it("redacts nested credentials, authorization and images in audit inputs", () =>
   })
   expect(output).not.toMatch(/key-value|session-cookie|tiny|sql-secret|AAA=/)
 })
+
+it("omits Decision AI evidence excerpts from both live and replayed audit activity", () => {
+  const activities = historyActivities([
+    {
+      type: "function_call",
+      callId: "review-1",
+      name: "review_investigation",
+      arguments: JSON.stringify({
+        evidence: "private incident evidence with customer names",
+      }),
+    },
+    {
+      type: "function_call_result",
+      callId: "review-1",
+      output: { text: JSON.stringify({ resources: [] }) },
+    },
+  ])
+  expect(activities).toMatchObject([
+    {
+      name: "review_investigation",
+      input: "[Evidence omitted]",
+      status: "complete",
+    },
+  ])
+  expect(JSON.stringify(activities)).not.toContain("private incident evidence")
+})

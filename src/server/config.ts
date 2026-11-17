@@ -3,6 +3,8 @@ import "@tanstack/react-start/server-only"
 import { existsSync } from "node:fs"
 import { resolve } from "node:path"
 import { z } from "zod"
+import { parseDecisionConfig } from "./decision-config"
+import type { DecisionConfig } from "./decision-config"
 
 /**
  * The one place environment variables are read and validated.
@@ -79,6 +81,7 @@ export type Config = {
   openaiModel?: string
   guardrailModel?: string
   openaiBaseUrl?: string
+  decisionAi?: DecisionConfig
 }
 
 export class ConfigError extends Error {
@@ -104,6 +107,7 @@ export function parseConfig(env: Record<string, string | undefined>): Config {
       )
     )
   }
+  const decisionAi = parseDecisionConfig(env)
   return {
     dataDir: result.data.DATA_DIR,
     encryptionKey: result.data.ENCRYPTION_KEY,
@@ -117,6 +121,7 @@ export function parseConfig(env: Record<string, string | undefined>): Config {
     guardrailModel:
       result.data.GUARDRAIL_MODEL || result.data.OPENAI_MODEL || undefined,
     openaiBaseUrl: result.data.OPENAI_BASE_URL,
+    ...(decisionAi ? { decisionAi } : {}),
   }
 }
 

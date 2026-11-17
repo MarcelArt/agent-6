@@ -9,6 +9,32 @@ const AUTH = {
 }
 
 describe("parseConfig", () => {
+  it("keeps optional Decision AI errors separate from required startup configuration", () => {
+    const env = {
+      DATA_DIR: "./data",
+      ENCRYPTION_KEY: KEY,
+      ...AUTH,
+      OPENAI_API_KEY: "support-key",
+      OPENAI_MODEL: "support-model",
+    }
+    expect(
+      parseConfig({ ...env, DECISION_AI_PROVIDER: "openai" })
+    ).toMatchObject({
+      openaiApiKey: "support-key",
+      decisionAi: { status: "invalid" },
+    })
+    expect(
+      parseConfig({
+        ...env,
+        DECISION_AI_PROVIDER: "openai",
+        DECISION_AI_API_KEY: "decision-key",
+        DECISION_AI_MODEL: "gpt-6-luna",
+      })
+    ).toMatchObject({
+      openaiApiKey: "support-key",
+      decisionAi: { status: "configured", apiKey: "decision-key" },
+    })
+  })
   it("uses the support model for the Guardrail unless another model is set", () => {
     const env = {
       DATA_DIR: "./data",

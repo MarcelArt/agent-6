@@ -4,7 +4,7 @@
 
 ## How to use
 
-Give the agent one step file and say "implement this step". Do not start a step until every step under its "Depends on" is merged. Step 01 is a design step: it stops after showing three directions and continues only once you have picked one. Step 18 is optional. Decision AI from `plan.md` has no step yet; it will be planned later.
+Give the agent one step file and say "implement this step". Do not start a step until every step under its "Depends on" is merged. Step 01 is a design step: it stops after showing three directions and continues only once you have picked one. Step 18 is optional.
 
 ## Order
 
@@ -28,6 +28,7 @@ Give the agent one step file and say "implement this step". Do not start a step 
 | 16 | [OAuth](16-oauth.md) | Optional sign-in through an OAuth 2.0 provider |
 | 17 | [Deployment](17-deployment.md) | Docker image, compose file, setup guide |
 | 18 | [Postgres for own data](18-postgres-for-own-data.md) | Optional alternative to SQLite |
+| 19 | [Decision AI](19-decision-ai.md) | Optional provider-backed investigation and fault advice |
 
 ## Decisions that apply to every step
 

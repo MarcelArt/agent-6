@@ -28,7 +28,7 @@ Make sure this project has proper routing, navigating through pages shouldn't ch
 - OpenAI Agents SDK
   Admin provide api key, model, and openai compatible base url to environment variables.
 - Decision AI
-  Optional feature where admin can provide api key, model, and base url of decision AI. The app need to be able to support typesafe systemone jev api, cloudflare worker ai clef, and openai decision api. This will be used by agent to decide which repository to check, which repository that have issues. If this value is not provided, it will use the regular Agents SDK. This feature can also be toggle on admin interface.
+  Optional separate model configured by the system administrator through environment variables, supporting TypeSafe System One (Jev), Cloudflare Workers AI (Clef), and the OpenAI Decisions API. It advises which Repositories, Database Connections and Log Connections to inspect, classifies faults and recommends the Repository for a Filed Issue. Admin Settings has an organization-wide toggle and a synthetic connection test. Missing, disabled, invalid or failed Decision AI configuration uses the regular agent flow. See [step 19](plans/19-decision-ai.md) and [ADR 0003](adr/0003-advisory-decision-ai.md).
 ## Authn
 - Default user and password from environment variables are created for the first time
 - Future user will be created from admin user

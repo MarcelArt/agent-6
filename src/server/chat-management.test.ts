@@ -16,6 +16,8 @@ import { INDONESIAN_AGENT_MESSAGES } from "@/lib/preferred-language"
 import { createUploads } from "./uploads"
 import { createUploadsRepository } from "./repositories/uploads"
 import { AuthorizationError } from "./session"
+import * as issueTools from "./issue-tools"
+import type { DecisionConfig } from "./decision-config"
 import {
   GUARDRAIL_FAILED,
   GUARDRAIL_REFUSED,
@@ -161,6 +163,7 @@ beforeEach(async () => {
   })
 })
 afterEach(() => {
+  vi.restoreAllMocks()
   vi.unstubAllGlobals()
   vi.useRealTimers()
   rmSync(directory, { recursive: true, force: true })
@@ -990,7 +993,7 @@ describe("Pictures", () => {
 })
 
 describe("Support model protocols", () => {
-  function sdk(model = "compatible-model") {
+  function sdk(model = "compatible-model", decisionAi?: DecisionConfig) {
     return createChatManagement({
       settings,
       auth,
@@ -1007,6 +1010,7 @@ describe("Support model protocols", () => {
         openaiApiKey: "wrong-key",
         openaiModel: model,
         openaiBaseUrl: "http://compatible.test/v1",
+        decisionAi,
       }),
     })
   }
@@ -1016,6 +1020,175 @@ describe("Support model protocols", () => {
       { headers: { "Content-Type": "text/event-stream" } }
     )
   }
+  const decisionConfig: DecisionConfig = {
+    status: "configured",
+    provider: "typesafe",
+    apiKey: "decision-only-key",
+    model: "jev-latest",
+    baseUrl: "http://decision.test/v1",
+    minProbability: 0.7,
+    minMargin: 0.15,
+  }
+  it("runs advisory selection after the Guardrail and reads the toggle afresh on each reply", async () => {
+    let decisions = 0
+    const fetcher = vi
+      .spyOn(globalThis, "fetch")
+      .mockImplementation(async (url, init) => {
+        const body = JSON.parse(init!.body as string)
+        if (String(url).includes("decision.test")) {
+          expect(classify).toHaveBeenCalled()
+          expect(init?.headers).toMatchObject({
+            Authorization: "Bearer decision-only-key",
+          })
+          decisions++
+          return Response.json({
+            answers: { r0: { type: "noul", noul: 0.95 } },
+          })
+        }
+        if (decisions)
+          expect(JSON.stringify(body.messages)).toContain(
+            "Prioritize recommended resources"
+          )
+        return completion(
+          { content: "Open Billing to find your invoice." },
+          "stop"
+        )
+      })
+    const conversation = await create()
+    const service = sdk("compatible-model", decisionConfig)
+    settings.set("decisionAiEnabled", "false")
+    await events(await service.reply(client, conversation.id, { start: true }))
+    expect(decisions).toBe(0)
+    settings.set("decisionAiEnabled", "true")
+    const streamed = await events(
+      await service.reply(client, conversation.id, {
+        message: "Where is Billing?",
+      })
+    )
+    expect(decisions).toBe(1)
+    expect(JSON.stringify(streamed)).not.toContain("decision-only-key")
+    const audit = conversations.audit(conversation.id)
+    expect(audit.activities.some((a) => a.name === "decision_resources")).toBe(
+      true
+    )
+    expect(JSON.stringify(audit.activities)).not.toContain("decision-only-key")
+    expect(fetcher).toHaveBeenCalledTimes(3)
+  })
+  it("continues the regular support run when the decision provider fails", async () => {
+    vi.spyOn(globalThis, "fetch").mockImplementation(async (url) =>
+      String(url).includes("decision.test")
+        ? new Response("private provider error", { status: 503 })
+        : completion({ content: "Open Billing to find your invoice." }, "stop")
+    )
+    const conversation = await create()
+    await events(
+      await sdk("compatible-model", decisionConfig).reply(
+        client,
+        conversation.id,
+        { start: true }
+      )
+    )
+    expect(
+      (await management.get(client, conversation.id)).messages.at(-1)
+    ).toMatchObject({
+      status: "complete",
+      content: "Open Billing to find your invoice.",
+    })
+    const audit = conversations.audit(conversation.id)
+    expect(JSON.stringify(audit.activities)).toContain("HTTP 503")
+    expect(JSON.stringify(audit.activities)).not.toContain(
+      "private provider error"
+    )
+  })
+  it("returns conflicting fix advice for review and allows the agent to retain its evidence-supported choice", async () => {
+    const file = vi.fn().mockResolvedValue({ reported: true })
+    vi.spyOn(issueTools, "createIssueTools").mockReturnValue({
+      findExisting: vi.fn().mockResolvedValue({ issues: [] }),
+      file,
+    })
+    let supportCalls = 0,
+      faultCalls = 0
+    const proposal = {
+      repositoryId,
+      kind: "code-fix",
+      title: "Invoice calculation fails",
+      userExperience: "Invoice is incorrect",
+      findings: "billing.ts:1 calculates a wrong total",
+      potentialFix: "Correct the calculation",
+      existingIssueNumber: null,
+    }
+    vi.spyOn(globalThis, "fetch").mockImplementation(async (url, init) => {
+      const body = JSON.parse(init!.body as string)
+      if (String(url).includes("decision.test")) {
+        if (body.questions.classification) {
+          faultCalls++
+          return Response.json({
+            answers: {
+              classification: {
+                type: "choice",
+                choice: "data-fix",
+                confidence: 0.9,
+                probabilities: {
+                  "data-fix": 0.9,
+                  "code-fix": 0.04,
+                  "no-fix": 0.03,
+                  "insufficient-evidence": 0.03,
+                },
+              },
+              destination: {
+                type: "choice",
+                choice: "r0",
+                confidence: 0.9,
+                probabilities: { r0: 0.95, unknown: 0.05 },
+              },
+            },
+          })
+        }
+        return Response.json({ answers: { r0: { type: "noul", noul: 0.9 } } })
+      }
+      supportCalls++
+      if (supportCalls === 2) {
+        expect(file).not.toHaveBeenCalled()
+        expect(JSON.stringify(body.messages)).toContain("decisionAdvice")
+      }
+      if (supportCalls <= 2)
+        return completion(
+          {
+            tool_calls: [
+              {
+                index: 0,
+                id: `file-${supportCalls}`,
+                type: "function",
+                function: {
+                  name: "file_issue",
+                  arguments: JSON.stringify(proposal),
+                },
+              },
+            ],
+          },
+          "tool_calls"
+        )
+      return completion({ content: "The team has been informed." }, "stop")
+    })
+    const conversation = await create()
+    await events(
+      await sdk("compatible-model", decisionConfig).reply(
+        client,
+        conversation.id,
+        { start: true }
+      )
+    )
+    expect(faultCalls).toBe(1)
+    expect(file).toHaveBeenCalledExactlyOnceWith(proposal)
+    expect(
+      conversations
+        .audit(conversation.id)
+        .activities.some((a) => a.name === "decision_fault")
+    ).toBe(true)
+    expect(
+      (await management.get(client, conversation.id)).messages.at(-1)?.status
+    ).toBe("complete")
+  })
   it("uses Responses for gpt-6.1-sol tools and replays local history on follow-up", async () => {
     const requests: Array<Record<string, unknown>> = []
     vi.stubGlobal(

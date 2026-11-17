@@ -79,5 +79,5 @@ The one organization-wide language the agent answers in.
 _Avoid_: Locale, user language
 
 **Decision AI**:
-An optional separate model that chooses which Repositories the agent should inspect for a question. Not built yet; a future feature.
+An optional separate model that recommends which Repositories, Database Connections and Log Connections to inspect, a fault's Code Fix or Data Fix classification, and the Repository for a Filed Issue. The agent remains responsible for investigating the evidence and deciding what to do.
 _Avoid_: Router, planner

@@ -17,7 +17,11 @@ export function redact(text: string) {
         /\b([a-z][a-z0-9+.-]*:\/\/)[^\s/:@]+:[^\s/@]+@/gi,
         "$1[redacted]@"
       )
-      .replace(/[\w.+-]+@[\w-]+(?:\.[\w-]+)+/g, "[redacted email]")
+      // Bounded email components avoid quadratic backtracking on long code/log tokens.
+      .replace(
+        /[\w.+-]{1,64}@[\w-]{1,63}(?:\.[\w-]{1,63})+/g,
+        "[redacted email]"
+      )
       .replace(
         /\b(?:gh[pousr]_[A-Za-z0-9]{20,}|github_pat_\w{20,}|sk-[\w-]{20,}|xox[abprs]-[\w-]{10,}|AKIA[0-9A-Z]{16}|eyJ[\w-]{8,}\.[\w-]{8,}\.[\w-]{8,})/g,
         "[redacted token]"

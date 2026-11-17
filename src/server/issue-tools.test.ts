@@ -414,6 +414,9 @@ describe("Issue filing", () => {
     const evidence =
       "src/invoice.ts:42 at 2026-11-15T09:10:02+07:00, delivery 8812, where token = $1 and id = 120000"
     expect(redact(evidence)).toBe(evidence)
+    // Long source/log tokens must not cause the email pattern to backtrack quadratically.
+    const longEvidence = "x".repeat(64 * 1024)
+    expect(redact(longEvidence)).toBe(longEvidence)
 
     const issues = tools(conversation())
     await issues.findExisting({ repositoryId })

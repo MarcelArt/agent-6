@@ -40,6 +40,25 @@ Open `/login` at `BETTER_AUTH_URL` and sign in with the initial Admin credential
 
 Under **Users**, create the other Admins and Clients. There is no public registration. An Admin configures resources and Applications; a Client can ask questions about any Application in this installation. Keep an Admin password login available when enabling OAuth.
 
+## Optional Decision AI
+
+Leave every `DECISION_AI_*` variable empty to use the regular agent flow. To enable advice from a separate decision model, configure exactly one provider in the server environment:
+
+| Variable | TypeSafe | Cloudflare Workers AI | OpenAI Decisions |
+| --- | --- | --- | --- |
+| `DECISION_AI_PROVIDER` | `typesafe` | `cloudflare` | `openai` |
+| `DECISION_AI_API_KEY` | TypeSafe key | Workers AI API token | OpenAI API key |
+| `DECISION_AI_MODEL` | e.g. `jev-latest` | `@cf/cloudflare/clef` or `@cf/cloudflare/clef-flash` | e.g. `gpt-6-luna` |
+| `DECISION_AI_ACCOUNT_ID` | empty | Your Cloudflare account ID | empty |
+
+`DECISION_AI_BASE_URL` is optional. The defaults are `https://api.typesafe.ai/v1`, `https://api.cloudflare.com/client/v4/accounts/<account-id>/ai/run`, and `https://api.openai.com/v1`. For a compatible gateway, supply the corresponding API prefix; Agent 6 appends `/systemone`, `/<Cloudflare model ID>`, or `/decisions`. This is independent of `OPENAI_BASE_URL`, and credentials never fall back to the support model's key.
+
+Restart after changing environment variables (`docker compose up -d --force-recreate --wait` for Compose). Valid configuration defaults to enabled. Under **Settings → Decision AI**, an Admin can save an organization-wide on/off preference and run **Test connection**, including while disabled. Tests send synthetic input only and do not change the toggle. The preference survives restarts, provider changes, and configuration removal/restoration. An absent or invalid configuration disables the feature without preventing application startup; Settings explains what needs correcting.
+
+Decision AI receives the current question, up to six recent text messages, attached-resource metadata and, for later decisions, up to 16 KB of redacted evidence excerpts. Screenshots and SDK reasoning are excluded. Requests are capped at 64 KB, four requests per reply, three seconds per request and six seconds total waiting. A provider failure stops further decision requests for that reply; support continues through the regular agent flow.
+
+Optional `DECISION_AI_MIN_PROBABILITY` (0.5–1, default 0.7) and `DECISION_AI_MIN_MARGIN` (0–1, default 0.15) tune initial recommendation thresholds. Classification and issue destinations must meet both thresholds. These are advisory heuristics: the main agent still checks evidence and can investigate any attached resource. See [TypeSafe's protocol](https://docs.typesafe.ai/api/system-one), [Cloudflare Clef](https://developers.cloudflare.com/workers-ai/models/clef/) and [OpenAI Decisions](https://developers.openai.com/api/docs/guides/decisions) for provider setup and model availability.
+
 ## GitHub token
 
 Create a token under GitHub → Settings → Developer settings → Personal access tokens. Set it as `GITHUB_TOKEN` in `.env`, then recreate the container for the environment change to take effect.

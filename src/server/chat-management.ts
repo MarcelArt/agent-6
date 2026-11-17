@@ -15,6 +15,7 @@ import { createGuardrailClassifier } from "./guardrail"
 import { createUploads } from "./uploads"
 import { createSettingsRepository } from "./repositories/settings"
 import { readLanguageSettings } from "./preferred-language"
+import { decisionEnabled } from "./decision-settings"
 import { publicActivity } from "./reply-activity"
 import type { ToolActivity } from "@/lib/conversation-history"
 import { replies } from "./reply-lifecycle"
@@ -153,6 +154,9 @@ export function createChatManagement(
           503
         )
       const claim = conversations.begin(id, owner.id, parsed.data)
+      const useDecisionAi = decisionEnabled(
+        deps.settings ?? createSettingsRepository()
+      )
       const abort = new AbortController()
       const finishReply = replies.begin(claim.assistantId, () => abort.abort())
       const current = () =>
@@ -273,6 +277,7 @@ export function createChatManagement(
                     deps.run ?? createSupportRun(getConfig())
                   )({
                     scope: applicationScope,
+                    decisionAiEnabled: useDecisionAi,
                     language,
                     needsTitle: claim.history.length === 0,
                     conversationId: id,

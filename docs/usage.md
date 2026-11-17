@@ -58,6 +58,14 @@ Open **History** at `/chat/history` to find and continue your Conversations, new
 
 Admins can open **All Conversations** at `/admin/conversations`, filter by user, Application and Filed Issues, and review any Conversation at `/admin/conversations/$conversationId`. The audit view is read-only and includes deleted Conversations, Guardrail refusals, Filed Issue links, images, and redacted tool inputs and errors. New runs persist tool activity even when a later model request fails; older runs show available tool details from their saved SDK history. Tool outputs, reasoning and image bytes are excluded from audit activity, and SQL literal values and recognized credentials are redacted. Unsent images remain private to the user who picked them.
 
+### Decision AI
+
+When configured through the server environment, **Settings → Decision AI** shows the provider and model, an organization-wide toggle, and **Test connection**. Save a toggle change to apply it to the next reply. The connection test also works while disabled, uses synthetic input only, and never changes the preference. Missing or invalid configuration displays Not configured or Configuration error and disables the controls. See the [setup guide](setup.md#optional-decision-ai) for environment variables.
+
+After the Guardrail passes, Decision AI recommends attached Repositories, Database Connections and Log Connections to investigate. The agent may request updated rankings after new evidence, and obtains fix-classification and destination advice before filing an issue. Recommendations may include several resources, no relevant resources, no fix needed or insufficient evidence. They are advisory: the support agent retains access to all attached resources and still needs evidence to report a fault. Conflicting issue advice is returned for reconsideration before filing; it never moves or files an issue itself.
+
+When disabled, unconfigured, uncertain, unavailable or over its request/input limits, the regular agent flow continues. Admin Conversation review shows normalized decision summaries, probabilities, duration and safe fallback reasons, excluding decision evidence and raw provider payloads. Clients see plain investigation progress.
+
 ### Pictures
 
 A message can carry up to 4 pictures (PNG, JPEG or WebP, 10 MB each), added with the **Attach image** button, by pasting or by dropping them on the message box. The server decides the type from the file's content, not its name. Originals are stored in `DATA_DIR/uploads/` and served only through `/api/uploads/<id>` to the Conversation's owner and Admins; pictures that have not been sent are private to the user who picked them. The model gets a copy scaled down to at most 1568 pixels on its longest side, and the pictures stay in the Conversation's context for follow-ups. Pictures that were picked but never sent are removed after a day.

@@ -34,15 +34,18 @@ import type { LanguageResult } from "@/lib/preferred-language"
 import { getSettings, savePreferredLanguage } from "@/server/settings.functions"
 import { getOAuthSettings } from "@/server/oauth.functions"
 import { OAuthForm } from "@/components/settings/oauth-form"
+import { DecisionForm } from "@/components/settings/decision-form"
+import { getDecisionSettings } from "@/server/decision-settings.functions"
 
 export const Route = createFileRoute("/admin/settings")({
   head: () => ({ meta: [{ title: "Settings · Agent 6" }] }),
   loader: async () => {
-    const [language, oauth] = await Promise.all([
+    const [language, oauth, decision] = await Promise.all([
       getSettings(),
       getOAuthSettings(),
+      getDecisionSettings(),
     ])
-    return { ...language, oauth }
+    return { ...language, oauth, decision }
   },
   component: Page,
 })
@@ -54,6 +57,7 @@ function Page() {
       <DetailHeader title="Settings" />
       <div className="min-h-0 flex-1 overflow-y-auto">
         <LanguageForm />
+        <DecisionForm saved={saved.decision} />
         <OAuthForm saved={saved.oauth} />
       </div>
     </DetailPane>
