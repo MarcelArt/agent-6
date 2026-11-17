@@ -2,6 +2,7 @@ name: agent-6
 
 services:
   agent-6:
+    container_name: agent-6
     image: marcelaritonang/agent-6:latest
     init: true
     env_file: .env
