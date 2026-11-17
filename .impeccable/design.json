@@ -1,0 +1,865 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-17T14:10:07Z",
+  "title": "Design System: Agent 6",
+  "extensions": {
+    "colorMeta": {
+      "primary": {
+        "role": "primary",
+        "displayName": "Light / Deep Violet",
+        "tonalRamp": [
+          "oklch(0.15 0.06625 301.924)",
+          "oklch(0.27 0.15900 301.924)",
+          "oklch(0.39 0.23850 301.924)",
+          "oklch(0.51 0.26500 301.924)",
+          "oklch(0.63 0.26500 301.924)",
+          "oklch(0.75 0.22525 301.924)",
+          "oklch(0.87 0.13250 301.924)",
+          "oklch(0.95 0.05300 301.924)"
+        ]
+      },
+      "primary-foreground": {
+        "role": "primary",
+        "displayName": "Light / Zinc Neutrals / primary foreground",
+        "tonalRamp": [
+          "oklch(0.15 0.00350 308.299)",
+          "oklch(0.27 0.00840 308.299)",
+          "oklch(0.39 0.01260 308.299)",
+          "oklch(0.51 0.01400 308.299)",
+          "oklch(0.63 0.01400 308.299)",
+          "oklch(0.75 0.01190 308.299)",
+          "oklch(0.87 0.00700 308.299)",
+          "oklch(0.95 0.00280 308.299)"
+        ]
+      },
+      "background": {
+        "role": "neutral",
+        "displayName": "Light / Zinc Neutrals / background",
+        "tonalRamp": [
+          "oklch(0.15 0.00000 0)",
+          "oklch(0.27 0.00000 0)",
+          "oklch(0.39 0.00000 0)",
+          "oklch(0.51 0.00000 0)",
+          "oklch(0.63 0.00000 0)",
+          "oklch(0.75 0.00000 0)",
+          "oklch(0.87 0.00000 0)",
+          "oklch(0.95 0.00000 0)"
+        ]
+      },
+      "foreground": {
+        "role": "neutral",
+        "displayName": "Light / Zinc Neutrals / foreground",
+        "tonalRamp": [
+          "oklch(0.15 0.00125 285.823)",
+          "oklch(0.27 0.00300 285.823)",
+          "oklch(0.39 0.00450 285.823)",
+          "oklch(0.51 0.00500 285.823)",
+          "oklch(0.63 0.00500 285.823)",
+          "oklch(0.75 0.00425 285.823)",
+          "oklch(0.87 0.00250 285.823)",
+          "oklch(0.95 0.00100 285.823)"
+        ]
+      },
+      "card": {
+        "role": "neutral",
+        "displayName": "Light / Zinc Neutrals / card",
+        "tonalRamp": [
+          "oklch(0.15 0.00000 0)",
+          "oklch(0.27 0.00000 0)",
+          "oklch(0.39 0.00000 0)",
+          "oklch(0.51 0.00000 0)",
+          "oklch(0.63 0.00000 0)",
+          "oklch(0.75 0.00000 0)",
+          "oklch(0.87 0.00000 0)",
+          "oklch(0.95 0.00000 0)"
+        ]
+      },
+      "card-foreground": {
+        "role": "neutral",
+        "displayName": "Light / Zinc Neutrals / card foreground",
+        "tonalRamp": [
+          "oklch(0.15 0.00125 285.823)",
+          "oklch(0.27 0.00300 285.823)",
+          "oklch(0.39 0.00450 285.823)",
+          "oklch(0.51 0.00500 285.823)",
+          "oklch(0.63 0.00500 285.823)",
+          "oklch(0.75 0.00425 285.823)",
+          "oklch(0.87 0.00250 285.823)",
+          "oklch(0.95 0.00100 285.823)"
+        ]
+      },
+      "popover": {
+        "role": "neutral",
+        "displayName": "Light / Zinc Neutrals / popover",
+        "tonalRamp": [
+          "oklch(0.15 0.00000 0)",
+          "oklch(0.27 0.00000 0)",
+          "oklch(0.39 0.00000 0)",
+          "oklch(0.51 0.00000 0)",
+          "oklch(0.63 0.00000 0)",
+          "oklch(0.75 0.00000 0)",
+          "oklch(0.87 0.00000 0)",
+          "oklch(0.95 0.00000 0)"
+        ]
+      },
+      "popover-foreground": {
+        "role": "neutral",
+        "displayName": "Light / Zinc Neutrals / popover foreground",
+        "tonalRamp": [
+          "oklch(0.15 0.00125 285.823)",
+          "oklch(0.27 0.00300 285.823)",
+          "oklch(0.39 0.00450 285.823)",
+          "oklch(0.51 0.00500 285.823)",
+          "oklch(0.63 0.00500 285.823)",
+          "oklch(0.75 0.00425 285.823)",
+          "oklch(0.87 0.00250 285.823)",
+          "oklch(0.95 0.00100 285.823)"
+        ]
+      },
+      "secondary": {
+        "role": "neutral",
+        "displayName": "Light / Zinc Neutrals / secondary",
+        "tonalRamp": [
+          "oklch(0.15 0.00025 286.375)",
+          "oklch(0.27 0.00060 286.375)",
+          "oklch(0.39 0.00090 286.375)",
+          "oklch(0.51 0.00100 286.375)",
+          "oklch(0.63 0.00100 286.375)",
+          "oklch(0.75 0.00085 286.375)",
+          "oklch(0.87 0.00050 286.375)",
+          "oklch(0.95 0.00020 286.375)"
+        ]
+      },
+      "secondary-foreground": {
+        "role": "neutral",
+        "displayName": "Light / Zinc Neutrals / secondary foreground",
+        "tonalRamp": [
+          "oklch(0.15 0.00150 285.885)",
+          "oklch(0.27 0.00360 285.885)",
+          "oklch(0.39 0.00540 285.885)",
+          "oklch(0.51 0.00600 285.885)",
+          "oklch(0.63 0.00600 285.885)",
+          "oklch(0.75 0.00510 285.885)",
+          "oklch(0.87 0.00300 285.885)",
+          "oklch(0.95 0.00120 285.885)"
+        ]
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "Light / Zinc Neutrals / muted",
+        "tonalRamp": [
+          "oklch(0.15 0.00025 286.375)",
+          "oklch(0.27 0.00060 286.375)",
+          "oklch(0.39 0.00090 286.375)",
+          "oklch(0.51 0.00100 286.375)",
+          "oklch(0.63 0.00100 286.375)",
+          "oklch(0.75 0.00085 286.375)",
+          "oklch(0.87 0.00050 286.375)",
+          "oklch(0.95 0.00020 286.375)"
+        ]
+      },
+      "muted-foreground": {
+        "role": "neutral",
+        "displayName": "Light / Zinc Neutrals / muted foreground",
+        "tonalRamp": [
+          "oklch(0.15 0.00400 285.938)",
+          "oklch(0.27 0.00960 285.938)",
+          "oklch(0.39 0.01440 285.938)",
+          "oklch(0.51 0.01600 285.938)",
+          "oklch(0.63 0.01600 285.938)",
+          "oklch(0.75 0.01360 285.938)",
+          "oklch(0.87 0.00800 285.938)",
+          "oklch(0.95 0.00320 285.938)"
+        ]
+      },
+      "accent": {
+        "role": "neutral",
+        "displayName": "Light / Zinc Neutrals / accent",
+        "tonalRamp": [
+          "oklch(0.15 0.00025 286.375)",
+          "oklch(0.27 0.00060 286.375)",
+          "oklch(0.39 0.00090 286.375)",
+          "oklch(0.51 0.00100 286.375)",
+          "oklch(0.63 0.00100 286.375)",
+          "oklch(0.75 0.00085 286.375)",
+          "oklch(0.87 0.00050 286.375)",
+          "oklch(0.95 0.00020 286.375)"
+        ]
+      },
+      "accent-foreground": {
+        "role": "neutral",
+        "displayName": "Light / Zinc Neutrals / accent foreground",
+        "tonalRamp": [
+          "oklch(0.15 0.00150 285.885)",
+          "oklch(0.27 0.00360 285.885)",
+          "oklch(0.39 0.00540 285.885)",
+          "oklch(0.51 0.00600 285.885)",
+          "oklch(0.63 0.00600 285.885)",
+          "oklch(0.75 0.00510 285.885)",
+          "oklch(0.87 0.00300 285.885)",
+          "oklch(0.95 0.00120 285.885)"
+        ]
+      },
+      "destructive": {
+        "role": "neutral",
+        "displayName": "Light / Error Red",
+        "tonalRamp": [
+          "oklch(0.15 0.06125 27.325)",
+          "oklch(0.27 0.14700 27.325)",
+          "oklch(0.39 0.22050 27.325)",
+          "oklch(0.51 0.24500 27.325)",
+          "oklch(0.63 0.24500 27.325)",
+          "oklch(0.75 0.20825 27.325)",
+          "oklch(0.87 0.12250 27.325)",
+          "oklch(0.95 0.04900 27.325)"
+        ]
+      },
+      "border": {
+        "role": "neutral",
+        "displayName": "Light / Zinc Neutrals / border",
+        "tonalRamp": [
+          "oklch(0.15 0.00100 286.32)",
+          "oklch(0.27 0.00240 286.32)",
+          "oklch(0.39 0.00360 286.32)",
+          "oklch(0.51 0.00400 286.32)",
+          "oklch(0.63 0.00400 286.32)",
+          "oklch(0.75 0.00340 286.32)",
+          "oklch(0.87 0.00200 286.32)",
+          "oklch(0.95 0.00080 286.32)"
+        ]
+      },
+      "input": {
+        "role": "neutral",
+        "displayName": "Light / Zinc Neutrals / input",
+        "tonalRamp": [
+          "oklch(0.15 0.00100 286.32)",
+          "oklch(0.27 0.00240 286.32)",
+          "oklch(0.39 0.00360 286.32)",
+          "oklch(0.51 0.00400 286.32)",
+          "oklch(0.63 0.00400 286.32)",
+          "oklch(0.75 0.00340 286.32)",
+          "oklch(0.87 0.00200 286.32)",
+          "oklch(0.95 0.00080 286.32)"
+        ]
+      },
+      "ring": {
+        "role": "neutral",
+        "displayName": "Light / Zinc Neutrals / ring",
+        "tonalRamp": [
+          "oklch(0.15 0.00375 286.067)",
+          "oklch(0.27 0.00900 286.067)",
+          "oklch(0.39 0.01350 286.067)",
+          "oklch(0.51 0.01500 286.067)",
+          "oklch(0.63 0.01500 286.067)",
+          "oklch(0.75 0.01275 286.067)",
+          "oklch(0.87 0.00750 286.067)",
+          "oklch(0.95 0.00300 286.067)"
+        ]
+      },
+      "sidebar": {
+        "role": "neutral",
+        "displayName": "Light / Zinc Neutrals / sidebar",
+        "tonalRamp": [
+          "oklch(0.15 0.00000 0)",
+          "oklch(0.27 0.00000 0)",
+          "oklch(0.39 0.00000 0)",
+          "oklch(0.51 0.00000 0)",
+          "oklch(0.63 0.00000 0)",
+          "oklch(0.75 0.00000 0)",
+          "oklch(0.87 0.00000 0)",
+          "oklch(0.95 0.00000 0)"
+        ]
+      },
+      "sidebar-foreground": {
+        "role": "neutral",
+        "displayName": "Light / Zinc Neutrals / sidebar foreground",
+        "tonalRamp": [
+          "oklch(0.15 0.00125 285.823)",
+          "oklch(0.27 0.00300 285.823)",
+          "oklch(0.39 0.00450 285.823)",
+          "oklch(0.51 0.00500 285.823)",
+          "oklch(0.63 0.00500 285.823)",
+          "oklch(0.75 0.00425 285.823)",
+          "oklch(0.87 0.00250 285.823)",
+          "oklch(0.95 0.00100 285.823)"
+        ]
+      },
+      "sidebar-accent": {
+        "role": "neutral",
+        "displayName": "Light / Zinc Neutrals / sidebar accent",
+        "tonalRamp": [
+          "oklch(0.15 0.00025 286.375)",
+          "oklch(0.27 0.00060 286.375)",
+          "oklch(0.39 0.00090 286.375)",
+          "oklch(0.51 0.00100 286.375)",
+          "oklch(0.63 0.00100 286.375)",
+          "oklch(0.75 0.00085 286.375)",
+          "oklch(0.87 0.00050 286.375)",
+          "oklch(0.95 0.00020 286.375)"
+        ]
+      },
+      "sidebar-accent-foreground": {
+        "role": "neutral",
+        "displayName": "Light / Zinc Neutrals / sidebar accent foreground",
+        "tonalRamp": [
+          "oklch(0.15 0.00150 285.885)",
+          "oklch(0.27 0.00360 285.885)",
+          "oklch(0.39 0.00540 285.885)",
+          "oklch(0.51 0.00600 285.885)",
+          "oklch(0.63 0.00600 285.885)",
+          "oklch(0.75 0.00510 285.885)",
+          "oklch(0.87 0.00300 285.885)",
+          "oklch(0.95 0.00120 285.885)"
+        ]
+      },
+      "sidebar-border": {
+        "role": "neutral",
+        "displayName": "Light / Zinc Neutrals / sidebar border",
+        "tonalRamp": [
+          "oklch(0.15 0.00100 286.32)",
+          "oklch(0.27 0.00240 286.32)",
+          "oklch(0.39 0.00360 286.32)",
+          "oklch(0.51 0.00400 286.32)",
+          "oklch(0.63 0.00400 286.32)",
+          "oklch(0.75 0.00340 286.32)",
+          "oklch(0.87 0.00200 286.32)",
+          "oklch(0.95 0.00080 286.32)"
+        ]
+      },
+      "dark-primary": {
+        "role": "primary",
+        "displayName": "Dark / Deep Violet",
+        "tonalRamp": [
+          "oklch(0.15 0.05450 303.724)",
+          "oklch(0.27 0.13080 303.724)",
+          "oklch(0.39 0.19620 303.724)",
+          "oklch(0.51 0.21800 303.724)",
+          "oklch(0.63 0.21800 303.724)",
+          "oklch(0.75 0.18530 303.724)",
+          "oklch(0.87 0.10900 303.724)",
+          "oklch(0.95 0.04360 303.724)"
+        ]
+      },
+      "dark-primary-foreground": {
+        "role": "primary",
+        "displayName": "Dark / Zinc Neutrals / primary foreground",
+        "tonalRamp": [
+          "oklch(0.15 0.00350 308.299)",
+          "oklch(0.27 0.00840 308.299)",
+          "oklch(0.39 0.01260 308.299)",
+          "oklch(0.51 0.01400 308.299)",
+          "oklch(0.63 0.01400 308.299)",
+          "oklch(0.75 0.01190 308.299)",
+          "oklch(0.87 0.00700 308.299)",
+          "oklch(0.95 0.00280 308.299)"
+        ]
+      },
+      "dark-background": {
+        "role": "neutral",
+        "displayName": "Dark / Zinc Neutrals / background",
+        "tonalRamp": [
+          "oklch(0.15 0.00125 285.823)",
+          "oklch(0.27 0.00300 285.823)",
+          "oklch(0.39 0.00450 285.823)",
+          "oklch(0.51 0.00500 285.823)",
+          "oklch(0.63 0.00500 285.823)",
+          "oklch(0.75 0.00425 285.823)",
+          "oklch(0.87 0.00250 285.823)",
+          "oklch(0.95 0.00100 285.823)"
+        ]
+      },
+      "dark-foreground": {
+        "role": "neutral",
+        "displayName": "Dark / Zinc Neutrals / foreground",
+        "tonalRamp": [
+          "oklch(0.15 0.00000 0)",
+          "oklch(0.27 0.00000 0)",
+          "oklch(0.39 0.00000 0)",
+          "oklch(0.51 0.00000 0)",
+          "oklch(0.63 0.00000 0)",
+          "oklch(0.75 0.00000 0)",
+          "oklch(0.87 0.00000 0)",
+          "oklch(0.95 0.00000 0)"
+        ]
+      },
+      "dark-card": {
+        "role": "neutral",
+        "displayName": "Dark / Zinc Neutrals / card",
+        "tonalRamp": [
+          "oklch(0.15 0.00150 285.885)",
+          "oklch(0.27 0.00360 285.885)",
+          "oklch(0.39 0.00540 285.885)",
+          "oklch(0.51 0.00600 285.885)",
+          "oklch(0.63 0.00600 285.885)",
+          "oklch(0.75 0.00510 285.885)",
+          "oklch(0.87 0.00300 285.885)",
+          "oklch(0.95 0.00120 285.885)"
+        ]
+      },
+      "dark-card-foreground": {
+        "role": "neutral",
+        "displayName": "Dark / Zinc Neutrals / card foreground",
+        "tonalRamp": [
+          "oklch(0.15 0.00000 0)",
+          "oklch(0.27 0.00000 0)",
+          "oklch(0.39 0.00000 0)",
+          "oklch(0.51 0.00000 0)",
+          "oklch(0.63 0.00000 0)",
+          "oklch(0.75 0.00000 0)",
+          "oklch(0.87 0.00000 0)",
+          "oklch(0.95 0.00000 0)"
+        ]
+      },
+      "dark-popover": {
+        "role": "neutral",
+        "displayName": "Dark / Zinc Neutrals / popover",
+        "tonalRamp": [
+          "oklch(0.15 0.00150 285.885)",
+          "oklch(0.27 0.00360 285.885)",
+          "oklch(0.39 0.00540 285.885)",
+          "oklch(0.51 0.00600 285.885)",
+          "oklch(0.63 0.00600 285.885)",
+          "oklch(0.75 0.00510 285.885)",
+          "oklch(0.87 0.00300 285.885)",
+          "oklch(0.95 0.00120 285.885)"
+        ]
+      },
+      "dark-popover-foreground": {
+        "role": "neutral",
+        "displayName": "Dark / Zinc Neutrals / popover foreground",
+        "tonalRamp": [
+          "oklch(0.15 0.00000 0)",
+          "oklch(0.27 0.00000 0)",
+          "oklch(0.39 0.00000 0)",
+          "oklch(0.51 0.00000 0)",
+          "oklch(0.63 0.00000 0)",
+          "oklch(0.75 0.00000 0)",
+          "oklch(0.87 0.00000 0)",
+          "oklch(0.95 0.00000 0)"
+        ]
+      },
+      "dark-secondary": {
+        "role": "neutral",
+        "displayName": "Dark / Zinc Neutrals / secondary",
+        "tonalRamp": [
+          "oklch(0.15 0.00150 286.033)",
+          "oklch(0.27 0.00360 286.033)",
+          "oklch(0.39 0.00540 286.033)",
+          "oklch(0.51 0.00600 286.033)",
+          "oklch(0.63 0.00600 286.033)",
+          "oklch(0.75 0.00510 286.033)",
+          "oklch(0.87 0.00300 286.033)",
+          "oklch(0.95 0.00120 286.033)"
+        ]
+      },
+      "dark-secondary-foreground": {
+        "role": "neutral",
+        "displayName": "Dark / Zinc Neutrals / secondary foreground",
+        "tonalRamp": [
+          "oklch(0.15 0.00000 0)",
+          "oklch(0.27 0.00000 0)",
+          "oklch(0.39 0.00000 0)",
+          "oklch(0.51 0.00000 0)",
+          "oklch(0.63 0.00000 0)",
+          "oklch(0.75 0.00000 0)",
+          "oklch(0.87 0.00000 0)",
+          "oklch(0.95 0.00000 0)"
+        ]
+      },
+      "dark-muted": {
+        "role": "neutral",
+        "displayName": "Dark / Zinc Neutrals / muted",
+        "tonalRamp": [
+          "oklch(0.15 0.00150 286.033)",
+          "oklch(0.27 0.00360 286.033)",
+          "oklch(0.39 0.00540 286.033)",
+          "oklch(0.51 0.00600 286.033)",
+          "oklch(0.63 0.00600 286.033)",
+          "oklch(0.75 0.00510 286.033)",
+          "oklch(0.87 0.00300 286.033)",
+          "oklch(0.95 0.00120 286.033)"
+        ]
+      },
+      "dark-muted-foreground": {
+        "role": "neutral",
+        "displayName": "Dark / Zinc Neutrals / muted foreground",
+        "tonalRamp": [
+          "oklch(0.15 0.00375 286.067)",
+          "oklch(0.27 0.00900 286.067)",
+          "oklch(0.39 0.01350 286.067)",
+          "oklch(0.51 0.01500 286.067)",
+          "oklch(0.63 0.01500 286.067)",
+          "oklch(0.75 0.01275 286.067)",
+          "oklch(0.87 0.00750 286.067)",
+          "oklch(0.95 0.00300 286.067)"
+        ]
+      },
+      "dark-accent": {
+        "role": "neutral",
+        "displayName": "Dark / Zinc Neutrals / accent",
+        "tonalRamp": [
+          "oklch(0.15 0.00150 286.033)",
+          "oklch(0.27 0.00360 286.033)",
+          "oklch(0.39 0.00540 286.033)",
+          "oklch(0.51 0.00600 286.033)",
+          "oklch(0.63 0.00600 286.033)",
+          "oklch(0.75 0.00510 286.033)",
+          "oklch(0.87 0.00300 286.033)",
+          "oklch(0.95 0.00120 286.033)"
+        ]
+      },
+      "dark-accent-foreground": {
+        "role": "neutral",
+        "displayName": "Dark / Zinc Neutrals / accent foreground",
+        "tonalRamp": [
+          "oklch(0.15 0.00000 0)",
+          "oklch(0.27 0.00000 0)",
+          "oklch(0.39 0.00000 0)",
+          "oklch(0.51 0.00000 0)",
+          "oklch(0.63 0.00000 0)",
+          "oklch(0.75 0.00000 0)",
+          "oklch(0.87 0.00000 0)",
+          "oklch(0.95 0.00000 0)"
+        ]
+      },
+      "dark-destructive": {
+        "role": "neutral",
+        "displayName": "Dark / Error Red",
+        "tonalRamp": [
+          "oklch(0.15 0.04775 22.216)",
+          "oklch(0.27 0.11460 22.216)",
+          "oklch(0.39 0.17190 22.216)",
+          "oklch(0.51 0.19100 22.216)",
+          "oklch(0.63 0.19100 22.216)",
+          "oklch(0.75 0.16235 22.216)",
+          "oklch(0.87 0.09550 22.216)",
+          "oklch(0.95 0.03820 22.216)"
+        ]
+      },
+      "dark-border": {
+        "role": "neutral",
+        "displayName": "Dark / Zinc Neutrals / border",
+        "tonalRamp": [
+          "oklch(0.15 0.00000 0 / 10%)",
+          "oklch(0.27 0.00000 0 / 10%)",
+          "oklch(0.39 0.00000 0 / 10%)",
+          "oklch(0.51 0.00000 0 / 10%)",
+          "oklch(0.63 0.00000 0 / 10%)",
+          "oklch(0.75 0.00000 0 / 10%)",
+          "oklch(0.87 0.00000 0 / 10%)",
+          "oklch(0.95 0.00000 0 / 10%)"
+        ]
+      },
+      "dark-input": {
+        "role": "neutral",
+        "displayName": "Dark / Zinc Neutrals / input",
+        "tonalRamp": [
+          "oklch(0.15 0.00000 0 / 15%)",
+          "oklch(0.27 0.00000 0 / 15%)",
+          "oklch(0.39 0.00000 0 / 15%)",
+          "oklch(0.51 0.00000 0 / 15%)",
+          "oklch(0.63 0.00000 0 / 15%)",
+          "oklch(0.75 0.00000 0 / 15%)",
+          "oklch(0.87 0.00000 0 / 15%)",
+          "oklch(0.95 0.00000 0 / 15%)"
+        ]
+      },
+      "dark-ring": {
+        "role": "neutral",
+        "displayName": "Dark / Zinc Neutrals / ring",
+        "tonalRamp": [
+          "oklch(0.15 0.00400 285.938)",
+          "oklch(0.27 0.00960 285.938)",
+          "oklch(0.39 0.01440 285.938)",
+          "oklch(0.51 0.01600 285.938)",
+          "oklch(0.63 0.01600 285.938)",
+          "oklch(0.75 0.01360 285.938)",
+          "oklch(0.87 0.00800 285.938)",
+          "oklch(0.95 0.00320 285.938)"
+        ]
+      },
+      "dark-sidebar": {
+        "role": "neutral",
+        "displayName": "Dark / Zinc Neutrals / sidebar",
+        "tonalRamp": [
+          "oklch(0.15 0.00150 285.885)",
+          "oklch(0.27 0.00360 285.885)",
+          "oklch(0.39 0.00540 285.885)",
+          "oklch(0.51 0.00600 285.885)",
+          "oklch(0.63 0.00600 285.885)",
+          "oklch(0.75 0.00510 285.885)",
+          "oklch(0.87 0.00300 285.885)",
+          "oklch(0.95 0.00120 285.885)"
+        ]
+      },
+      "dark-sidebar-foreground": {
+        "role": "neutral",
+        "displayName": "Dark / Zinc Neutrals / sidebar foreground",
+        "tonalRamp": [
+          "oklch(0.15 0.00000 0)",
+          "oklch(0.27 0.00000 0)",
+          "oklch(0.39 0.00000 0)",
+          "oklch(0.51 0.00000 0)",
+          "oklch(0.63 0.00000 0)",
+          "oklch(0.75 0.00000 0)",
+          "oklch(0.87 0.00000 0)",
+          "oklch(0.95 0.00000 0)"
+        ]
+      },
+      "dark-sidebar-accent": {
+        "role": "neutral",
+        "displayName": "Dark / Zinc Neutrals / sidebar accent",
+        "tonalRamp": [
+          "oklch(0.15 0.00150 286.033)",
+          "oklch(0.27 0.00360 286.033)",
+          "oklch(0.39 0.00540 286.033)",
+          "oklch(0.51 0.00600 286.033)",
+          "oklch(0.63 0.00600 286.033)",
+          "oklch(0.75 0.00510 286.033)",
+          "oklch(0.87 0.00300 286.033)",
+          "oklch(0.95 0.00120 286.033)"
+        ]
+      },
+      "dark-sidebar-accent-foreground": {
+        "role": "neutral",
+        "displayName": "Dark / Zinc Neutrals / sidebar accent foreground",
+        "tonalRamp": [
+          "oklch(0.15 0.00000 0)",
+          "oklch(0.27 0.00000 0)",
+          "oklch(0.39 0.00000 0)",
+          "oklch(0.51 0.00000 0)",
+          "oklch(0.63 0.00000 0)",
+          "oklch(0.75 0.00000 0)",
+          "oklch(0.87 0.00000 0)",
+          "oklch(0.95 0.00000 0)"
+        ]
+      },
+      "dark-sidebar-border": {
+        "role": "neutral",
+        "displayName": "Dark / Zinc Neutrals / sidebar border",
+        "tonalRamp": [
+          "oklch(0.15 0.00000 0 / 10%)",
+          "oklch(0.27 0.00000 0 / 10%)",
+          "oklch(0.39 0.00000 0 / 10%)",
+          "oklch(0.51 0.00000 0 / 10%)",
+          "oklch(0.63 0.00000 0 / 10%)",
+          "oklch(0.75 0.00000 0 / 10%)",
+          "oklch(0.87 0.00000 0 / 10%)",
+          "oklch(0.95 0.00000 0 / 10%)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Login and picker headings."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Pane and Card titles."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Conversation message text."
+      },
+      "admin-body": {
+        "displayName": "Admin Body",
+        "purpose": "Dense form and component copy."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Controls and Tags; fields may tighten leading."
+      },
+      "meta": {
+        "displayName": "Meta",
+        "purpose": "Compact names, timestamps and secondary text."
+      }
+    },
+    "shadows": [
+      {
+        "name": "surface-ring",
+        "value": "0 0 0 1px color-mix(in oklab, var(--foreground) 10%, transparent)",
+        "purpose": "Preset card and popup edge; not a decorative halo."
+      },
+      {
+        "name": "floating-medium",
+        "value": "0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)",
+        "purpose": "Existing dropdown and select popup shadow."
+      },
+      {
+        "name": "focus-control",
+        "value": "0 0 0 2px color-mix(in oklab, var(--ring) 30%, transparent)",
+        "purpose": "Standard control keyboard focus, with ring-colored border."
+      }
+    ],
+    "motion": [
+      {
+        "name": "state-duration",
+        "value": "150ms",
+        "purpose": "Tailwind default used by state transitions."
+      },
+      {
+        "name": "state-easing",
+        "value": "cubic-bezier(0.4, 0, 0.2, 1)",
+        "purpose": "Default transition easing."
+      },
+      {
+        "name": "popup-duration",
+        "value": "100ms",
+        "purpose": "Duration specified by dialogs, dropdowns and select popups."
+      },
+      {
+        "name": "busy-spin",
+        "value": "spin 1s linear infinite",
+        "purpose": "Repository sync and spinner primitives; investigation activity also supplies reduced-motion overrides."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "sm",
+        "value": "40rem"
+      },
+      {
+        "name": "md",
+        "value": "48rem"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Button / primary",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Primary action.",
+      "html": "<button type=\"button\" class=\"ds-btn-primary\">Save changes</button>",
+      "css": ".ds-btn-primary{display:inline-flex;align-items:center;justify-content:center;gap:.25rem;height:1.75rem;padding:0 .5rem;border:1px solid transparent;border-radius:calc(var(--radius) * .8);background:transparent;color:var(--foreground);font-family:var(--font-sans,'Geist Variable',sans-serif);font-size:.75rem;font-weight:500;line-height:1.625;white-space:nowrap;cursor:pointer;outline:none;transition:all 150ms cubic-bezier(.4,0,.2,1);background:var(--primary);color:var(--primary-foreground);}.ds-btn-primary:hover{background:color-mix(in oklab,var(--primary) 80%,transparent);}.ds-btn-primary:focus-visible{border-color:var(--ring);box-shadow:0 0 0 2px color-mix(in oklab,var(--ring) 30%,transparent)}.ds-btn-primary:active:not([aria-haspopup]){transform:translateY(1px)}.ds-btn-primary:disabled{opacity:.5;pointer-events:none}"
+    },
+    {
+      "name": "Button / outline",
+      "kind": "button",
+      "refersTo": "button-outline",
+      "description": "Secondary action.",
+      "html": "<button type=\"button\" class=\"ds-btn-outline\">Cancel</button>",
+      "css": ".ds-btn-outline{display:inline-flex;align-items:center;justify-content:center;gap:.25rem;height:1.75rem;padding:0 .5rem;border:1px solid transparent;border-radius:calc(var(--radius) * .8);background:transparent;color:var(--foreground);font-family:var(--font-sans,'Geist Variable',sans-serif);font-size:.75rem;font-weight:500;line-height:1.625;white-space:nowrap;cursor:pointer;outline:none;transition:all 150ms cubic-bezier(.4,0,.2,1);border-color:var(--border);}.ds-btn-outline:hover{background:color-mix(in oklab,var(--input) 50%,transparent);color:var(--foreground);}.ds-btn-outline:focus-visible{border-color:var(--ring);box-shadow:0 0 0 2px color-mix(in oklab,var(--ring) 30%,transparent)}.ds-btn-outline:active:not([aria-haspopup]){transform:translateY(1px)}.ds-btn-outline:disabled{opacity:.5;pointer-events:none}:host-context(.dark) .ds-btn-outline{background:color-mix(in oklab,var(--input) 30%,transparent)}"
+    },
+    {
+      "name": "Button / secondary",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Neutral secondary action.",
+      "html": "<button type=\"button\" class=\"ds-btn-secondary\">Continue</button>",
+      "css": ".ds-btn-secondary{display:inline-flex;align-items:center;justify-content:center;gap:.25rem;height:1.75rem;padding:0 .5rem;border:1px solid transparent;border-radius:calc(var(--radius) * .8);background:transparent;color:var(--foreground);font-family:var(--font-sans,'Geist Variable',sans-serif);font-size:.75rem;font-weight:500;line-height:1.625;white-space:nowrap;cursor:pointer;outline:none;transition:all 150ms cubic-bezier(.4,0,.2,1);background:var(--secondary);color:var(--secondary-foreground);}.ds-btn-secondary:hover{background:color-mix(in oklch,var(--secondary),var(--foreground) 5%);}.ds-btn-secondary:focus-visible{border-color:var(--ring);box-shadow:0 0 0 2px color-mix(in oklab,var(--ring) 30%,transparent)}.ds-btn-secondary:active:not([aria-haspopup]){transform:translateY(1px)}.ds-btn-secondary:disabled{opacity:.5;pointer-events:none}"
+    },
+    {
+      "name": "Button / ghost",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Unobtrusive action.",
+      "html": "<button type=\"button\" class=\"ds-btn-ghost\">Sync now</button>",
+      "css": ".ds-btn-ghost{display:inline-flex;align-items:center;justify-content:center;gap:.25rem;height:1.75rem;padding:0 .5rem;border:1px solid transparent;border-radius:calc(var(--radius) * .8);background:transparent;color:var(--foreground);font-family:var(--font-sans,'Geist Variable',sans-serif);font-size:.75rem;font-weight:500;line-height:1.625;white-space:nowrap;cursor:pointer;outline:none;transition:all 150ms cubic-bezier(.4,0,.2,1);}.ds-btn-ghost:hover{background:var(--muted);color:var(--foreground);}.ds-btn-ghost:focus-visible{border-color:var(--ring);box-shadow:0 0 0 2px color-mix(in oklab,var(--ring) 30%,transparent)}.ds-btn-ghost:active:not([aria-haspopup]){transform:translateY(1px)}.ds-btn-ghost:disabled{opacity:.5;pointer-events:none}:host-context(.dark) .ds-btn-ghost:hover{background:color-mix(in oklab,var(--muted) 50%,transparent)}"
+    },
+    {
+      "name": "Button / destructive",
+      "kind": "button",
+      "refersTo": "button-destructive",
+      "description": "Library variant; avoid its failing light-theme text pairing in screens.",
+      "html": "<button type=\"button\" class=\"ds-btn-destructive\">Remove</button>",
+      "css": ".ds-btn-destructive{display:inline-flex;align-items:center;justify-content:center;gap:.25rem;height:1.75rem;padding:0 .5rem;border:1px solid transparent;border-radius:calc(var(--radius) * .8);background:transparent;color:var(--foreground);font-family:var(--font-sans,'Geist Variable',sans-serif);font-size:.75rem;font-weight:500;line-height:1.625;white-space:nowrap;cursor:pointer;outline:none;transition:all 150ms cubic-bezier(.4,0,.2,1);background:color-mix(in oklab,var(--destructive) 10%,transparent);color:var(--destructive);}.ds-btn-destructive:hover{background:color-mix(in oklab,var(--destructive) 20%,transparent);}.ds-btn-destructive:focus-visible{border-color:color-mix(in oklab,var(--destructive) 40%,transparent);box-shadow:0 0 0 2px color-mix(in oklab,var(--destructive) 20%,transparent)}.ds-btn-destructive:active:not([aria-haspopup]){transform:translateY(1px)}.ds-btn-destructive:disabled{opacity:.5;pointer-events:none}:host-context(.dark) .ds-btn-destructive{background:color-mix(in oklab,var(--destructive) 20%,transparent)}:host-context(.dark) .ds-btn-destructive:hover{background:color-mix(in oklab,var(--destructive) 30%,transparent)}"
+    },
+    {
+      "name": "Button / link",
+      "kind": "button",
+      "refersTo": "button-link",
+      "description": "Library variant; primary text is restricted in dark theme.",
+      "html": "<button type=\"button\" class=\"ds-btn-link\">View details</button>",
+      "css": ".ds-btn-link{display:inline-flex;align-items:center;justify-content:center;gap:.25rem;height:1.75rem;padding:0 .5rem;border:1px solid transparent;border-radius:calc(var(--radius) * .8);background:transparent;color:var(--foreground);font-family:var(--font-sans,'Geist Variable',sans-serif);font-size:.75rem;font-weight:500;line-height:1.625;white-space:nowrap;cursor:pointer;outline:none;transition:all 150ms cubic-bezier(.4,0,.2,1);color:var(--primary);text-underline-offset:4px;}.ds-btn-link:hover{text-decoration:underline;}.ds-btn-link:focus-visible{border-color:var(--ring);box-shadow:0 0 0 2px color-mix(in oklab,var(--ring) 30%,transparent)}.ds-btn-link:active:not([aria-haspopup]){transform:translateY(1px)}.ds-btn-link:disabled{opacity:.5;pointer-events:none}"
+    },
+    {
+      "name": "Input",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Standalone field with responsive text, placeholder, focus, invalid and disabled states.",
+      "html": "<input class=\"ds-input\" aria-label=\"Application name\" placeholder=\"Application name\">",
+      "css": ".ds-input{width:100%;min-width:0;height:1.75rem;border:1px solid var(--input);border-radius:calc(var(--radius) * .8);background:color-mix(in oklab,var(--input) 20%,transparent);padding:.125rem .5rem;color:var(--foreground);font-family:var(--font-sans,'Geist Variable',sans-serif);font-size:.875rem;line-height:1.428571;outline:none;transition:color 150ms cubic-bezier(.4,0,.2,1),background-color 150ms cubic-bezier(.4,0,.2,1),border-color 150ms cubic-bezier(.4,0,.2,1),box-shadow 150ms cubic-bezier(.4,0,.2,1)}.ds-input::placeholder{color:var(--muted-foreground)}.ds-input:focus-visible{border-color:var(--ring);box-shadow:0 0 0 2px color-mix(in oklab,var(--ring) 30%,transparent)}.ds-input:disabled{opacity:.5;cursor:not-allowed;pointer-events:none}.ds-input[aria-invalid=true]{border-color:var(--destructive);box-shadow:0 0 0 2px color-mix(in oklab,var(--destructive) 20%,transparent)}:host-context(.dark) .ds-input{background:color-mix(in oklab,var(--input) 30%,transparent)}:host-context(.dark) .ds-input[aria-invalid=true]{border-color:color-mix(in oklab,var(--destructive) 50%,transparent);box-shadow:0 0 0 2px color-mix(in oklab,var(--destructive) 40%,transparent)}@media(min-width:48rem){.ds-input{font-size:.75rem;line-height:1.625}}"
+    },
+    {
+      "name": "Navigation rail",
+      "kind": "nav",
+      "refersTo": "nav-item",
+      "description": "Desktop rail control styling; the shipped phone layout uses labeled bottom tabs.",
+      "html": "<nav class=\"ds-nav\" aria-label=\"Example navigation\"><a class=\"ds-nav-item\" href=\"#ds-chat\" aria-label=\"Chat\" title=\"Chat\" aria-current=\"page\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M22 17a2 2 0 0 1-2 2H6.828a2 2 0 0 0-1.414.586l-2.202 2.202A.71.71 0 0 1 2 21.286V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2z\"/></svg></a><a class=\"ds-nav-item\" href=\"#ds-history\" aria-label=\"History\" title=\"History\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8\"/><path d=\"M3 3v5h5\"/><path d=\"M12 7v5l4 2\"/></svg></a></nav>",
+      "css": ".ds-nav{display:flex;flex-direction:column;align-items:center;gap:.25rem;width:3.5rem;padding:.5rem 0;border-right:1px solid var(--border);background:var(--sidebar);color:var(--sidebar-foreground)}.ds-nav-item{display:inline-flex;align-items:center;justify-content:center;width:2rem;height:2rem;border:1px solid transparent;border-radius:calc(var(--radius) * .8);color:var(--muted-foreground);text-decoration:none;outline:none;transition:all 150ms cubic-bezier(.4,0,.2,1)}.ds-nav-item:hover,.ds-nav-item[aria-current=page]{background:var(--sidebar-accent);color:var(--sidebar-accent-foreground)}.ds-nav-item:focus-visible{border-color:var(--ring);box-shadow:0 0 0 2px color-mix(in oklab,var(--ring) 30%,transparent)}.ds-nav-item:active{transform:translateY(1px)}.ds-nav-item svg{pointer-events:none;flex-shrink:0}"
+    },
+    {
+      "name": "Tag",
+      "kind": "chip",
+      "refersTo": "tag",
+      "description": "Secondary Badge with the screen-level admin text override.",
+      "html": "<span class=\"ds-tag\">backend</span>",
+      "css": ".ds-tag{display:inline-flex;align-items:center;justify-content:center;gap:.25rem;width:fit-content;height:1.25rem;padding:.125rem .5rem;border:1px solid transparent;border-radius:calc(infinity * 1px);background:var(--secondary);color:var(--secondary-foreground);font-family:var(--font-sans,'Geist Variable',sans-serif);font-size:.75rem;font-weight:500;line-height:1.333333;white-space:nowrap;overflow:hidden}"
+    },
+    {
+      "name": "Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Default card surface, ring, title and supporting description. Static container, without invented interaction.",
+      "html": "<section class=\"ds-card\" aria-labelledby=\"ds-card-title\"><div class=\"ds-card-header\"><h3 class=\"ds-card-title\" id=\"ds-card-title\">Which screen were you using?</h3><p class=\"ds-card-description\">Choose all that apply.</p></div><div class=\"ds-card-content\">Interactive Question content</div></section>",
+      "css": ".ds-card{display:flex;flex-direction:column;gap:1rem;overflow:hidden;padding:1rem 0;border-radius:var(--radius);background:var(--card);color:var(--card-foreground);font-family:var(--font-sans,'Geist Variable',sans-serif);font-size:.75rem;line-height:1.625;box-shadow:0 0 0 1px color-mix(in oklab,var(--foreground) 10%,transparent)}.ds-card-header{display:grid;align-items:start;gap:.25rem;padding:0 1rem}.ds-card-title{margin:0;font-size:.875rem;font-weight:500;line-height:1.428571}.ds-card-description{margin:0;color:var(--muted-foreground);font-size:.75rem;line-height:1.625}.ds-card-content{padding:0 1rem}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Support Desk",
+    "overview": "The Support Desk keeps the current task and its context close together. Its quiet, compact and precise character comes from a shared navigation rail, a persistent record list and an adjacent working pane. Familiar controls make the interface easy to scan; restrained violet actions, neutral surfaces and modest type changes carry the hierarchy.\n\nThe system uses the existing shadcn base-mira components, Base UI behavior and Lucide icons. Administration stays dense, while Client messages, choices and the composer receive more reading room. Light and dark themes express the same hierarchy. This document records the implemented system and preserves the approved three-pane direction.",
+    "keyCharacteristics": [
+      "Quiet, compact and precise, with familiar task controls.",
+      "A shared three-pane shell that becomes one pane with bottom navigation on phones.",
+      "One violet action accent over zinc neutral surfaces.",
+      "Geist throughout, with larger Client conversation text.",
+      "Explicit status, visible keyboard focus and recoverable error states."
+    ],
+    "rules": [
+      {
+        "name": "The Semantic Color Rule",
+        "body": "Use the existing semantic theme roles; do not introduce local color literals or a second accent palette.",
+        "section": "colors"
+      },
+      {
+        "name": "The Contrast Pair Rule",
+        "body": "Primary is a fill, not running text. Keep selected-row secondary text at foreground with 70% opacity; use destructive outline actions instead of destructive tinted buttons for confirmations.",
+        "section": "colors"
+      },
+      {
+        "name": "The Reading Scale Rule",
+        "body": "Preserve the browser-relative root size and the larger Client text. Do not shrink text to recover space in dense panes.",
+        "section": "typography"
+      },
+      {
+        "name": "The Pane Continuity Rule",
+        "body": "Keep selection, search and pagination in the URL, and let each visible pane scroll independently.",
+        "section": "layout"
+      },
+      {
+        "name": "The Floating Surface Rule",
+        "body": "Keep work surfaces flat. Retain the component preset shadows on floating menus and selects, without adding decorative shadows to panes or cards.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do reuse the existing UI primitives and shared record list/detail components.",
+      "Do preserve both themes, semantic tokens and browser-relative sizing.",
+      "Do give icon controls accessible names, keyboard focus and explanatory tooltips where established.",
+      "Do pair status icons with words and preserve error, loading, disabled and empty states.",
+      "Do verify desktop and 375px phone layouts in both themes when changing UI.",
+      "Do keep Client-facing progress and recovery copy plain and actionable."
+    ],
+    "donts": [
+      "Don't change the frozen color, font or radius tokens as part of a screen extension.",
+      "Don't introduce gradients, ornamental shadows or a separate administration identity.",
+      "Don't use primary-colored running text in dark theme or destructive text on a destructive tint in light theme.",
+      "Don't use muted text on a selected neutral row; use the established foreground-opacity treatment.",
+      "Don't use the smallest preset buttons or keyboard-key component, or rely on the Badge primitive's smaller default text.",
+      "Don't place destructive record actions next to Save; keep them in the record menu and confirmation flow.",
+      "Don't treat the older screenshots' pixel dimensions as current measurements."
+    ]
+  }
+}
