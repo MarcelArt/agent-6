@@ -226,7 +226,7 @@ The logged-in frame fills the small viewport height and prevents page scrolling.
 
 | Element | Observed size or rhythm |
 |---|---|
-| Navigation rail | 3.5rem wide; 2rem mark and rail controls. |
+| Navigation rail | 3.5rem wide, expanding to 14rem with item names; 2rem mark and rail controls. |
 | Record list | 20rem wide; fixed beside a flexible detail pane. |
 | Pane header | 3rem high, 1rem horizontal inset, 0.5rem gaps. |
 | Record forms | 36rem maximum width; 1rem/1.5rem horizontal/vertical padding, increasing to 2rem/2.5rem on desktop; 1.5rem between sections. |
@@ -287,7 +287,7 @@ Cards use the card surface/foreground pair, large corners and the thin preset ri
 
 ### Navigation
 
-The desktop rail uses accessible icon links with right-hand tooltips, neutral active fills and a bottom-anchored account menu. The phone bar gives each destination an icon and text; Admin opens the section menu and Account opens the user menu. Active state is explicit through `aria-current` as well as the selected surface or label weight. Theme selection lives in the account menu, with its own control on Login. Sources: `src/components/shell/app-shell.tsx`, `nav.ts` and `user-menu.tsx`.
+The desktop rail uses accessible icon links with right-hand tooltips, neutral active fills and a bottom-anchored account menu. A control above the account menu expands it to show item names (tooltips then switch off) and is remembered per browser. The phone bar gives each destination an icon and text; Admin opens the section menu and Account opens the user menu. Active state is explicit through `aria-current` as well as the selected surface or label weight. Theme selection lives in the account menu, with its own control on Login. Sources: `src/components/shell/app-shell.tsx`, `nav.ts` and `user-menu.tsx`.
 
 ### Record List and Detail
 

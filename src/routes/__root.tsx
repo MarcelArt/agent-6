@@ -14,9 +14,11 @@ import { ErrorPage } from "@/components/shell/error-page"
 import { FullPageMessage } from "@/components/shell/full-page-message"
 import { buttonVariants } from "@/components/ui/button"
 import { TooltipProvider } from "@/components/ui/tooltip"
+import { railScript } from "@/lib/rail"
 import { themeScript } from "@/lib/theme"
 import { getCurrentUser } from "@/server/session.functions"
 import { getNavCounts } from "@/server/nav.functions"
+import ImpeccableLiveRoot from '../impeccable/ImpeccableLiveRoot';
 
 export const Route = createRootRoute({
   // Runs before every page, on the server for the first one. Routes read
@@ -81,10 +83,11 @@ function NotFound() {
 
 function RootDocument({ children }: { children: React.ReactNode }) {
   return (
-    // The theme script sets the class and color-scheme before React hydrates.
+    // The theme and rail scripts set <html> attributes before React hydrates.
     <html lang="en" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+        <script dangerouslySetInnerHTML={{ __html: railScript }} />
         <HeadContent />
       </head>
       <body>
@@ -100,6 +103,9 @@ function RootDocument({ children }: { children: React.ReactNode }) {
             },
           ]}
         />
+        {/* impeccable-live-tanstack-start */}
+        <ImpeccableLiveRoot />
+        {/* impeccable-live-tanstack-end */}
         <Scripts />
       </body>
     </html>

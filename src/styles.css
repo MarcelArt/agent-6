@@ -4,6 +4,8 @@
 @import "@fontsource-variable/geist";
 
 @custom-variant dark (&:is(.dark *));
+/* Set on <html> by the rail script in src/lib/rail.ts. */
+@custom-variant rail-expanded (&:where([data-rail="expanded"] *));
 
 @theme inline {
     --font-heading: var(--font-sans);
@@ -46,6 +48,7 @@
     --radius-2xl: calc(var(--radius) * 1.8);
     --radius-3xl: calc(var(--radius) * 2.2);
     --radius-4xl: calc(var(--radius) * 2.6);
+    --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 :root {

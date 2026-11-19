@@ -1,12 +1,16 @@
 import { Link, useLocation, useRouteContext } from "@tanstack/react-router"
-import { ShieldCheckIcon } from "lucide-react"
+import {
+  PanelLeftCloseIcon,
+  PanelLeftOpenIcon,
+  ShieldCheckIcon,
+} from "lucide-react"
 import { cn } from "cn"
 import { adminNav, chatNav, countMeaning } from "./nav"
 import { UserMenuContent, initials } from "./user-menu"
 import type { NavItem } from "./nav"
 import type { SessionUser } from "@/lib/roles"
+import { useRailExpanded } from "@/lib/rail"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { buttonVariants } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -81,13 +85,20 @@ function UserAvatar({ user, size }: { user: SessionUser; size?: "sm" }) {
 type ShellProps = { user: SessionUser; pathname: string; counts: Counts }
 
 function Rail({ user, pathname, counts }: ShellProps) {
+  const [expanded, setExpanded] = useRailExpanded()
+  const toggleLabel = expanded ? "Collapse navigation" : "Expand navigation"
   return (
     <nav
       aria-label="Main"
-      className="hidden w-14 shrink-0 flex-col items-center gap-1 border-r bg-sidebar py-2 text-sidebar-foreground md:flex"
+      className="hidden w-14 shrink-0 flex-col gap-1 overflow-x-hidden overflow-y-auto border-r bg-sidebar px-3 py-2 text-sidebar-foreground transition-[width] duration-240 ease-out-quint motion-reduce:transition-none md:flex rail-expanded:w-56"
     >
-      <Link to="/chat" aria-label="Agent 6" className="mb-2 flex">
+      <Link
+        to="/chat"
+        aria-label="Agent 6"
+        className="mb-2 flex items-center gap-2.5 rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-ring/30"
+      >
         <ProductMark />
+        <RailLabel className="text-sm font-semibold">Agent 6</RailLabel>
       </Link>
       {chatNav.map((item) => (
         <RailItem
@@ -95,31 +106,81 @@ function Rail({ user, pathname, counts }: ShellProps) {
           item={item}
           pathname={pathname}
           counts={counts}
+          expanded={expanded}
         />
       ))}
       {user.role === "admin" && (
         <>
-          <Separator className="my-1.5 w-6!" />
+          <Separator className="mx-1 my-1.5 w-6! transition-[width] duration-240 ease-out-quint motion-reduce:transition-none rail-expanded:w-[calc(100%-0.5rem)]!" />
+          <span className="-mt-1 max-h-0 overflow-hidden px-2 text-xs whitespace-nowrap text-muted-foreground opacity-0 transition-[max-height,margin,opacity] duration-240 ease-out-quint motion-reduce:transition-none rail-expanded:mt-0 rail-expanded:max-h-6 rail-expanded:opacity-100">
+            Admin
+          </span>
           {adminNav.map((item) => (
             <RailItem
               key={item.to}
               item={item}
               pathname={pathname}
               counts={counts}
+              expanded={expanded}
             />
           ))}
         </>
       )}
+      <Tooltip disabled={expanded}>
+        <TooltipTrigger
+          render={
+            <button
+              type="button"
+              aria-label={toggleLabel}
+              onClick={() => setExpanded(!expanded)}
+              className={cn(
+                railRowClass,
+                "mt-auto text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+              )}
+            />
+          }
+        >
+          <PanelLeftOpenIcon className="rail-expanded:hidden" />
+          <PanelLeftCloseIcon className="hidden rail-expanded:block" />
+          <RailLabel>Collapse</RailLabel>
+        </TooltipTrigger>
+        <TooltipContent side="right">{toggleLabel}</TooltipContent>
+      </Tooltip>
       <DropdownMenu>
         <DropdownMenuTrigger
           aria-label={`Account: ${user.name}`}
-          className="mt-auto rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+          className="-mx-1 flex h-10 w-[calc(100%+0.5rem)] shrink-0 items-center gap-2 rounded-lg px-1 text-left outline-none hover:bg-sidebar-accent focus-visible:ring-2 focus-visible:ring-ring/30 aria-expanded:bg-sidebar-accent"
         >
           <UserAvatar user={user} />
+          <RailLabel className="text-xs font-medium">{user.name}</RailLabel>
         </DropdownMenuTrigger>
         <UserMenuContent user={user} side="right" align="end" sideOffset={20} />
       </DropdownMenu>
     </nav>
+  )
+}
+
+/** A row of the desktop rail: a 2rem icon cell that gains a label when open. */
+const railRowClass =
+  "relative inline-flex h-8 w-full shrink-0 items-center gap-2 rounded-md px-2 text-xs/relaxed font-medium whitespace-nowrap transition-colors outline-none select-none focus-visible:ring-2 focus-visible:ring-ring/30 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0"
+
+/** Text that fades in beside a rail icon while the rail is expanded. */
+function RailLabel({
+  className,
+  children,
+}: {
+  className?: string
+  children: React.ReactNode
+}) {
+  return (
+    <span
+      className={cn(
+        "min-w-0 truncate opacity-0 transition-opacity duration-120 ease-out motion-reduce:transition-none rail-expanded:opacity-100 rail-expanded:delay-80",
+        className
+      )}
+    >
+      {children}
+    </span>
   )
 }
 
@@ -160,16 +221,19 @@ function RailItem({
   item,
   pathname,
   counts,
+  expanded,
 }: {
   item: NavItem
   pathname: string
   counts: Counts
+  expanded: boolean
 }) {
   const active = item.isActive(pathname)
   const count = item.badge ? counts[item.badge] : 0
   const label = itemLabel(item, counts)
   return (
-    <Tooltip>
+    // Labels are visible while expanded, so the tooltip would only repeat them.
+    <Tooltip disabled={expanded}>
       <TooltipTrigger
         render={
           <Link
@@ -178,16 +242,22 @@ function RailItem({
             aria-current={active ? "page" : undefined}
             aria-label={label}
             className={cn(
-              buttonVariants({ variant: "ghost", size: "icon-lg" }),
-              "relative text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground dark:hover:bg-sidebar-accent",
+              railRowClass,
+              "text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
               active && "bg-sidebar-accent text-sidebar-accent-foreground"
             )}
           />
         }
       >
         <item.icon />
+        <RailLabel className={cn(count > 0 && "rail-expanded:pr-6")}>
+          {item.label}
+        </RailLabel>
         {count > 0 && (
-          <CountBadge count={count} className="absolute -top-1 -right-1" />
+          <CountBadge
+            count={count}
+            className="absolute -top-1 -right-1 transition-[top,right] duration-240 ease-out-quint motion-reduce:transition-none rail-expanded:top-2 rail-expanded:right-2"
+          />
         )}
       </TooltipTrigger>
       <TooltipContent side="right">{label}</TooltipContent>

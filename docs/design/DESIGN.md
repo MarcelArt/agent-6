@@ -10,11 +10,12 @@ Every logged-in screen is one full-height frame (`flex h-svh`) of up to three pa
 
 | Pane | Size | Contents |
 |---|---|---|
-| **Rail** | `w-14 shrink-0 border-r bg-sidebar py-2`, items `gap-1` | Top: product mark (a `size-8 rounded-lg bg-primary` square with "6"). Then the Chat, History and Tickets icons. Admins only: a separator, then All Conversations, All Tickets (with a count badge of pending Tickets), Users, Repositories, Applications, Database Connections and Log Connections (each with a count badge of connections that need a secret), Settings. Bottom (`mt-auto`): the current user's Avatar. |
+| **Rail** | `w-14 shrink-0 border-r bg-sidebar px-3 py-2`, items `gap-1`; expanded `w-56` | Top: product mark (a `size-8 rounded-lg bg-primary` square with "6"). Then the Chat, History and Tickets icons. Admins only: a separator, then All Conversations, All Tickets (with a count badge of pending Tickets), Users, Repositories, Applications, Database Connections and Log Connections (each with a count badge of connections that need a secret), Settings. Bottom (`mt-auto`): the expand/collapse control, then the current user's Avatar. |
 | **List pane** | `w-80 shrink-0 border-r` | Records of the current section: Repositories, Conversations, Users and so on. |
 | **Detail pane** | `flex-1 min-w-0` | The selected record's form, a Conversation, the Application picker, or an empty hint. |
 
 - **Rail items** are icon buttons (`size-8`), inactive `text-muted-foreground`, active `bg-sidebar-accent text-sidebar-accent-foreground`. Every item has an `aria-label` and a Tooltip (side right) with its name. The list pane header always names the section in text, so icons are never the only label.
+- **Expanded rail:** the control above the Avatar widens the rail to `w-56`, pushing the panes. Each item shows its name beside the icon, count badges move to the row end, the separator spans the rail with an "Admin" group name below it, and the Avatar shows the user's name. Tooltips are disabled while names are visible. The width animates over 240ms with the `ease-out-quint` token, and names fade in; reduced motion removes both. The choice is remembered per browser (`src/lib/rail.ts`) and applied by a pre-paint script on `<html data-rail="expanded">`, which the `rail-expanded:` variant reads.
 - **User menu and theme** (Admin and chat areas alike): the rail Avatar opens a DropdownMenu to the right of the rail, aligned to the bottom (`w-60`). It holds:
   - Avatar, name and email;
   - separator;
@@ -164,7 +165,7 @@ Pass these as `className` on the shadcn components; the preset's sizes are 12px 
 
 | Element | Component |
 |---|---|
-| Rail items | `Button variant="ghost" size="icon-lg"` + `Tooltip`; plain `<nav>`, not the Sidebar component |
+| Rail items | `Link` rows (`h-8`, ghost-button states) + `Tooltip` disabled while expanded; plain `<nav>`, not the Sidebar component |
 | User menu, row menus, "…" actions, phone Admin menu | `DropdownMenu` (`DropdownMenuLabel`, `DropdownMenuRadioGroup` for Theme, `DropdownMenuItem variant="destructive"`) |
 | Avatar | `Avatar` + `AvatarFallback className="text-foreground"` |
 | Search fields | `InputGroup` + `InputGroupAddon` + `InputGroupInput` |
