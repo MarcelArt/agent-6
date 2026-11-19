@@ -10,7 +10,7 @@ Every logged-in screen is one full-height frame (`flex h-svh`) of up to three pa
 
 | Pane | Size | Contents |
 |---|---|---|
-| **Rail** | `w-14 shrink-0 border-r bg-sidebar py-2`, items `gap-1` | Top: product mark (a `size-8 rounded-lg bg-primary` square with "6"). Then the Chat and History icons. Admins only: a separator, then Users, Repositories, Applications, Database Connections, Log Connections, Settings. Bottom (`mt-auto`): the current user's Avatar. |
+| **Rail** | `w-14 shrink-0 border-r bg-sidebar py-2`, items `gap-1` | Top: product mark (a `size-8 rounded-lg bg-primary` square with "6"). Then the Chat, History and Tickets icons. Admins only: a separator, then All Conversations, All Tickets (with a count badge of pending Tickets), Users, Repositories, Applications, Database Connections, Log Connections, Settings. Bottom (`mt-auto`): the current user's Avatar. |
 | **List pane** | `w-80 shrink-0 border-r` | Records of the current section: Repositories, Conversations, Users and so on. |
 | **Detail pane** | `flex-1 min-w-0` | The selected record's form, a Conversation, the Application picker, or an empty hint. |
 
@@ -24,7 +24,7 @@ Every logged-in screen is one full-height frame (`flex h-svh`) of up to three pa
   - Log out.
 
   This is the only theme control in the app. Login has its own (see 6).
-- **Admin and chat share the shell.** Clients see only Chat and History in the rail. Admins see the same plus the six admin sections. There is no separate "admin mode".
+- **Admin and chat share the shell.** Clients see only Chat, History and Tickets in the rail. Admins see the same plus the eight admin sections. There is no separate "admin mode".
 - **Sections without records** (Settings) have no list pane: rail plus detail pane.
 
 ### Routes and panes
@@ -127,7 +127,7 @@ Pass these as `className` on the shadcn components; the preset's sizes are 12px 
 - **List pane** (Conversations):
   - header: title "Conversations" and `Button variant="outline" size="sm"` "New conversation";
   - toolbar: search by title, and an Application filter Select ("All Applications");
-  - rows: title (line 1), and "Customer Portal · Today, 09:15" (line 2). Where the Conversation has a Filed Issue, add a `circle-dot` icon with the text "Reported to the team".
+  - rows: title (line 1), and "Customer Portal · Today, 09:15" (line 2). Where the Conversation has Tickets, add a `ticket` icon with "Ticket created" (or "2 tickets created"); a Conversation from before Tickets with a Filed Issue keeps the `circle-dot` icon and "Reported to the team".
 - **Detail header:** Conversation title, and the Application as an outline Badge with that Application's icon.
 - **Messages** (MessageScroller; starts scrolled to the newest message):
   - A "Today" Marker (separator variant) opens each day.
@@ -143,7 +143,8 @@ Pass these as `className` on the shadcn components; the preset's sizes are 12px 
   - **Multiple choice:** CardFooter with `Button size="lg"` "Send answer" and the hint "Or type your own answer below." (`text-xs text-muted-foreground`).
   - **Single choice** sends on click; it has no Send button.
   - **Answered:** the options become a plain list of disabled radios or checkboxes, the chosen one `font-medium`, the others muted. CardFooter `border-t` shows a lock icon and "Answered". The answer also appears as the Client's Bubble right after it.
-- **Filed Issue notice:** an Alert `w-fit` directly under the agent answer that led to it, with a `circle-dot` icon, AlertTitle "Reported to the team", AlertDescription "The developers have what they need to fix this."
+- **Ticket notice:** an Alert `w-fit` directly under the agent answer that created the Ticket, with a `ticket` icon, AlertTitle by status ("Ticket waiting for review", "Ticket accepted", "Ticket declined"), a one-line explanation and a "View ticket" link (`/chat/tickets/$id` for the owner, `/admin/tickets/$id` in the audit view). Admins also get "Filed Issue #482 in halden/billing-service" once it is accepted.
+- **Filed Issue notice** (answers from before Tickets): an Alert `w-fit` directly under the agent answer that led to it, with a `circle-dot` icon, AlertTitle "Reported to the team", AlertDescription "The developers have what they need to fix this."
   - Clients see no issue number and no link.
   - Admins (step 14 audit view) see "Filed Issue #482 in halden/billing-service" as a link to GitHub.
 - **Progress and errors:**
@@ -200,7 +201,8 @@ Pass these as `className` on the shadcn components; the preset's sizes are 12px 
 - **Rail becomes a bottom tab bar:** `h-14 border-t bg-sidebar`, tabs `flex-1`, each an icon (`size-5`) over a `text-xs` label; active tab `font-medium text-foreground`. The tabs are:
   - Chat;
   - History;
-  - Admin (Admins only), which opens a DropdownMenu of the six sections upwards;
+  - Tickets;
+  - Admin (Admins only, with the pending Ticket count), which opens a DropdownMenu of the admin sections upwards;
   - Account (the Avatar), which opens the user menu upwards.
 
   The tab bar stays visible on every screen.

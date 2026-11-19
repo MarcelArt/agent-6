@@ -20,12 +20,14 @@ import { Route as AdminDatabaseConnectionsRouteRouteImport } from './routes/admi
 import { Route as AdminLogConnectionsRouteRouteImport } from './routes/admin/log-connections/route'
 import { Route as AdminRepositoriesRouteRouteImport } from './routes/admin/repositories/route'
 import { Route as AdminSettingsRouteImport } from './routes/admin/settings'
+import { Route as AdminTicketsRouteRouteImport } from './routes/admin/tickets/route'
 import { Route as AdminUsersRouteRouteImport } from './routes/admin/users/route'
 import { Route as ApiHealthRouteImport } from './routes/api/health'
 import { Route as ChatIndexRouteImport } from './routes/chat/index'
 import { Route as ChatConversationIdRouteImport } from './routes/chat/$conversationId'
 import { Route as ChatAccountRouteImport } from './routes/chat/account'
 import { Route as ChatHistoryRouteImport } from './routes/chat/history'
+import { Route as ChatTicketsRouteRouteImport } from './routes/chat/tickets/route'
 import { Route as AdminApplicationsIndexRouteImport } from './routes/admin/applications/index'
 import { Route as AdminApplicationsApplicationIdRouteImport } from './routes/admin/applications/$applicationId'
 import { Route as AdminApplicationsNewRouteImport } from './routes/admin/applications/new'
@@ -40,6 +42,8 @@ import { Route as AdminLogConnectionsNewRouteImport } from './routes/admin/log-c
 import { Route as AdminRepositoriesIndexRouteImport } from './routes/admin/repositories/index'
 import { Route as AdminRepositoriesRepositoryIdRouteImport } from './routes/admin/repositories/$repositoryId'
 import { Route as AdminRepositoriesNewRouteImport } from './routes/admin/repositories/new'
+import { Route as AdminTicketsIndexRouteImport } from './routes/admin/tickets/index'
+import { Route as AdminTicketsTicketIdRouteImport } from './routes/admin/tickets/$ticketId'
 import { Route as AdminUsersIndexRouteImport } from './routes/admin/users/index'
 import { Route as AdminUsersUserIdRouteImport } from './routes/admin/users/$userId'
 import { Route as AdminUsersNewRouteImport } from './routes/admin/users/new'
@@ -47,6 +51,8 @@ import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as ApiChatConversationIdRouteImport } from './routes/api/chat/$conversationId'
 import { Route as ApiUploadsIndexRouteImport } from './routes/api/uploads/index'
 import { Route as ApiUploadsUploadIdRouteImport } from './routes/api/uploads/$uploadId'
+import { Route as ChatTicketsIndexRouteImport } from './routes/chat/tickets/index'
+import { Route as ChatTicketsTicketIdRouteImport } from './routes/chat/tickets/$ticketId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -105,6 +111,11 @@ const AdminSettingsRoute = AdminSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => AdminRouteRoute,
 } as any)
+const AdminTicketsRouteRoute = AdminTicketsRouteRouteImport.update({
+  id: '/tickets',
+  path: '/tickets',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
 const AdminUsersRouteRoute = AdminUsersRouteRouteImport.update({
   id: '/users',
   path: '/users',
@@ -133,6 +144,11 @@ const ChatAccountRoute = ChatAccountRouteImport.update({
 const ChatHistoryRoute = ChatHistoryRouteImport.update({
   id: '/history',
   path: '/history',
+  getParentRoute: () => ChatRouteRoute,
+} as any)
+const ChatTicketsRouteRoute = ChatTicketsRouteRouteImport.update({
+  id: '/tickets',
+  path: '/tickets',
   getParentRoute: () => ChatRouteRoute,
 } as any)
 const AdminApplicationsIndexRoute = AdminApplicationsIndexRouteImport.update({
@@ -213,6 +229,16 @@ const AdminRepositoriesNewRoute = AdminRepositoriesNewRouteImport.update({
   path: '/new',
   getParentRoute: () => AdminRepositoriesRouteRoute,
 } as any)
+const AdminTicketsIndexRoute = AdminTicketsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminTicketsRouteRoute,
+} as any)
+const AdminTicketsTicketIdRoute = AdminTicketsTicketIdRouteImport.update({
+  id: '/$ticketId',
+  path: '/$ticketId',
+  getParentRoute: () => AdminTicketsRouteRoute,
+} as any)
 const AdminUsersIndexRoute = AdminUsersIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -248,6 +274,16 @@ const ApiUploadsUploadIdRoute = ApiUploadsUploadIdRouteImport.update({
   path: '/api/uploads/$uploadId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ChatTicketsIndexRoute = ChatTicketsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => ChatTicketsRouteRoute,
+} as any)
+const ChatTicketsTicketIdRoute = ChatTicketsTicketIdRouteImport.update({
+  id: '/$ticketId',
+  path: '/$ticketId',
+  getParentRoute: () => ChatTicketsRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -259,7 +295,9 @@ export interface FileRoutesByFullPath {
   '/admin/database-connections': typeof AdminDatabaseConnectionsRouteRouteWithChildren
   '/admin/log-connections': typeof AdminLogConnectionsRouteRouteWithChildren
   '/admin/repositories': typeof AdminRepositoriesRouteRouteWithChildren
+  '/admin/tickets': typeof AdminTicketsRouteRouteWithChildren
   '/admin/users': typeof AdminUsersRouteRouteWithChildren
+  '/chat/tickets': typeof ChatTicketsRouteRouteWithChildren
   '/admin/settings': typeof AdminSettingsRoute
   '/api/health': typeof ApiHealthRoute
   '/chat/$conversationId': typeof ChatConversationIdRoute
@@ -276,18 +314,22 @@ export interface FileRoutesByFullPath {
   '/admin/log-connections/new': typeof AdminLogConnectionsNewRoute
   '/admin/repositories/$repositoryId': typeof AdminRepositoriesRepositoryIdRoute
   '/admin/repositories/new': typeof AdminRepositoriesNewRoute
+  '/admin/tickets/$ticketId': typeof AdminTicketsTicketIdRoute
   '/admin/users/$userId': typeof AdminUsersUserIdRoute
   '/admin/users/new': typeof AdminUsersNewRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/chat/$conversationId': typeof ApiChatConversationIdRoute
   '/api/uploads/$uploadId': typeof ApiUploadsUploadIdRoute
+  '/chat/tickets/$ticketId': typeof ChatTicketsTicketIdRoute
   '/admin/applications/': typeof AdminApplicationsIndexRoute
   '/admin/conversations/': typeof AdminConversationsIndexRoute
   '/admin/database-connections/': typeof AdminDatabaseConnectionsIndexRoute
   '/admin/log-connections/': typeof AdminLogConnectionsIndexRoute
   '/admin/repositories/': typeof AdminRepositoriesIndexRoute
+  '/admin/tickets/': typeof AdminTicketsIndexRoute
   '/admin/users/': typeof AdminUsersIndexRoute
   '/api/uploads/': typeof ApiUploadsIndexRoute
+  '/chat/tickets/': typeof ChatTicketsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -308,18 +350,22 @@ export interface FileRoutesByTo {
   '/admin/log-connections/new': typeof AdminLogConnectionsNewRoute
   '/admin/repositories/$repositoryId': typeof AdminRepositoriesRepositoryIdRoute
   '/admin/repositories/new': typeof AdminRepositoriesNewRoute
+  '/admin/tickets/$ticketId': typeof AdminTicketsTicketIdRoute
   '/admin/users/$userId': typeof AdminUsersUserIdRoute
   '/admin/users/new': typeof AdminUsersNewRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/chat/$conversationId': typeof ApiChatConversationIdRoute
   '/api/uploads/$uploadId': typeof ApiUploadsUploadIdRoute
+  '/chat/tickets/$ticketId': typeof ChatTicketsTicketIdRoute
   '/admin/applications': typeof AdminApplicationsIndexRoute
   '/admin/conversations': typeof AdminConversationsIndexRoute
   '/admin/database-connections': typeof AdminDatabaseConnectionsIndexRoute
   '/admin/log-connections': typeof AdminLogConnectionsIndexRoute
   '/admin/repositories': typeof AdminRepositoriesIndexRoute
+  '/admin/tickets': typeof AdminTicketsIndexRoute
   '/admin/users': typeof AdminUsersIndexRoute
   '/api/uploads': typeof ApiUploadsIndexRoute
+  '/chat/tickets': typeof ChatTicketsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -332,7 +378,9 @@ export interface FileRoutesById {
   '/admin/database-connections': typeof AdminDatabaseConnectionsRouteRouteWithChildren
   '/admin/log-connections': typeof AdminLogConnectionsRouteRouteWithChildren
   '/admin/repositories': typeof AdminRepositoriesRouteRouteWithChildren
+  '/admin/tickets': typeof AdminTicketsRouteRouteWithChildren
   '/admin/users': typeof AdminUsersRouteRouteWithChildren
+  '/chat/tickets': typeof ChatTicketsRouteRouteWithChildren
   '/admin/settings': typeof AdminSettingsRoute
   '/api/health': typeof ApiHealthRoute
   '/chat/$conversationId': typeof ChatConversationIdRoute
@@ -349,18 +397,22 @@ export interface FileRoutesById {
   '/admin/log-connections/new': typeof AdminLogConnectionsNewRoute
   '/admin/repositories/$repositoryId': typeof AdminRepositoriesRepositoryIdRoute
   '/admin/repositories/new': typeof AdminRepositoriesNewRoute
+  '/admin/tickets/$ticketId': typeof AdminTicketsTicketIdRoute
   '/admin/users/$userId': typeof AdminUsersUserIdRoute
   '/admin/users/new': typeof AdminUsersNewRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/chat/$conversationId': typeof ApiChatConversationIdRoute
   '/api/uploads/$uploadId': typeof ApiUploadsUploadIdRoute
+  '/chat/tickets/$ticketId': typeof ChatTicketsTicketIdRoute
   '/admin/applications/': typeof AdminApplicationsIndexRoute
   '/admin/conversations/': typeof AdminConversationsIndexRoute
   '/admin/database-connections/': typeof AdminDatabaseConnectionsIndexRoute
   '/admin/log-connections/': typeof AdminLogConnectionsIndexRoute
   '/admin/repositories/': typeof AdminRepositoriesIndexRoute
+  '/admin/tickets/': typeof AdminTicketsIndexRoute
   '/admin/users/': typeof AdminUsersIndexRoute
   '/api/uploads/': typeof ApiUploadsIndexRoute
+  '/chat/tickets/': typeof ChatTicketsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -374,7 +426,9 @@ export interface FileRouteTypes {
     | '/admin/database-connections'
     | '/admin/log-connections'
     | '/admin/repositories'
+    | '/admin/tickets'
     | '/admin/users'
+    | '/chat/tickets'
     | '/admin/settings'
     | '/api/health'
     | '/chat/$conversationId'
@@ -391,18 +445,22 @@ export interface FileRouteTypes {
     | '/admin/log-connections/new'
     | '/admin/repositories/$repositoryId'
     | '/admin/repositories/new'
+    | '/admin/tickets/$ticketId'
     | '/admin/users/$userId'
     | '/admin/users/new'
     | '/api/auth/$'
     | '/api/chat/$conversationId'
     | '/api/uploads/$uploadId'
+    | '/chat/tickets/$ticketId'
     | '/admin/applications/'
     | '/admin/conversations/'
     | '/admin/database-connections/'
     | '/admin/log-connections/'
     | '/admin/repositories/'
+    | '/admin/tickets/'
     | '/admin/users/'
     | '/api/uploads/'
+    | '/chat/tickets/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -423,18 +481,22 @@ export interface FileRouteTypes {
     | '/admin/log-connections/new'
     | '/admin/repositories/$repositoryId'
     | '/admin/repositories/new'
+    | '/admin/tickets/$ticketId'
     | '/admin/users/$userId'
     | '/admin/users/new'
     | '/api/auth/$'
     | '/api/chat/$conversationId'
     | '/api/uploads/$uploadId'
+    | '/chat/tickets/$ticketId'
     | '/admin/applications'
     | '/admin/conversations'
     | '/admin/database-connections'
     | '/admin/log-connections'
     | '/admin/repositories'
+    | '/admin/tickets'
     | '/admin/users'
     | '/api/uploads'
+    | '/chat/tickets'
   id:
     | '__root__'
     | '/'
@@ -446,7 +508,9 @@ export interface FileRouteTypes {
     | '/admin/database-connections'
     | '/admin/log-connections'
     | '/admin/repositories'
+    | '/admin/tickets'
     | '/admin/users'
+    | '/chat/tickets'
     | '/admin/settings'
     | '/api/health'
     | '/chat/$conversationId'
@@ -463,18 +527,22 @@ export interface FileRouteTypes {
     | '/admin/log-connections/new'
     | '/admin/repositories/$repositoryId'
     | '/admin/repositories/new'
+    | '/admin/tickets/$ticketId'
     | '/admin/users/$userId'
     | '/admin/users/new'
     | '/api/auth/$'
     | '/api/chat/$conversationId'
     | '/api/uploads/$uploadId'
+    | '/chat/tickets/$ticketId'
     | '/admin/applications/'
     | '/admin/conversations/'
     | '/admin/database-connections/'
     | '/admin/log-connections/'
     | '/admin/repositories/'
+    | '/admin/tickets/'
     | '/admin/users/'
     | '/api/uploads/'
+    | '/chat/tickets/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -568,6 +636,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminSettingsRouteImport
       parentRoute: typeof AdminRouteRoute
     }
+    '/admin/tickets': {
+      id: '/admin/tickets'
+      path: '/tickets'
+      fullPath: '/admin/tickets'
+      preLoaderRoute: typeof AdminTicketsRouteRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
     '/admin/users': {
       id: '/admin/users'
       path: '/users'
@@ -608,6 +683,13 @@ declare module '@tanstack/react-router' {
       path: '/history'
       fullPath: '/chat/history'
       preLoaderRoute: typeof ChatHistoryRouteImport
+      parentRoute: typeof ChatRouteRoute
+    }
+    '/chat/tickets': {
+      id: '/chat/tickets'
+      path: '/tickets'
+      fullPath: '/chat/tickets'
+      preLoaderRoute: typeof ChatTicketsRouteRouteImport
       parentRoute: typeof ChatRouteRoute
     }
     '/admin/applications/': {
@@ -708,6 +790,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminRepositoriesNewRouteImport
       parentRoute: typeof AdminRepositoriesRouteRoute
     }
+    '/admin/tickets/': {
+      id: '/admin/tickets/'
+      path: '/'
+      fullPath: '/admin/tickets/'
+      preLoaderRoute: typeof AdminTicketsIndexRouteImport
+      parentRoute: typeof AdminTicketsRouteRoute
+    }
+    '/admin/tickets/$ticketId': {
+      id: '/admin/tickets/$ticketId'
+      path: '/$ticketId'
+      fullPath: '/admin/tickets/$ticketId'
+      preLoaderRoute: typeof AdminTicketsTicketIdRouteImport
+      parentRoute: typeof AdminTicketsRouteRoute
+    }
     '/admin/users/': {
       id: '/admin/users/'
       path: '/'
@@ -756,6 +852,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/api/uploads/$uploadId'
       preLoaderRoute: typeof ApiUploadsUploadIdRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/chat/tickets/': {
+      id: '/chat/tickets/'
+      path: '/'
+      fullPath: '/chat/tickets/'
+      preLoaderRoute: typeof ChatTicketsIndexRouteImport
+      parentRoute: typeof ChatTicketsRouteRoute
+    }
+    '/chat/tickets/$ticketId': {
+      id: '/chat/tickets/$ticketId'
+      path: '/$ticketId'
+      fullPath: '/chat/tickets/$ticketId'
+      preLoaderRoute: typeof ChatTicketsTicketIdRouteImport
+      parentRoute: typeof ChatTicketsRouteRoute
     }
   }
 }
@@ -851,6 +961,19 @@ const AdminRepositoriesRouteRouteWithChildren =
     AdminRepositoriesRouteRouteChildren,
   )
 
+interface AdminTicketsRouteRouteChildren {
+  AdminTicketsTicketIdRoute: typeof AdminTicketsTicketIdRoute
+  AdminTicketsIndexRoute: typeof AdminTicketsIndexRoute
+}
+
+const AdminTicketsRouteRouteChildren: AdminTicketsRouteRouteChildren = {
+  AdminTicketsTicketIdRoute: AdminTicketsTicketIdRoute,
+  AdminTicketsIndexRoute: AdminTicketsIndexRoute,
+}
+
+const AdminTicketsRouteRouteWithChildren =
+  AdminTicketsRouteRoute._addFileChildren(AdminTicketsRouteRouteChildren)
+
 interface AdminUsersRouteRouteChildren {
   AdminUsersUserIdRoute: typeof AdminUsersUserIdRoute
   AdminUsersNewRoute: typeof AdminUsersNewRoute
@@ -873,6 +996,7 @@ interface AdminRouteRouteChildren {
   AdminDatabaseConnectionsRouteRoute: typeof AdminDatabaseConnectionsRouteRouteWithChildren
   AdminLogConnectionsRouteRoute: typeof AdminLogConnectionsRouteRouteWithChildren
   AdminRepositoriesRouteRoute: typeof AdminRepositoriesRouteRouteWithChildren
+  AdminTicketsRouteRoute: typeof AdminTicketsRouteRouteWithChildren
   AdminUsersRouteRoute: typeof AdminUsersRouteRouteWithChildren
   AdminSettingsRoute: typeof AdminSettingsRoute
   AdminIndexRoute: typeof AdminIndexRoute
@@ -885,6 +1009,7 @@ const AdminRouteRouteChildren: AdminRouteRouteChildren = {
     AdminDatabaseConnectionsRouteRouteWithChildren,
   AdminLogConnectionsRouteRoute: AdminLogConnectionsRouteRouteWithChildren,
   AdminRepositoriesRouteRoute: AdminRepositoriesRouteRouteWithChildren,
+  AdminTicketsRouteRoute: AdminTicketsRouteRouteWithChildren,
   AdminUsersRouteRoute: AdminUsersRouteRouteWithChildren,
   AdminSettingsRoute: AdminSettingsRoute,
   AdminIndexRoute: AdminIndexRoute,
@@ -894,7 +1019,21 @@ const AdminRouteRouteWithChildren = AdminRouteRoute._addFileChildren(
   AdminRouteRouteChildren,
 )
 
+interface ChatTicketsRouteRouteChildren {
+  ChatTicketsTicketIdRoute: typeof ChatTicketsTicketIdRoute
+  ChatTicketsIndexRoute: typeof ChatTicketsIndexRoute
+}
+
+const ChatTicketsRouteRouteChildren: ChatTicketsRouteRouteChildren = {
+  ChatTicketsTicketIdRoute: ChatTicketsTicketIdRoute,
+  ChatTicketsIndexRoute: ChatTicketsIndexRoute,
+}
+
+const ChatTicketsRouteRouteWithChildren =
+  ChatTicketsRouteRoute._addFileChildren(ChatTicketsRouteRouteChildren)
+
 interface ChatRouteRouteChildren {
+  ChatTicketsRouteRoute: typeof ChatTicketsRouteRouteWithChildren
   ChatConversationIdRoute: typeof ChatConversationIdRoute
   ChatAccountRoute: typeof ChatAccountRoute
   ChatHistoryRoute: typeof ChatHistoryRoute
@@ -902,6 +1041,7 @@ interface ChatRouteRouteChildren {
 }
 
 const ChatRouteRouteChildren: ChatRouteRouteChildren = {
+  ChatTicketsRouteRoute: ChatTicketsRouteRouteWithChildren,
   ChatConversationIdRoute: ChatConversationIdRoute,
   ChatAccountRoute: ChatAccountRoute,
   ChatHistoryRoute: ChatHistoryRoute,

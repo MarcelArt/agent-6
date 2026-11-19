@@ -29,6 +29,7 @@ Give the agent one step file and say "implement this step". Do not start a step 
 | 17 | [Deployment](17-deployment.md) | Docker image, compose file, setup guide |
 | 18 | [Postgres for own data](18-postgres-for-own-data.md) | Optional alternative to SQLite |
 | 19 | [Decision AI](19-decision-ai.md) | Optional provider-backed investigation and fault advice |
+| 20 | [Tickets](20-tickets.md) | Admin accepts or declines reports before GitHub filing |
 
 ## Decisions that apply to every step
 

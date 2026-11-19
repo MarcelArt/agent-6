@@ -12,6 +12,7 @@ import {
   message,
   repository,
   repositoryAttachment,
+  ticket,
   upload,
   user,
 } from "./schema"
@@ -37,6 +38,7 @@ import type {
   Report,
 } from "@/lib/chat"
 import { REPLY_LEASE_MS } from "@/lib/chat"
+import type { TicketStatus } from "@/lib/tickets"
 
 export class ConversationError extends Error {
   constructor(
@@ -68,12 +70,32 @@ export function createConversationsRepository(db: Db = getDb()) {
   const owned = (id: string, userId: string) => readable(id, userId)
   function messages(id: string, admin = false): Array<ChatMessage> {
     const reports = new Map<string, Array<Report>>()
+    const add = (messageId: string, report: Report) =>
+      reports.set(messageId, [...(reports.get(messageId) ?? []), report])
+    const tickets = db
+      .select({
+        id: ticket.id,
+        messageId: ticket.messageId,
+        status: ticket.status,
+        filedIssueId: ticket.filedIssueId,
+        repository: filedIssue.repository,
+        number: filedIssue.issueNumber,
+        url: filedIssue.url,
+      })
+      .from(ticket)
+      .leftJoin(filedIssue, eq(filedIssue.id, ticket.filedIssueId))
+      .where(eq(ticket.conversationId, id))
+      .orderBy(asc(ticket.createdAt), asc(sql`${ticket}.rowid`))
+      .all()
+    // A Ticket's Filed Issue is shown on the Ticket's own marker.
+    const linked = new Set(tickets.map((item) => item.filedIssueId))
     for (const row of db
       .select()
       .from(filedIssue)
       .where(eq(filedIssue.conversationId, id))
       .orderBy(asc(filedIssue.createdAt), asc(sql`rowid`))
       .all()) {
+      if (linked.has(row.id)) continue
       // Issue details and failures never reach a Client's browser.
       const report: Report | null =
         row.outcome === "failed"
@@ -98,12 +120,24 @@ export function createConversationsRepository(db: Db = getDb()) {
                   }
                 : {}),
             }
-      if (report)
-        reports.set(row.messageId, [
-          ...(reports.get(row.messageId) ?? []),
-          report,
-        ])
+      if (report) add(row.messageId, report)
     }
+    // Owners see only the status; the Filed Issue link is for Admins.
+    for (const row of tickets)
+      add(row.messageId, {
+        id: row.id,
+        outcome: "ticket",
+        status: row.status as TicketStatus,
+        ...(admin && row.repository && row.number !== null && row.url
+          ? {
+              issue: {
+                repository: row.repository,
+                number: row.number,
+                url: row.url,
+              },
+            }
+          : {}),
+      })
     const images = new Map<string, Array<ChatImage>>()
     for (const row of db
       .select({ upload })
@@ -325,6 +359,10 @@ export function createConversationsRepository(db: Db = getDb()) {
         sql<number>`(select count(distinct ${filedIssue.url}) from ${filedIssue} where ${filedIssue.conversationId} = ${conversation.id} and ${filedIssue.outcome} != 'failed')`.mapWith(
           Number
         )
+      const tickets =
+        sql<number>`(select count(*) from ${ticket} where ${ticket.conversationId} = ${conversation.id})`.mapWith(
+          Number
+        )
       const refused =
         sql<boolean>`exists(select 1 from ${message} where ${message.conversationId} = ${conversation.id} and ${message.refused} = 1)`.mapWith(
           Boolean
@@ -367,6 +405,7 @@ export function createConversationsRepository(db: Db = getDb()) {
           updatedAt: conversation.updatedAt,
           deletedAt: conversation.deletedAt,
           issueCount: issues,
+          ticketCount: tickets,
           refused,
         })
         .from(conversation)
@@ -662,6 +701,10 @@ export function createConversationsRepository(db: Db = getDb()) {
             .set({ messageId: assistantId })
             .where(eq(filedIssue.messageId, assistant.id))
             .run()
+          db.update(ticket)
+            .set({ messageId: assistantId })
+            .where(eq(ticket.messageId, assistant.id))
+            .run()
           db.update(conversation)
             .set({
               runningUntil: new Date(Date.now() + REPLY_LEASE_MS),
@@ -687,6 +730,29 @@ export function createConversationsRepository(db: Db = getDb()) {
         },
         { behavior: "immediate" }
       )
+    },
+    /** A Conversation's Tickets as the agent is told about them, oldest first. */
+    tickets(id: string) {
+      return db
+        .select({
+          id: ticket.id,
+          kind: ticket.kind,
+          title: ticket.title,
+          summary: ticket.summary,
+          status: ticket.status,
+          repository: ticket.repository,
+          targetIssueNumber: ticket.targetIssueNumber,
+          declineReason: ticket.declineReason,
+        })
+        .from(ticket)
+        .where(eq(ticket.conversationId, id))
+        .orderBy(asc(ticket.createdAt), asc(sql`rowid`))
+        .all()
+        .map((row) => ({
+          ...row,
+          kind: row.kind as FiledIssueRecord["kind"],
+          status: row.status as TicketStatus,
+        }))
     },
     /** Filed Issues and failed reports of a Conversation, oldest first. */
     filedIssues(id: string): Array<FiledIssueRecord & { messageId: string }> {

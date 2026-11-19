@@ -4,6 +4,7 @@ import {
   primaryKey,
   sqliteTable,
   text,
+  type AnySQLiteColumn,
 } from "drizzle-orm/sqlite-core"
 
 /*
@@ -332,4 +333,65 @@ export const filedIssue = sqliteTable(
     createdAt: timestamp("created_at").notNull(),
   },
   (table) => [index("filed_issue_conversation_idx").on(table.conversationId)]
+)
+
+/**
+ * A Ticket: a Code Fix or Data Fix report the agent prepared from a
+ * Conversation, waiting for an Admin to accept or decline it. Accepting files
+ * the issue on GitHub and links the resulting Filed Issue.
+ * `messageId` is the agent answer it belongs to; like a Filed Issue's it has no
+ * foreign key because a retry gives the answer a new id.
+ */
+export const ticket = sqliteTable(
+  "ticket",
+  {
+    id: text("id").primaryKey(),
+    conversationId: text("conversation_id")
+      .notNull()
+      .references(() => conversation.id, { onDelete: "cascade" }),
+    messageId: text("message_id").notNull(),
+    /** Null once the Repository is removed; `repository` keeps its name. */
+    repositoryId: text("repository_id").references(() => repository.id, {
+      onDelete: "set null",
+    }),
+    /** "owner/name" of the Repository when the Ticket was last changed. */
+    repository: text("repository").notNull(),
+    /** "code-fix" or "data-fix". */
+    kind: text("kind").notNull(),
+    /** For developers: the GitHub issue title. */
+    title: text("title").notNull(),
+    /** For developers: redacted Markdown sections, without heading or footer. */
+    body: text("body").notNull(),
+    /** For the owner: short, non-technical, in the Preferred Language. */
+    summary: text("summary").notNull(),
+    /** Open Agent 6 issue to add an occurrence to; null for a new issue. */
+    targetIssueNumber: integer("target_issue_number"),
+    /** Pending Ticket the agent thought described the same fault. */
+    possibleDuplicateOf: text("possible_duplicate_of").references(
+      (): AnySQLiteColumn => ticket.id,
+      { onDelete: "set null" }
+    ),
+    /** "pending", "accepted" or "declined". */
+    status: text("status").notNull().default("pending"),
+    /** Written by the Admin for the owner, shown exactly as written. */
+    declineReason: text("decline_reason"),
+    decidedBy: text("decided_by").references(() => user.id, {
+      onDelete: "set null",
+    }),
+    decidedAt: timestamp("decided_at"),
+    /** Why the last acceptance could not file the issue, for Admins. */
+    lastError: text("last_error"),
+    /** Set while an Admin's acceptance is filing the issue. */
+    filingUntil: timestamp("filing_until"),
+    filedIssueId: text("filed_issue_id").references(() => filedIssue.id, {
+      onDelete: "set null",
+    }),
+    createdAt: timestamp("created_at").notNull(),
+    updatedAt: timestamp("updated_at").notNull(),
+  },
+  (table) => [
+    index("ticket_status_idx").on(table.status, table.createdAt),
+    index("ticket_conversation_idx").on(table.conversationId),
+    index("ticket_repository_idx").on(table.repositoryId, table.status),
+  ]
 )

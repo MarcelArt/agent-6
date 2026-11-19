@@ -1,4 +1,4 @@
-import { Link, useLocation } from "@tanstack/react-router"
+import { Link, useLocation, useRouteContext } from "@tanstack/react-router"
 import { ShieldCheckIcon } from "lucide-react"
 import { cn } from "cn"
 import { adminNav, chatNav } from "./nav"
@@ -32,13 +32,29 @@ export function AppShell({
   children: React.ReactNode
 }) {
   const pathname = useLocation({ select: (location) => location.pathname })
+  // Loaded with the user on every navigation; null for anyone but an Admin.
+  const pendingTickets = useRouteContext({
+    from: "__root__",
+    select: (context) => context.pendingTickets,
+  })
+  const counts: Counts = { pendingTickets: pendingTickets ?? 0 }
   return (
     <div className="flex h-svh flex-col overflow-hidden md:flex-row">
-      <Rail user={user} pathname={pathname} />
+      <Rail user={user} pathname={pathname} counts={counts} />
       {children}
-      <TabBar user={user} pathname={pathname} />
+      <TabBar user={user} pathname={pathname} counts={counts} />
     </div>
   )
+}
+
+type Counts = Record<NonNullable<NavItem["badge"]>, number>
+
+const countText = (count: number) => (count > 99 ? "99+" : String(count))
+
+/** "All Tickets, 3 waiting for review" for screen readers and tooltips. */
+function itemLabel(item: NavItem, counts: Counts) {
+  const count = item.badge ? counts[item.badge] : 0
+  return count ? `${item.label}, ${count} waiting for review` : item.label
 }
 
 function UserAvatar({ user, size }: { user: SessionUser; size?: "sm" }) {
@@ -56,9 +72,9 @@ function UserAvatar({ user, size }: { user: SessionUser; size?: "sm" }) {
   )
 }
 
-type ShellProps = { user: SessionUser; pathname: string }
+type ShellProps = { user: SessionUser; pathname: string; counts: Counts }
 
-function Rail({ user, pathname }: ShellProps) {
+function Rail({ user, pathname, counts }: ShellProps) {
   return (
     <nav
       aria-label="Main"
@@ -68,13 +84,23 @@ function Rail({ user, pathname }: ShellProps) {
         <ProductMark />
       </Link>
       {chatNav.map((item) => (
-        <RailItem key={item.to} item={item} pathname={pathname} />
+        <RailItem
+          key={item.to}
+          item={item}
+          pathname={pathname}
+          counts={counts}
+        />
       ))}
       {user.role === "admin" && (
         <>
           <Separator className="my-1.5 w-6!" />
           {adminNav.map((item) => (
-            <RailItem key={item.to} item={item} pathname={pathname} />
+            <RailItem
+              key={item.to}
+              item={item}
+              pathname={pathname}
+              counts={counts}
+            />
           ))}
         </>
       )}
@@ -104,8 +130,38 @@ export function ProductMark({ className }: { className?: string }) {
   )
 }
 
-function RailItem({ item, pathname }: { item: NavItem; pathname: string }) {
+function CountBadge({
+  count,
+  className,
+}: {
+  count: number
+  className?: string
+}) {
+  return (
+    <span
+      aria-hidden="true"
+      className={cn(
+        "flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-xs leading-none font-medium text-primary-foreground tabular-nums",
+        className
+      )}
+    >
+      {countText(count)}
+    </span>
+  )
+}
+
+function RailItem({
+  item,
+  pathname,
+  counts,
+}: {
+  item: NavItem
+  pathname: string
+  counts: Counts
+}) {
   const active = item.isActive(pathname)
+  const count = item.badge ? counts[item.badge] : 0
+  const label = itemLabel(item, counts)
   return (
     <Tooltip>
       <TooltipTrigger
@@ -114,18 +170,21 @@ function RailItem({ item, pathname }: { item: NavItem; pathname: string }) {
             to={item.to}
             activeOptions={{ exact: true }}
             aria-current={active ? "page" : undefined}
-            aria-label={item.label}
+            aria-label={label}
             className={cn(
               buttonVariants({ variant: "ghost", size: "icon-lg" }),
-              "text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground dark:hover:bg-sidebar-accent",
+              "relative text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground dark:hover:bg-sidebar-accent",
               active && "bg-sidebar-accent text-sidebar-accent-foreground"
             )}
           />
         }
       >
         <item.icon />
+        {count > 0 && (
+          <CountBadge count={count} className="absolute -top-1 -right-1" />
+        )}
       </TooltipTrigger>
-      <TooltipContent side="right">{item.label}</TooltipContent>
+      <TooltipContent side="right">{label}</TooltipContent>
     </Tooltip>
   )
 }
@@ -133,8 +192,12 @@ function RailItem({ item, pathname }: { item: NavItem; pathname: string }) {
 const tabClass =
   "flex flex-1 flex-col items-center justify-center gap-0.5 text-xs text-muted-foreground outline-none focus-visible:bg-sidebar-accent aria-expanded:text-foreground data-active:font-medium data-active:text-foreground"
 
-function TabBar({ user, pathname }: ShellProps) {
+function TabBar({ user, pathname, counts }: ShellProps) {
   const inAdmin = adminNav.some((item) => item.isActive(pathname))
+  const adminCount = adminNav.reduce(
+    (sum, item) => sum + (item.badge ? counts[item.badge] : 0),
+    0
+  )
   return (
     <nav
       aria-label="Main"
@@ -164,10 +227,21 @@ function TabBar({ user, pathname }: ShellProps) {
             className={tabClass}
             data-active={inAdmin ? "" : undefined}
           >
-            <span className="flex h-6 items-center">
+            <span className="relative flex h-6 items-center">
               <ShieldCheckIcon className="size-5" />
+              {adminCount > 0 && (
+                <CountBadge
+                  count={adminCount}
+                  className="absolute -top-1 -right-3"
+                />
+              )}
             </span>
             Admin
+            {adminCount > 0 && (
+              <span className="sr-only">
+                , {adminCount} tickets waiting for review
+              </span>
+            )}
           </DropdownMenuTrigger>
           <DropdownMenuContent side="top" align="center" className="w-56">
             {adminNav.map((item) => {
@@ -186,6 +260,17 @@ function TabBar({ user, pathname }: ShellProps) {
                 >
                   <item.icon />
                   {item.label}
+                  {item.badge && counts[item.badge] > 0 && (
+                    <>
+                      <CountBadge
+                        count={counts[item.badge]}
+                        className="ml-auto"
+                      />
+                      <span className="sr-only">
+                        , {counts[item.badge]} waiting for review
+                      </span>
+                    </>
+                  )}
                 </DropdownMenuItem>
               )
             })}

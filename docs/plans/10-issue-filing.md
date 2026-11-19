@@ -44,6 +44,8 @@ When a problem needs a Code Fix or a Data Fix, the agent files a GitHub issue fo
 
 Tracking issue status after filing. Applying any fix. Admin review before filing.
 
+Step [20 Tickets](20-tickets.md) later added Admin review: the agent now creates a Ticket and an Admin's acceptance files the issue.
+
 ## Domain terms
 
 Filed Issue, Code Fix, Data Fix, Repository, Conversation.

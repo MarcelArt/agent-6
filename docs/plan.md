@@ -1,6 +1,6 @@
 # plan
 
-Agent that provide support for users of applications by reading code, logs, and databases, which can guide users using the app or if the issue is in need of a code fix or data fix, agent can create github issue.
+Agent that provide support for users of applications by reading code, logs, and databases, which can guide users using the app or if the issue is in need of a code fix or data fix, agent can create a ticket that becomes a github issue once an admin accepts it.
 This app targeted to be self-hosted by organization, so no need multi-tenancy like organization or workspace scope.
 Make sure this project has proper routing, navigating through pages shouldn't changing state only and reloading the browser should reload to the page the user currently is.
 ## Main Features
@@ -15,7 +15,7 @@ Make sure this project has proper routing, navigating through pages shouldn't ch
   User admin can add grafana/loki connection also with tags so agent can query the logs  
 ### Client Interface
 - Chatbot
-  A chat interface for client user for them to be asking help/direction of a problem of the app. Before starting the conversation user need to select the app first. The user can upload a picture as a context for the agent to pinpoint the problem. The agent need to answer in non-technical manner, since client user are not developer, and as short as possible, 4-5 sentences are good. If the problem need a code fix or data fix, agent create a github issue with bug description and a potential fix for that for the developer. This feature also need a guardrail, user can only ask question relevant to the agent responsibilities. If user messages are vague agent should ask more questions for more informations, in the chat ui can also display interactive question and multiple selection display, that user can click.
+  A chat interface for client user for them to be asking help/direction of a problem of the app. Before starting the conversation user need to select the app first. The user can upload a picture as a context for the agent to pinpoint the problem. The agent need to answer in non-technical manner, since client user are not developer, and as short as possible, 4-5 sentences are good. If the problem need a code fix or data fix, agent create a ticket with bug description and a potential fix for that for the developer; an admin accepts it (creating the github issue) or declines it with a reason the user can see. This feature also need a guardrail, user can only ask question relevant to the agent responsibilities. If user messages are vague agent should ask more questions for more informations, in the chat ui can also display interactive question and multiple selection display, that user can click.
 - Chat histories
   User can see past conversations.
 ## Secondary Features

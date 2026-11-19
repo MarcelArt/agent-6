@@ -16,12 +16,20 @@ import { buttonVariants } from "@/components/ui/button"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { themeScript } from "@/lib/theme"
 import { getCurrentUser } from "@/server/session.functions"
+import { countPendingTickets } from "@/server/tickets.functions"
 
 export const Route = createRootRoute({
   // Runs before every page, on the server for the first one. Routes read
   // `context.user` to decide who may see them; server functions check the
-  // session again themselves.
-  beforeLoad: async () => ({ user: await getCurrentUser() }),
+  // session again themselves. The pending Ticket count (null for anyone but
+  // an Admin) feeds the nav badge and refreshes with every navigation.
+  beforeLoad: async () => {
+    const [user, pendingTickets] = await Promise.all([
+      getCurrentUser(),
+      countPendingTickets(),
+    ])
+    return { user, pendingTickets }
+  },
   head: () => ({
     meta: [
       {

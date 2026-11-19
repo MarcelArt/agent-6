@@ -1,4 +1,5 @@
 import type { AgentMessages } from "./preferred-language"
+import type { TicketStatus } from "./tickets"
 
 export const MAX_MESSAGE_LENGTH = 8000
 /** Renewed while the worker is alive; this is not a reply duration limit. */
@@ -18,12 +19,16 @@ export type ChatApplication = {
   description: string
   ready: boolean
 }
-/** At most this many new issues per Conversation. Comments on existing issues do not count. */
-export const MAX_NEW_ISSUES = 2
-export type IssueKind = "code-fix" | "data-fix"
+export type IssueKind = "code-fix" | "data-fix" | "feature-request"
+export const ISSUE_KINDS: Array<IssueKind> = [
+  "code-fix",
+  "data-fix",
+  "feature-request",
+]
 export const issueKindLabels: Record<IssueKind, string> = {
   "code-fix": "Code Fix",
   "data-fix": "Data Fix",
+  "feature-request": "Feature Request",
 }
 /** A Filed Issue as stored. `number` and `url` are null when reporting failed. */
 export type FiledIssueRecord = {
@@ -37,7 +42,8 @@ export type FiledIssueRecord = {
 }
 /**
  * What an agent answer shows about reporting to the team. Clients get only
- * the bare notice; `issue` and failures are sent to Admins alone.
+ * the bare notice; `issue` and failures are sent to Admins alone. Answers
+ * from before Tickets show the Filed Issue directly.
  */
 export type Report =
   | {
@@ -46,6 +52,14 @@ export type Report =
       issue?: { repository: string; number: number; url: string }
     }
   | { id: string; outcome: "failed"; repository: string; reason: string }
+  | {
+      /** The Ticket's id. */
+      id: string
+      outcome: "ticket"
+      status: TicketStatus
+      /** Admins only, once the Ticket was accepted. */
+      issue?: { repository: string; number: number; url: string }
+    }
 export const MAX_IMAGES_PER_MESSAGE = 4
 export const MAX_IMAGE_BYTES = 10 * 1024 * 1024
 export const IMAGE_TYPES = ["image/png", "image/jpeg", "image/webp"] as const

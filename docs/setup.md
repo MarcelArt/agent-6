@@ -73,7 +73,7 @@ For a fine-grained token, choose the user or organization that owns the Reposito
 
 The token's user also needs write access to each Repository: GitHub drops issue labels when its user cannot set them, and Agent 6 needs its `agent-6` label to find existing issues. Complete organization approval or SAML SSO authorization if required. A classic token needs the `repo` scope and access to each relevant Repository. Track expiry and rotate the token before it expires. See GitHub's [token instructions](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens).
 
-Agent 6 starts without a token, but cannot connect or sync a Repository. Without Issues access, answers can still work and Admins see reporting failures in Conversations.
+Agent 6 starts without a token, but cannot connect or sync a Repository. Without Issues access, answers and Tickets still work; accepting a Ticket fails and Admins see the reason on it.
 
 ## Read-only Postgres role
 
@@ -147,7 +147,7 @@ Under **Log Connections**, add the URL and optional auth header and tenant ID, t
 4. Under **Applications**, create an Application with a name and a description Clients recognize. Add notes to help the agent understand the product.
 5. Open its Attachments and use **Add Repository**, **Add Database Connection** and **Add Log Connection** to attach the relevant resources. Each Log Connection Attachment needs a Base Selector. Connections alone grant no scope; Tags only describe them. An Application needs at least one ready Repository to become available for questions.
 6. In **Settings**, choose the organization's **Preferred Language** if desired.
-7. At `/chat`, select the Application and ask a question with a known answer. Check an answer that needs its code, then one that needs a database or its logs. Use a test fault to check issue reporting. Admins can review **All Conversations** and any reporting errors.
+7. At `/chat`, select the Application and ask a question with a known answer. Check an answer that needs its code, then one that needs a database or its logs. Use a test fault to check that a Ticket is created, then accept it in **All Tickets** to check issue filing. Admins can review **All Conversations** and any filing errors on the Ticket.
 8. Sign in as a Client and check the workflow they will use. Create additional Applications for other products and attach their resources explicitly.
 
 ## HTTPS reverse proxy and OAuth
@@ -193,7 +193,7 @@ For OAuth, register a confidential OAuth/OIDC client with your provider. In Agen
 
 ## Backup and restore
 
-The named volume contains `agent6.db` (users, sessions, settings, encrypted connections, Applications, Attachments, Conversations and Filed Issues), SQLite WAL/SHM files while running, `repos/` clones, and `uploads/` pictures. Back up the whole directory, plus `.env` separately in secure storage. Losing `ENCRYPTION_KEY` means every encrypted connection password, log auth header and OAuth client secret must be re-entered. Keep `BETTER_AUTH_SECRET` with the backup too.
+The named volume contains `agent6.db` (users, sessions, settings, encrypted connections, Applications, Attachments, Conversations, Tickets and Filed Issues), SQLite WAL/SHM files while running, `repos/` clones, and `uploads/` pictures. Back up the whole directory, plus `.env` separately in secure storage. Losing `ENCRYPTION_KEY` means every encrypted connection password, log auth header and OAuth client secret must be re-entered. Keep `BETTER_AUTH_SECRET` with the backup too.
 
 For a consistent backup, stop the service and copy the volume through a one-off container. This avoids copying a live SQLite database or a half-written clone. These commands use the service's mounted volume rather than assuming its Docker volume name:
 

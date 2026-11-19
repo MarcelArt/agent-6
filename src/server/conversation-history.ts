@@ -21,12 +21,13 @@ export function createConversationHistory(
       return {
         ...result,
         conversations: result.conversations.map(
-          ({ id, title, application, updatedAt, issueCount }) => ({
+          ({ id, title, application, updatedAt, issueCount, ticketCount }) => ({
             id,
             title,
             application,
             updatedAt,
             issueCount,
+            ticketCount,
           })
         ),
       }

@@ -24,6 +24,8 @@ export type ConversationSummary = {
   updatedAt: number
   deletedAt: number | null
   issueCount: number
+  /** Tickets created from it, whatever their status. */
+  ticketCount: number
   refused: boolean
 }
 export type ToolActivity = {

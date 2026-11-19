@@ -6,6 +6,8 @@ import {
   MessageSquareIcon,
   ScrollTextIcon,
   SettingsIcon,
+  TicketIcon,
+  TicketsIcon,
   UsersIcon,
 } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
@@ -16,6 +18,8 @@ export type NavItem = {
   to: NonNullable<LinkProps["to"]>
   icon: LucideIcon
   isActive: (pathname: string) => boolean
+  /** A count shown on the item, from the root route's context. */
+  badge?: "pendingTickets"
 }
 
 const under = (base: string) => (pathname: string) =>
@@ -30,6 +34,7 @@ export const chatNav: Array<NavItem> = [
     isActive: (pathname) =>
       under("/chat")(pathname) &&
       !under("/chat/history")(pathname) &&
+      !under("/chat/tickets")(pathname) &&
       !under("/chat/account")(pathname),
   },
   {
@@ -37,6 +42,12 @@ export const chatNav: Array<NavItem> = [
     to: "/chat/history",
     icon: HistoryIcon,
     isActive: under("/chat/history"),
+  },
+  {
+    label: "Tickets",
+    to: "/chat/tickets",
+    icon: TicketIcon,
+    isActive: under("/chat/tickets"),
   },
 ]
 
@@ -47,6 +58,13 @@ export const adminNav: Array<NavItem> = [
     to: "/admin/conversations",
     icon: MessageSquareIcon,
     isActive: under("/admin/conversations"),
+  },
+  {
+    label: "All Tickets",
+    to: "/admin/tickets",
+    icon: TicketsIcon,
+    isActive: under("/admin/tickets"),
+    badge: "pendingTickets",
   },
   {
     label: "Users",

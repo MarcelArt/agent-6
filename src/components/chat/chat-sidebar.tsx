@@ -11,6 +11,7 @@ import {
   MessageSquareIcon,
   PencilIcon,
   SquarePenIcon,
+  TicketIcon,
   Trash2Icon,
 } from "lucide-react"
 import { ListPane, PaneHeader, PaneTitle } from "@/components/shell/panes"
@@ -147,11 +148,21 @@ export function ChatSidebar() {
                         {activityTime(row.updatedAt)}
                       </time>
                     </span>
-                    {row.issueCount > 0 && (
+                    {row.ticketCount > 0 ? (
                       <span className="flex items-center gap-1 text-xs leading-4">
-                        <CircleDotIcon className="size-3" />
-                        Reported to the team
+                        <TicketIcon className="size-3" />
+                        {row.ticketCount === 1
+                          ? "Ticket created"
+                          : `${row.ticketCount} tickets created`}
                       </span>
+                    ) : (
+                      // Conversations from before Tickets.
+                      row.issueCount > 0 && (
+                        <span className="flex items-center gap-1 text-xs leading-4">
+                          <CircleDotIcon className="size-3" />
+                          Reported to the team
+                        </span>
+                      )
                     )}
                   </Link>
                   <DropdownMenu>

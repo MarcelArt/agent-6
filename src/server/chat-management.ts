@@ -282,6 +282,8 @@ export function createChatManagement(
                     needsTitle: claim.history.length === 0,
                     conversationId: id,
                     messageId: claim.assistantId,
+                    // Saved history misses Tickets from failed attempts.
+                    tickets: conversations.tickets(id),
                     history: prepared.history,
                     question: claim.question,
                     images: prepared.images,

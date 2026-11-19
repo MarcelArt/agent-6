@@ -1,6 +1,6 @@
 # Agent 6
 
-A self-hosted support agent for one organization. It answers questions about your Applications using their code, read-only databases and logs, and reports faults through GitHub issues.
+A self-hosted support agent for one organization. It answers questions about your Applications using their code, read-only databases and logs, and reports faults through GitHub issues once an Admin accepts the agent's Ticket.
 
 - [Administrator setup guide](docs/setup.md): Docker deployment, connections, HTTPS, backups and upgrades.
 - [Usage and development notes](docs/usage.md).

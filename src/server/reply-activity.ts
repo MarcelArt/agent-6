@@ -20,6 +20,8 @@ const labels: Record<string, string> = {
   list_log_labels: "Finding application logs",
   query_logs: "Checking application logs",
   find_existing_issues: "Checking existing reports",
+  create_ticket: "Creating a ticket for the team",
+  // Answers from before Tickets.
   file_issue: "Reporting to the developers",
   "Agent run": "Investigation",
   Guardrail: "Request check",

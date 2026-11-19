@@ -68,9 +68,17 @@ A fault that can only be resolved by changing a Repository's code.
 **Data Fix**:
 A fault, or a correction a user asks for, that can only be resolved by a developer correcting data in an Application's database.
 
+**Feature Request**:
+A change to what an Application can do that a person asks for and that only developers can make in a Repository's code. Unlike a Code Fix, nothing is broken.
+_Avoid_: Enhancement, wish
+
+**Ticket**:
+A Code Fix, Data Fix or Feature Request report the agent prepares from a Conversation for an Admin to accept or decline. An accepted Ticket becomes a Filed Issue; a declined Ticket carries the Admin's reason for the Conversation's owner.
+_Avoid_: Draft, request, bug report
+
 **Filed Issue**:
-A GitHub issue the agent created for a Code Fix or Data Fix, recorded on the Conversation that led to it.
-_Avoid_: Ticket, bug report
+The GitHub issue, or new occurrence on an existing one, created when an Admin accepts a Ticket, recorded on the Conversation that led to it.
+_Avoid_: Bug report
 
 ### Settings
 
@@ -79,5 +87,5 @@ The one organization-wide language the agent answers in.
 _Avoid_: Locale, user language
 
 **Decision AI**:
-An optional separate model that recommends which Repositories, Database Connections and Log Connections to inspect, a fault's Code Fix or Data Fix classification, and the Repository for a Filed Issue. The agent remains responsible for investigating the evidence and deciding what to do.
+An optional separate model that recommends which Repositories, Database Connections and Log Connections to inspect, a fault's Code Fix or Data Fix classification, and the Repository for a Ticket. The agent remains responsible for investigating the evidence and deciding what to do.
 _Avoid_: Router, planner

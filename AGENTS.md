@@ -2,7 +2,7 @@
 
 Agent 6 is a self-hosted support agent for one organization. It investigates an
 Application's code, read-only Postgres data and Loki logs, and reports faults
-through GitHub issues. The app uses TypeScript, React, TanStack Start, Better Auth
+as Tickets that become GitHub issues when an Admin accepts them. The app uses TypeScript, React, TanStack Start, Better Auth
 and Drizzle with SQLite. Use npm and Node.js 24; git is required for Repository sync.
 
 ## Read before changing behavior
@@ -63,8 +63,9 @@ and Drizzle with SQLite. Use npm and Node.js 24; git is required for Repository 
   connection credentials encrypted through `src/server/secrets.ts` and out of
   browser responses and model inputs.
 - Keep Client answers brief and non-technical, governed by the organization's
-  Preferred Language. File evidence-backed Code Fix or Data Fix reports with
-  existing issue deduplication; developers perform code and data corrections.
+  Preferred Language. Create evidence-backed Code Fix, Data Fix or Feature Request Tickets with
+  existing issue deduplication; only an Admin's acceptance files a GitHub
+  issue, and developers perform code and data corrections.
 
 ## Interface changes
 

@@ -8,6 +8,7 @@ import {
   ImageIcon,
   ImageOffIcon,
   SquarePenIcon,
+  TicketIcon,
 } from "lucide-react"
 import { ChatSidebar } from "./chat-sidebar"
 import { Composer } from "./composer"
@@ -41,10 +42,60 @@ import { ENGLISH_AGENT_MESSAGES } from "@/lib/preferred-language"
 import { cn } from "@/lib/utils"
 import type { ChatEvent, Conversation, ReplyInput, Report } from "@/lib/chat"
 import type { ConversationAudit } from "@/lib/conversation-history"
+import type { TicketStatus } from "@/lib/tickets"
 import { AuditActivity } from "./audit-activity"
 
-/** The Filed Issue notice under an agent answer. Only Admins receive `issue` and failures. */
-function ReportNotice({ report }: { report: Report }) {
+const ticketNotices: Record<TicketStatus, { title: string; text: string }> = {
+  pending: {
+    title: "Ticket waiting for review",
+    text: "The team will review it before passing it on.",
+  },
+  accepted: {
+    title: "Ticket accepted",
+    text: "The team passed it on to the developers.",
+  },
+  declined: {
+    title: "Ticket declined",
+    text: "The ticket says why.",
+  },
+}
+
+/**
+ * The Ticket or Filed Issue notice under an agent answer. Only Admins
+ * receive `issue` and failures; `audit` links to the Admin's Ticket screen.
+ */
+function ReportNotice({ report, audit }: { report: Report; audit: boolean }) {
+  if (report.outcome === "ticket") {
+    const notice = ticketNotices[report.status]
+    return (
+      <Alert className="w-fit">
+        <TicketIcon />
+        <AlertTitle>{notice.title}</AlertTitle>
+        <AlertDescription>
+          <span>
+            {notice.text}{" "}
+            <Link
+              to={
+                audit ? "/admin/tickets/$ticketId" : "/chat/tickets/$ticketId"
+              }
+              params={{ ticketId: report.id }}
+            >
+              View ticket
+            </Link>
+            {report.issue ? (
+              <>
+                {" · "}
+                <a href={report.issue.url} target="_blank" rel="noreferrer">
+                  Filed Issue #{report.issue.number} in{" "}
+                  {report.issue.repository}
+                </a>
+              </>
+            ) : null}
+          </span>
+        </AlertDescription>
+      </Alert>
+    )
+  }
   if (report.outcome === "failed")
     return (
       <Alert variant="destructive" className="w-fit">
@@ -488,7 +539,11 @@ export function ConversationView({
                             </Alert>
                           )}
                           {message.reports.map((report) => (
-                            <ReportNotice key={report.id} report={report} />
+                            <ReportNotice
+                              key={report.id}
+                              report={report}
+                              audit={!!audit}
+                            />
                           ))}
                           {audit && message.refused && (
                             <Badge variant="outline" className="text-xs">
