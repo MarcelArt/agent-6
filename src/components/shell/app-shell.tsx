@@ -1,7 +1,7 @@
 import { Link, useLocation, useRouteContext } from "@tanstack/react-router"
 import { ShieldCheckIcon } from "lucide-react"
 import { cn } from "cn"
-import { adminNav, chatNav } from "./nav"
+import { adminNav, chatNav, countMeaning } from "./nav"
 import { UserMenuContent, initials } from "./user-menu"
 import type { NavItem } from "./nav"
 import type { SessionUser } from "@/lib/roles"
@@ -33,11 +33,15 @@ export function AppShell({
 }) {
   const pathname = useLocation({ select: (location) => location.pathname })
   // Loaded with the user on every navigation; null for anyone but an Admin.
-  const pendingTickets = useRouteContext({
+  const navCounts = useRouteContext({
     from: "__root__",
-    select: (context) => context.pendingTickets,
+    select: (context) => context.navCounts,
   })
-  const counts: Counts = { pendingTickets: pendingTickets ?? 0 }
+  const counts: Counts = navCounts ?? {
+    pendingTickets: 0,
+    databaseConnectionsNeedingSecret: 0,
+    logConnectionsNeedingSecret: 0,
+  }
   return (
     <div className="flex h-svh flex-col overflow-hidden md:flex-row">
       <Rail user={user} pathname={pathname} counts={counts} />
@@ -54,7 +58,9 @@ const countText = (count: number) => (count > 99 ? "99+" : String(count))
 /** "All Tickets, 3 waiting for review" for screen readers and tooltips. */
 function itemLabel(item: NavItem, counts: Counts) {
   const count = item.badge ? counts[item.badge] : 0
-  return count ? `${item.label}, ${count} waiting for review` : item.label
+  return item.badge && count
+    ? `${item.label}, ${countMeaning[item.badge](count)}`
+    : item.label
 }
 
 function UserAvatar({ user, size }: { user: SessionUser; size?: "sm" }) {
@@ -239,7 +245,10 @@ function TabBar({ user, pathname, counts }: ShellProps) {
             Admin
             {adminCount > 0 && (
               <span className="sr-only">
-                , {adminCount} tickets waiting for review
+                {adminNav
+                  .filter((item) => item.badge && counts[item.badge] > 0)
+                  .map((item) => `, ${itemLabel(item, counts)}`)
+                  .join("")}
               </span>
             )}
           </DropdownMenuTrigger>
@@ -267,7 +276,7 @@ function TabBar({ user, pathname, counts }: ShellProps) {
                         className="ml-auto"
                       />
                       <span className="sr-only">
-                        , {counts[item.badge]} waiting for review
+                        , {countMeaning[item.badge](counts[item.badge])}
                       </span>
                     </>
                   )}

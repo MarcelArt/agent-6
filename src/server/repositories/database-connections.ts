@@ -1,7 +1,7 @@
 import "@tanstack/react-start/server-only"
 
 import { randomUUID } from "node:crypto"
-import { and, asc, count, eq, notExists, sql } from "drizzle-orm"
+import { and, asc, count, eq, isNull, notExists, sql } from "drizzle-orm"
 import { getDb } from "./db"
 import {
   application,
@@ -28,9 +28,19 @@ const columns = {
   testOk: connection.testOk,
   testMessage: connection.testMessage,
   writable: connection.writable,
+  needsSecret: needsSecret(),
+}
+/** Imported from a Setup File without its password, which is still missing. */
+function needsSecret() {
+  return sql<boolean>`(${connection.encryptedPassword} is null)`.mapWith(
+    Boolean
+  )
 }
 function publicRecord(
-  row: Pick<typeof connection.$inferSelect, keyof typeof columns>
+  row: Pick<
+    typeof connection.$inferSelect,
+    Exclude<keyof typeof columns, "needsSecret">
+  > & { needsSecret: boolean }
 ): DatabaseConnection {
   return {
     id: row.id,
@@ -43,13 +53,15 @@ function publicRecord(
     tags: JSON.parse(row.tags),
     description: row.description,
     test: { ok: row.testOk, message: row.testMessage, writable: row.writable },
+    needsSecret: row.needsSecret,
   }
 }
 function testValues(test: ConnectionTest) {
   return { testOk: test.ok, testMessage: test.message, writable: test.writable }
 }
 export type SavedConnectionInput = Omit<DatabaseConnectionInput, "password"> & {
-  encryptedPassword: string
+  /** Null keeps it Needs Secret. */
+  encryptedPassword: string | null
 }
 export function createDatabaseConnectionsRepository(db: Db = getDb()) {
   function findById(id: string) {
@@ -87,6 +99,15 @@ export function createDatabaseConnectionsRepository(db: Db = getDb()) {
     /** Only the executor and management may request a credential, never a loader. */
     credentials(id: string) {
       return db.select().from(connection).where(eq(connection.id, id)).get()
+    },
+    /** Every connection, oldest first. */
+    all() {
+      return db
+        .select(columns)
+        .from(connection)
+        .orderBy(asc(connection.createdAt), asc(connection.id))
+        .all()
+        .map(publicRecord)
     },
     list(
       options: { search?: string; page?: number; availableFor?: string } = {}
@@ -141,6 +162,16 @@ export function createDatabaseConnectionsRepository(db: Db = getDb()) {
         .where(eq(connection.id, id))
         .run()
       return findById(id)!
+    },
+    /** For the nav badge. */
+    needsSecretCount() {
+      return (
+        db
+          .select({ value: count() })
+          .from(connection)
+          .where(isNull(connection.encryptedPassword))
+          .get()?.value ?? 0
+      )
     },
     recordTest(id: string, test: ConnectionTest) {
       db.update(connection)

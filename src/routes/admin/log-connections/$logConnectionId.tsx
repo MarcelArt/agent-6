@@ -89,7 +89,7 @@ function Page() {
         backLink={<Link to="/admin/log-connections" search={search} />}
       >
         <span className="max-sm:hidden">
-          <ConnectionStatus test={connection.test} />
+          <ConnectionStatus connection={connection} />
         </span>
         <DetailActions>
           <Button
@@ -141,6 +141,8 @@ function Page() {
           })
         }
         onSaved={async () => {
+          // An earlier Test or Remove error no longer applies.
+          setProblem(undefined)
           await router.invalidate()
         }}
         cancel={

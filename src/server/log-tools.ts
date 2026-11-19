@@ -51,7 +51,12 @@ export function createLogTools(
     const available = connections ?? createLogConnectionsRepository()
     const baseSelector = available.baseSelector(applicationId, logConnectionId)
     const saved = available.credentials(logConnectionId)
-    if (baseSelector === undefined || !saved)
+    // A Needs Secret connection is out of scope, like a detached one.
+    if (
+      baseSelector === undefined ||
+      !saved ||
+      (saved.authType !== "none" && !saved.encryptedAuthSecret)
+    )
       throw new LogQueryError(UNAVAILABLE)
     try {
       const target: LokiTarget = {

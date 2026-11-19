@@ -9,6 +9,7 @@ import {
   listAvailableLogConnections,
 } from "@/server/log-connections.functions"
 import { BaseSelectorForm } from "@/components/log-connections/base-selector-form"
+import { NeedsSecretBadge } from "@/components/connections/needs-secret"
 import { useState } from "react"
 import { Link, createFileRoute, useRouter } from "@tanstack/react-router"
 import {
@@ -407,13 +408,16 @@ function Page() {
                       {resource.name}
                     </Link>
                     <span className="text-xs text-muted-foreground">
-                      {!resource.test.ok
-                        ? "Connection test failed"
-                        : resource.test.writable
-                          ? "Writable role · Supply a read-only role"
-                          : "Read-only role"}
+                      {resource.needsSecret
+                        ? "The agent cannot use it until its password is entered"
+                        : !resource.test.ok
+                          ? "Connection test failed"
+                          : resource.test.writable
+                            ? "Writable role · Supply a read-only role"
+                            : "Read-only role"}
                     </span>
                   </div>
+                  {resource.needsSecret && <NeedsSecretBadge />}
                   <DropdownMenu>
                     <DropdownMenuTrigger
                       render={
@@ -483,12 +487,21 @@ function Page() {
                     <span className="font-mono text-xs break-all text-muted-foreground">
                       {baseSelector}
                     </span>
-                    {!resource.test.ok && (
-                      <span className="text-xs text-destructive">
-                        Connection test failed
+                    {resource.needsSecret ? (
+                      <span className="text-xs text-muted-foreground">
+                        The agent cannot use it until its{" "}
+                        {resource.authType === "basic" ? "password" : "token"}{" "}
+                        is entered
                       </span>
+                    ) : (
+                      !resource.test.ok && (
+                        <span className="text-xs text-destructive">
+                          Connection test failed
+                        </span>
+                      )
                     )}
                   </div>
+                  {resource.needsSecret && <NeedsSecretBadge />}
                   <DropdownMenu>
                     <DropdownMenuTrigger
                       render={

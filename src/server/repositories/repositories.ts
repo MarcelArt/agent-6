@@ -90,6 +90,16 @@ export function createRepositoriesRepository(db: Db = getDb()) {
         .map(toRepository)
     },
 
+    /** Every Repository, oldest first. */
+    all(): Array<Repository> {
+      return db
+        .select()
+        .from(repository)
+        .orderBy(asc(repository.createdAt), asc(repository.id))
+        .all()
+        .map(toRepository)
+    },
+
     findById(id: string): Repository | undefined {
       const row = db
         .select()

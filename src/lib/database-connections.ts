@@ -21,12 +21,24 @@ export type ConnectionTest = {
 export type DatabaseConnection = Omit<DatabaseConnectionInput, "password"> & {
   id: string
   test: ConnectionTest
+  /**
+   * Imported from a Setup File without its password, which an Admin has not
+   * entered yet. The agent cannot use it for any Application until then.
+   */
+  needsSecret: boolean
 }
 /** All the connection context the model receives. */
 export type DatabaseConnectionContext = Pick<
   DatabaseConnection,
   "id" | "name" | "tags" | "description"
 >
+/** The stored test result of a Needs Secret connection. Nothing was tried. */
+export const NEEDS_PASSWORD_TEST: ConnectionTest = {
+  ok: false,
+  writable: null,
+  message:
+    "Enter the password, then save. Agent 6 has not tried to connect without it.",
+}
 export type DatabaseConnectionProblem = {
   ok: false
   message: string

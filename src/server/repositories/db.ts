@@ -17,9 +17,18 @@ const MIGRATIONS_FOLDER = resolve("drizzle")
 export function openDb(file: string) {
   const sqlite = new Database(file)
   sqlite.pragma("journal_mode = WAL")
-  sqlite.pragma("foreign_keys = ON")
   const db = drizzle(sqlite, { schema })
+  // Drizzle runs every migration inside one transaction, where the
+  // `PRAGMA foreign_keys=OFF` of a generated table rebuild does nothing. With
+  // foreign keys on, dropping the old table would cascade-delete the rows
+  // that point at it, so they stay off until the migrations are done.
+  sqlite.pragma("foreign_keys = OFF")
   migrate(db, { migrationsFolder: MIGRATIONS_FOLDER })
+  if ((sqlite.pragma("foreign_key_check") as Array<unknown>).length)
+    throw new Error(
+      "A database migration left rows that point at missing records. Restore the backup of DATA_DIR and report this."
+    )
+  sqlite.pragma("foreign_keys = ON")
   return db
 }
 

@@ -1,5 +1,6 @@
 import { createRouter as createTanStackRouter } from "@tanstack/react-router"
 import { routeTree } from "./routeTree.gen"
+import type { SetupFileImportSummary } from "@/lib/setup-file"
 
 export function getRouter() {
   const router = createTanStackRouter({
@@ -16,5 +17,9 @@ export function getRouter() {
 declare module "@tanstack/react-router" {
   interface Register {
     router: ReturnType<typeof getRouter>
+  }
+  interface HistoryState {
+    /** What a Setup File import did, shown once on the Applications list. */
+    setupImport?: SetupFileImportSummary
   }
 }

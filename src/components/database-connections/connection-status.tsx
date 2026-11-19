@@ -5,9 +5,18 @@ import {
 } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
-import type { ConnectionTest } from "@/lib/database-connections"
+import {
+  NeedsSecretBadge,
+  NeedsSecretNotice,
+} from "@/components/connections/needs-secret"
+import type { DatabaseConnection } from "@/lib/database-connections"
 
-export function ConnectionStatus({ test }: { test: ConnectionTest }) {
+export function ConnectionStatus({
+  connection: { test, needsSecret },
+}: {
+  connection: DatabaseConnection
+}) {
+  if (needsSecret) return <NeedsSecretBadge />
   return (
     <Badge variant="outline" className="text-xs">
       {!test.ok ? (
@@ -21,7 +30,12 @@ export function ConnectionStatus({ test }: { test: ConnectionTest }) {
     </Badge>
   )
 }
-export function ConnectionNotice({ test }: { test: ConnectionTest }) {
+export function ConnectionNotice({
+  connection: { test, needsSecret },
+}: {
+  connection: DatabaseConnection
+}) {
+  if (needsSecret) return <NeedsSecretNotice secret="password" />
   return (
     <Alert>
       {!test.ok ? (

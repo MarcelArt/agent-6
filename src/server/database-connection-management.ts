@@ -10,7 +10,7 @@ import type { Auth } from "./auth"
 import type { DatabaseConnectionsRepository } from "./repositories/database-connections"
 import type { ApplicationsRepository } from "./repositories/applications"
 import type { DatabaseConnectionInput } from "@/lib/database-connections"
-import { SSL_MODES } from "@/lib/database-connections"
+import { NEEDS_PASSWORD_TEST, SSL_MODES } from "@/lib/database-connections"
 import { tidyTags } from "@/lib/repositories"
 
 export class DatabaseConnectionError extends Error {
@@ -21,7 +21,10 @@ export class DatabaseConnectionError extends Error {
     super(message)
   }
 }
-function validInput(input: DatabaseConnectionInput): DatabaseConnectionInput {
+/** The rules every saved Database Connection follows, also applied to imported ones. */
+export function validDatabaseConnectionInput(
+  input: DatabaseConnectionInput
+): DatabaseConnectionInput {
   const value = {
     ...input,
     name: input.name.trim(),
@@ -96,8 +99,13 @@ export function createDatabaseConnectionManagement(
       }
     }
   }
+  /** The saved settings and password, or a refusal while it Needs Secret. */
   function credentials(id: string) {
     const saved = connections.credentials(id)!
+    if (saved.encryptedPassword === null)
+      throw new DatabaseConnectionError(
+        "Enter this connection's password and save first. Agent 6 does not try to connect without it."
+      )
     try {
       return {
         ...saved,
@@ -126,14 +134,31 @@ export function createDatabaseConnectionManagement(
         ? { connection: found, applications: connections.applicationsOf(id) }
         : null
     },
+    /**
+     * A blank password keeps the saved one, and keeps a Needs Secret
+     * connection Needs Secret without testing it. A new connection's blank
+     * password is an empty password.
+     */
     async save(headers: Headers, input: DatabaseConnectionInput, id?: string) {
       await admin(headers)
       if (id) existing(id)
-      const value = validInput(input)
-      const password = value.password || (id ? credentials(id).password : "")
-      const test = await probe({ ...value, password })
+      const value = validDatabaseConnectionInput(input)
+      const password =
+        value.password ||
+        (!id
+          ? ""
+          : connections.credentials(id)!.encryptedPassword === null
+            ? null
+            : credentials(id).password)
+      const test =
+        password === null
+          ? NEEDS_PASSWORD_TEST
+          : await probe({ ...value, password })
       const { password: _password, ...publicValues } = value
-      const saved = { ...publicValues, encryptedPassword: encrypt(password) }
+      const saved = {
+        ...publicValues,
+        encryptedPassword: password === null ? null : encrypt(password),
+      }
       return id
         ? connections.update(id, saved, test)
         : connections.create(saved, test)

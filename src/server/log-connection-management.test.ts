@@ -203,17 +203,22 @@ describe("Log Connections", () => {
       await management.list(admin),
     ]) {
       expect(JSON.stringify(result)).not.toContain(SECRET)
-      expect(JSON.stringify(result)).not.toMatch(/[sS]ecret/)
+      expect(JSON.stringify(result)).not.toMatch(/[aA]uthSecret/)
     }
     expect(readFileSync(file).includes(Buffer.from(SECRET))).toBe(false)
-    // Changing the auth type needs a new secret; basic sends user:password.
-    await expect(
-      management.save(
-        admin,
-        { ...INPUT, authType: "basic", authUsername: "reader", authSecret: "" },
-        saved.id
-      )
-    ).rejects.toMatchObject({ field: "authSecret" })
+    // Changing the auth type without a new secret never reuses the old one:
+    // the connection Needs Secret and nothing tries to connect.
+    const requests = seen.length
+    const blank = await management.save(
+      admin,
+      { ...INPUT, authType: "basic", authUsername: "reader", authSecret: "" },
+      saved.id
+    )
+    expect(blank).toMatchObject({ needsSecret: true, test: { ok: false } })
+    expect(blank.test.message).toMatch(/Enter the password/)
+    expect(connections.credentials(saved.id)?.encryptedAuthSecret).toBeNull()
+    expect(seen).toHaveLength(requests)
+    // Basic sends user:password.
     await management.save(
       admin,
       { ...INPUT, authType: "basic", authUsername: "reader", authSecret: "pw" },
@@ -480,5 +485,54 @@ describe("Log tools", () => {
       "Never quote log lines, stack traces or service names"
     )
     expect(instructions).toContain("ask when the problem happened")
+  })
+})
+
+describe("Needs Secret", () => {
+  /** A bearer Log Connection imported from a Setup File, without its token. */
+  function imported() {
+    const { authSecret: _secret, ...values } = INPUT
+    return connections.create(
+      { ...values, baseUrl, name: "Imported", encryptedAuthSecret: null },
+      { ok: false, message: "Enter the token, then save." }
+    )
+  }
+  it("tests nothing until the secret is entered, then clears the state and tests", async () => {
+    const saved = imported()
+    expect(saved.needsSecret).toBe(true)
+    await expect(management.test(admin, saved.id)).rejects.toThrow(
+      /Enter this connection's token/
+    )
+    await expect(
+      management.countStreams(admin, saved.id, '{app="billing"}')
+    ).rejects.toThrow(/Enter this connection's token/)
+    // A blank secret saves the other fields and keeps it Needs Secret.
+    const blank = await management.save(
+      admin,
+      { ...INPUT, authSecret: "", description: "Edited." },
+      saved.id
+    )
+    expect(blank).toMatchObject({
+      needsSecret: true,
+      description: "Edited.",
+      test: { ok: false, message: expect.stringMatching(/Enter the token/) },
+    })
+    expect(seen).toEqual([])
+    const entered = await management.save(admin, INPUT, saved.id)
+    expect(entered).toMatchObject({ needsSecret: false, test: { ok: true } })
+    expect(seen.at(-1)!.headers.authorization).toBe(`Bearer ${SECRET}`)
+  })
+  it("is left out of the Application's scope and the log tools, never queried without its header", async () => {
+    const saved = imported()
+    const app = application()
+    await management.attach(admin, app.id, saved.id, '{app="billing"}')
+    expect(applications.scope(app.id)!.attachments).toEqual([])
+    expect(
+      applications.scope(app.id, { includeNeedsSecret: true })!.attachments
+    ).toHaveLength(1)
+    const tools = createLogTools(app.id, undefined, connections)
+    await expect(tools.query(query(saved.id))).rejects.toThrow(/not available/)
+    expect(seen).toEqual([])
+    expect(connections.needsSecretCount()).toBe(1)
   })
 })

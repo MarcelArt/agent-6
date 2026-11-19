@@ -10,7 +10,7 @@ Every logged-in screen is one full-height frame (`flex h-svh`) of up to three pa
 
 | Pane | Size | Contents |
 |---|---|---|
-| **Rail** | `w-14 shrink-0 border-r bg-sidebar py-2`, items `gap-1` | Top: product mark (a `size-8 rounded-lg bg-primary` square with "6"). Then the Chat, History and Tickets icons. Admins only: a separator, then All Conversations, All Tickets (with a count badge of pending Tickets), Users, Repositories, Applications, Database Connections, Log Connections, Settings. Bottom (`mt-auto`): the current user's Avatar. |
+| **Rail** | `w-14 shrink-0 border-r bg-sidebar py-2`, items `gap-1` | Top: product mark (a `size-8 rounded-lg bg-primary` square with "6"). Then the Chat, History and Tickets icons. Admins only: a separator, then All Conversations, All Tickets (with a count badge of pending Tickets), Users, Repositories, Applications, Database Connections and Log Connections (each with a count badge of connections that need a secret), Settings. Bottom (`mt-auto`): the current user's Avatar. |
 | **List pane** | `w-80 shrink-0 border-r` | Records of the current section: Repositories, Conversations, Users and so on. |
 | **Detail pane** | `flex-1 min-w-0` | The selected record's form, a Conversation, the Application picker, or an empty hint. |
 

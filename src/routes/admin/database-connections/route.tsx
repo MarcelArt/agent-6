@@ -8,6 +8,7 @@ import {
 } from "@tanstack/react-router"
 import {
   DatabaseIcon,
+  KeyRoundIcon,
   PlusIcon,
   CircleCheckIcon,
   CircleAlertIcon,
@@ -23,6 +24,7 @@ import {
   RecordRow,
   RecordSearch,
 } from "@/components/records/record-list"
+import { NeedsSecretBadge } from "@/components/connections/needs-secret"
 import { DetailPane, ListPane } from "@/components/shell/panes"
 import { buttonVariants } from "@/components/ui/button"
 import { listDatabaseConnections } from "@/server/database-connections.functions"
@@ -92,7 +94,9 @@ function Layout() {
                 }
                 selected={selectedId === connection.id}
                 icon={
-                  connection.test.ok ? (
+                  connection.needsSecret ? (
+                    <KeyRoundIcon className="text-muted-foreground" />
+                  ) : connection.test.ok ? (
                     connection.test.writable ? (
                       <TriangleAlertIcon className="text-muted-foreground" />
                     ) : (
@@ -103,12 +107,15 @@ function Layout() {
                   )
                 }
                 name={connection.name}
+                property={connection.needsSecret && <NeedsSecretBadge />}
                 detail={
-                  !connection.test.ok
-                    ? connection.test.message
-                    : connection.test.writable
-                      ? "Writable role · Supply a read-only role"
-                      : "Ready"
+                  connection.needsSecret
+                    ? "Enter the password so the agent can use it"
+                    : !connection.test.ok
+                      ? connection.test.message
+                      : connection.test.writable
+                        ? "Writable role · Supply a read-only role"
+                        : "Ready"
                 }
                 secondary={connection.tags.join(", ")}
               />

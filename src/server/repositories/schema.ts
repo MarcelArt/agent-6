@@ -134,7 +134,11 @@ export const databaseConnection = sqliteTable("database_connection", {
   port: integer("port").notNull(),
   database: text("database").notNull(),
   user: text("user").notNull(),
-  encryptedPassword: text("encrypted_password").notNull(),
+  /**
+   * Null means Needs Secret: imported from a Setup File without its password.
+   * An empty password is stored encrypted like any other.
+   */
+  encryptedPassword: text("encrypted_password"),
   sslMode: text("ssl_mode").notNull(),
   tags: text("tags").notNull().default("[]"),
   description: text("description").notNull().default(""),
@@ -170,7 +174,10 @@ export const logConnection = sqliteTable("log_connection", {
   /** "none", "basic" or "bearer". */
   authType: text("auth_type").notNull(),
   authUsername: text("auth_username").notNull().default(""),
-  /** The basic auth password or bearer token. Null when authType is "none". */
+  /**
+   * The basic auth password or bearer token. Null when authType is "none";
+   * null with another authType means Needs Secret.
+   */
   encryptedAuthSecret: text("encrypted_auth_secret"),
   tenantId: text("tenant_id").notNull().default(""),
   tags: text("tags").notNull().default("[]"),

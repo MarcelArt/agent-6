@@ -1,7 +1,11 @@
 import { CircleAlertIcon, CircleCheckIcon } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
-import type { LogConnectionTest } from "@/lib/log-connections"
+import {
+  NeedsSecretBadge,
+  NeedsSecretNotice,
+} from "@/components/connections/needs-secret"
+import type { LogConnection, LogConnectionTest } from "@/lib/log-connections"
 
 function Icon({ test }: { test: LogConnectionTest }) {
   return test.ok ? (
@@ -10,7 +14,12 @@ function Icon({ test }: { test: LogConnectionTest }) {
     <CircleAlertIcon className="text-destructive" />
   )
 }
-export function ConnectionStatus({ test }: { test: LogConnectionTest }) {
+export function ConnectionStatus({
+  connection: { test, needsSecret },
+}: {
+  connection: LogConnection
+}) {
+  if (needsSecret) return <NeedsSecretBadge />
   return (
     <Badge variant="outline" className="text-xs">
       <Icon test={test} />
@@ -18,7 +27,15 @@ export function ConnectionStatus({ test }: { test: LogConnectionTest }) {
     </Badge>
   )
 }
-export function ConnectionNotice({ test }: { test: LogConnectionTest }) {
+export function ConnectionNotice({
+  connection: { test, needsSecret, authType },
+}: {
+  connection: LogConnection
+}) {
+  if (needsSecret)
+    return (
+      <NeedsSecretNotice secret={authType === "basic" ? "password" : "token"} />
+    )
   return (
     <Alert>
       <Icon test={test} />

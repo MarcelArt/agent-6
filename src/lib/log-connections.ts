@@ -21,6 +21,18 @@ export type LogConnectionTest = { ok: boolean; message: string }
 export type LogConnection = Omit<LogConnectionInput, "authSecret"> & {
   id: string
   test: LogConnectionTest
+  /**
+   * Its auth type needs a password or token that an Admin has not entered
+   * yet. The agent cannot use it for any Application until then.
+   */
+  needsSecret: boolean
+}
+/** The stored test result of a Needs Secret connection. Nothing was tried. */
+export function needsSecretTest(authType: LogAuthType): LogConnectionTest {
+  return {
+    ok: false,
+    message: `Enter the ${authType === "basic" ? "password" : "token"}, then save. Agent 6 has not tried to connect without it.`,
+  }
 }
 export type LogConnectionField = keyof LogConnectionInput | "baseSelector"
 export type LogConnectionProblem = {

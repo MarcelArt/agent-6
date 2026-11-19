@@ -290,6 +290,7 @@ describe("Advisory decisions", () => {
             user: "private-user",
             sslMode: "verify-full",
             test: { ok: true, message: "", writable: false },
+            needsSecret: false,
           },
         },
         {
@@ -305,6 +306,7 @@ describe("Advisory decisions", () => {
             authUsername: "private-user",
             tenantId: "private-tenant",
             test: { ok: true, message: "" },
+            needsSecret: false,
           },
         },
       ],

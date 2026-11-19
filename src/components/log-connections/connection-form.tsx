@@ -58,7 +58,10 @@ export function ConnectionForm({
     connection?.authType ?? "none"
   )
   const shown = problem ?? outsideProblem
-  const secretSaved = !!connection && connection.authType === authType
+  const sameType = !!connection && connection.authType === authType
+  const secretSaved = sameType && !connection.needsSecret
+  /** Imported without its secret; blank keeps it that way. */
+  const secretMissing = sameType && connection.needsSecret
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
     const formElement = event.currentTarget
@@ -104,7 +107,7 @@ export function ConnectionForm({
       {shown && (!("field" in shown) || !shown.field) && (
         <FormError title="Nothing was changed">{shown.message}</FormError>
       )}
-      {connection && <ConnectionNotice test={connection.test} />}
+      {connection && <ConnectionNotice connection={connection} />}
       <FieldGroup>
         <Field data-invalid={invalid("name")}>
           <FieldLabel htmlFor="log-connection-name">Name</FieldLabel>
@@ -202,17 +205,25 @@ export function ConnectionForm({
               id="log-connection-authSecret"
               name="authSecret"
               type="password"
-              required={!secretSaved}
+              required={!secretSaved && !secretMissing}
               maxLength={4096}
               autoComplete="new-password"
-              placeholder={secretSaved ? "Unchanged" : undefined}
+              placeholder={
+                secretSaved
+                  ? "Unchanged"
+                  : secretMissing
+                    ? "Not entered"
+                    : undefined
+              }
               aria-invalid={invalid("authSecret")}
               aria-describedby="log-connection-authSecret-hint"
             />
             <FieldDescription id="log-connection-authSecret-hint">
               {secretSaved
                 ? "Saved value unchanged. Type a new one to replace it."
-                : "Encrypted when saved and never shown again."}
+                : secretMissing
+                  ? "Not entered yet. Type it so the agent can use this connection; left blank, the connection keeps needing it."
+                  : "Encrypted when saved and never shown again."}
             </FieldDescription>
             {error("authSecret")}
           </Field>

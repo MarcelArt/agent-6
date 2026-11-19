@@ -73,7 +73,8 @@ export function parseRepositoryReference(
   return { owner, name }
 }
 
-function validInput(input: RepositoryInput): RepositoryInput {
+/** The rules every saved Repository follows, also applied to imported ones. */
+export function validRepositoryInput(input: RepositoryInput): RepositoryInput {
   const trackedBranch = input.trackedBranch.trim()
   if (!trackedBranch) {
     throw new RepositoryError("Pick the Tracked Branch.", "trackedBranch")
@@ -127,42 +128,15 @@ function fromGitHubError(error: unknown, fullName: string): unknown {
   }
 }
 
-export function createRepositoryManagement(
-  deps: {
-    auth?: Auth
-    repositories?: RepositoriesRepository
-    sync?: RepositorySync
-    /** Undefined when `GITHUB_TOKEN` is not set. */
-    github?: GitHub
-    /** Names of the Applications a Repository is attached to. */
-    applicationsOf?: (repositoryId: string) => Array<string>
-  } = {}
-) {
-  const auth = deps.auth ?? getAuth()
-  const repositories = deps.repositories ?? createRepositoriesRepository()
-  const sync = deps.sync ?? getRepositorySync()
-  const github =
-    "github" in deps
-      ? deps.github
-      : (() => {
-          const { githubToken } = getConfig()
-          return githubToken ? createGitHub(githubToken) : undefined
-        })()
-  const applicationsOf = deps.applicationsOf ?? repositories.applicationsOf
-
+/**
+ * The GitHub checks a new Repository passes: the token can read it, and its
+ * Tracked Branch exists. Both throw a `RepositoryError` for the Admin.
+ * `github` is undefined when `GITHUB_TOKEN` is not set.
+ */
+export function createGitHubChecks(github: GitHub | undefined) {
   function requireGitHub(): GitHub {
     if (!github) throw new RepositoryError(TOKEN_MISSING_MESSAGE)
     return github
-  }
-
-  function existing(repositoryId: string): Repository {
-    const repository = repositories.findById(repositoryId)
-    if (!repository) {
-      throw new RepositoryError(
-        "This Repository no longer exists. Go back to the list of Repositories."
-      )
-    }
-    return repository
   }
 
   /** The repository on GitHub that `reference` names, if the token can read it. */
@@ -186,15 +160,6 @@ export function createRepositoryManagement(
     }
   }
 
-  function refuseConnected(fullName: string) {
-    if (repositories.findByFullName(fullName)) {
-      throw new RepositoryError(
-        `${fullName} is already connected. Open it from the list instead.`,
-        "repository"
-      )
-    }
-  }
-
   async function requireBranch(fullName: string, branch: string) {
     const [owner, name] = fullName.split("/")
     let exists: boolean
@@ -207,6 +172,52 @@ export function createRepositoryManagement(
       throw new RepositoryError(
         `${fullName} has no branch named ${branch}. Pick another Tracked Branch.`,
         "trackedBranch"
+      )
+    }
+  }
+
+  return { requireGitHub, lookUp, requireBranch }
+}
+
+/** The configured GitHub client, or undefined when `GITHUB_TOKEN` is not set. */
+export function configuredGitHub(): GitHub | undefined {
+  const { githubToken } = getConfig()
+  return githubToken ? createGitHub(githubToken) : undefined
+}
+
+export function createRepositoryManagement(
+  deps: {
+    auth?: Auth
+    repositories?: RepositoriesRepository
+    sync?: RepositorySync
+    /** Undefined when `GITHUB_TOKEN` is not set. */
+    github?: GitHub
+    /** Names of the Applications a Repository is attached to. */
+    applicationsOf?: (repositoryId: string) => Array<string>
+  } = {}
+) {
+  const auth = deps.auth ?? getAuth()
+  const repositories = deps.repositories ?? createRepositoriesRepository()
+  const sync = deps.sync ?? getRepositorySync()
+  const github = "github" in deps ? deps.github : configuredGitHub()
+  const applicationsOf = deps.applicationsOf ?? repositories.applicationsOf
+  const { requireGitHub, lookUp, requireBranch } = createGitHubChecks(github)
+
+  function existing(repositoryId: string): Repository {
+    const repository = repositories.findById(repositoryId)
+    if (!repository) {
+      throw new RepositoryError(
+        "This Repository no longer exists. Go back to the list of Repositories."
+      )
+    }
+    return repository
+  }
+
+  function refuseConnected(fullName: string) {
+    if (repositories.findByFullName(fullName)) {
+      throw new RepositoryError(
+        `${fullName} is already connected. Open it from the list instead.`,
+        "repository"
       )
     }
   }
@@ -321,7 +332,7 @@ export function createRepositoryManagement(
     ): Promise<Repository> {
       await requireAdmin({ auth, headers })
       const found = await lookUp(input.reference)
-      const valid = validInput(input)
+      const valid = validRepositoryInput(input)
       await requireBranch(found.fullName, valid.trackedBranch)
       // Checked last, with nothing awaited before the insert.
       refuseConnected(found.fullName)
@@ -340,7 +351,7 @@ export function createRepositoryManagement(
       input: RepositoryInput
     ): Promise<Repository> {
       await requireAdmin({ auth, headers })
-      const valid = validInput(input)
+      const valid = validRepositoryInput(input)
       const before = existing(repositoryId)
       const branchChanged = valid.trackedBranch !== before.trackedBranch
       if (branchChanged) {

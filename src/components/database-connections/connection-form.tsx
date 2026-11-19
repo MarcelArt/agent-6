@@ -100,7 +100,7 @@ export function ConnectionForm({
       {shown && (!("field" in shown) || !shown.field) && (
         <FormError title="Nothing was changed">{shown.message}</FormError>
       )}
-      {connection && <ConnectionNotice test={connection.test} />}
+      {connection && <ConnectionNotice connection={connection} />}
       <FieldGroup>
         {(
           [
@@ -138,7 +138,11 @@ export function ConnectionForm({
               autoFocus={!connection && field === "name"}
               autoComplete={field === "password" ? "new-password" : "off"}
               placeholder={
-                field === "password" && connection ? "Unchanged" : undefined
+                field === "password" && connection
+                  ? connection.needsSecret
+                    ? "Not entered"
+                    : "Unchanged"
+                  : undefined
               }
               aria-invalid={invalid(field)}
               aria-describedby={
@@ -148,9 +152,11 @@ export function ConnectionForm({
             />
             {field === "password" && (
               <FieldDescription id="connection-password-hint">
-                {connection
-                  ? "Saved password unchanged. Type a new password to replace it."
-                  : "Encrypted when saved. Use a dedicated read-only Postgres role."}
+                {connection?.needsSecret
+                  ? "Not entered yet. Type it so the agent can use this connection; left blank, the connection keeps needing it."
+                  : connection
+                    ? "Saved password unchanged. Type a new password to replace it."
+                    : "Encrypted when saved. Use a dedicated read-only Postgres role."}
               </FieldDescription>
             )}
             {invalid(field) && (

@@ -24,7 +24,10 @@ export class ApplicationError extends Error {
     this.name = "ApplicationError"
   }
 }
-function validInput(input: ApplicationInput): ApplicationInput {
+/** The rules every saved Application follows, also applied to imported ones. */
+export function validApplicationInput(
+  input: ApplicationInput
+): ApplicationInput {
   const value = {
     name: input.name.trim(),
     description: input.description.trim(),
@@ -92,13 +95,14 @@ export function createApplicationManagement(
       await requireSession({ auth, headers })
       return applications.scope(applicationId)
     },
+    /** The Admin's view, which also lists Attachments of Needs Secret connections. */
     async get(headers: Headers, applicationId: string) {
       await requireAdmin({ auth, headers })
-      return applications.scope(applicationId)
+      return applications.scope(applicationId, { includeNeedsSecret: true })
     },
     async create(headers: Headers, input: ApplicationInput) {
       await requireAdmin({ auth, headers })
-      return applications.create(validInput(input))
+      return applications.create(validApplicationInput(input))
     },
     async update(
       headers: Headers,
@@ -107,7 +111,7 @@ export function createApplicationManagement(
     ) {
       await requireAdmin({ auth, headers })
       existing(applicationId)
-      applications.update(applicationId, validInput(input))
+      applications.update(applicationId, validApplicationInput(input))
       return existing(applicationId)
     },
     async remove(headers: Headers, applicationId: string) {

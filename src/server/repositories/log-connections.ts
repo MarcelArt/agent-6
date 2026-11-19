@@ -1,7 +1,7 @@
 import "@tanstack/react-start/server-only"
 
 import { randomUUID } from "node:crypto"
-import { and, asc, count, eq, notExists, sql } from "drizzle-orm"
+import { and, asc, count, eq, isNull, ne, notExists, sql } from "drizzle-orm"
 import { getDb } from "./db"
 import {
   application,
@@ -26,9 +26,20 @@ const columns = {
   description: connection.description,
   testOk: connection.testOk,
   testMessage: connection.testMessage,
+  needsSecret: sql<boolean>`(${needsSecret()})`.mapWith(Boolean),
+}
+/** Its auth type needs a password or token that is still missing. */
+function needsSecret() {
+  return and(
+    ne(connection.authType, "none"),
+    isNull(connection.encryptedAuthSecret)
+  )!
 }
 function publicRecord(
-  row: Pick<typeof connection.$inferSelect, keyof typeof columns>
+  row: Pick<
+    typeof connection.$inferSelect,
+    Exclude<keyof typeof columns, "needsSecret">
+  > & { needsSecret: boolean }
 ): LogConnection {
   return {
     id: row.id,
@@ -40,6 +51,7 @@ function publicRecord(
     tags: JSON.parse(row.tags),
     description: row.description,
     test: { ok: row.testOk, message: row.testMessage },
+    needsSecret: row.needsSecret,
   }
 }
 function testValues(test: LogConnectionTest) {
@@ -84,6 +96,15 @@ export function createLogConnectionsRepository(db: Db = getDb()) {
     /** Only the Loki client's callers may request a credential, never a loader. */
     credentials(id: string) {
       return db.select().from(connection).where(eq(connection.id, id)).get()
+    },
+    /** Every connection, oldest first. */
+    all() {
+      return db
+        .select(columns)
+        .from(connection)
+        .orderBy(asc(connection.createdAt), asc(connection.id))
+        .all()
+        .map(publicRecord)
     },
     list(
       options: { search?: string; page?: number; availableFor?: string } = {}
@@ -142,6 +163,16 @@ export function createLogConnectionsRepository(db: Db = getDb()) {
         .where(eq(connection.id, id))
         .run()
       return findById(id)!
+    },
+    /** For the nav badge. */
+    needsSecretCount() {
+      return (
+        db
+          .select({ value: count() })
+          .from(connection)
+          .where(needsSecret())
+          .get()?.value ?? 0
+      )
     },
     recordTest(id: string, test: LogConnectionTest) {
       db.update(connection)

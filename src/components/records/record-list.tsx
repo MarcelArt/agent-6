@@ -33,18 +33,23 @@ import {
 
 type LinkElement = React.ReactElement<Record<string, unknown>>
 
-/** Section name, record count and the "+" link to the create form. */
+/**
+ * Section name, record count and the "+" link to the create form. `actions`
+ * (`RecordListAction`s) sit before the "+".
+ */
 export function RecordListHeader({
   title,
   count,
   addLabel,
   addLink,
+  actions,
 }: {
   title: string
   count?: number
   /** For example "Connect repository". */
   addLabel: string
   addLink: LinkElement
+  actions?: React.ReactNode
 }) {
   const add = useRender({
     render: addLink,
@@ -63,9 +68,34 @@ export function RecordListHeader({
           {count}
         </span>
       )}
-      <div className="ml-auto flex items-center">{add}</div>
+      <div className="ml-auto flex items-center">
+        {actions}
+        {add}
+      </div>
     </PaneHeader>
   )
+}
+
+/** A ghost icon link in a list header, named for screen readers and on hover. */
+export function RecordListAction({
+  label,
+  link,
+  children,
+}: {
+  label: string
+  link: LinkElement
+  /** The icon. */
+  children: React.ReactNode
+}) {
+  return useRender({
+    render: link,
+    props: {
+      "aria-label": label,
+      title: label,
+      className: buttonVariants({ variant: "ghost", size: "icon-sm" }),
+      children,
+    },
+  })
 }
 
 /** The row under the header that holds the search and any filter. */

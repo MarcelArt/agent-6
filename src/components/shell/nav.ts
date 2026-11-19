@@ -12,6 +12,7 @@ import {
 } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 import type { LinkProps } from "@tanstack/react-router"
+import type { NavCounts } from "@/lib/nav-counts"
 
 export type NavItem = {
   label: string
@@ -19,7 +20,7 @@ export type NavItem = {
   icon: LucideIcon
   isActive: (pathname: string) => boolean
   /** A count shown on the item, from the root route's context. */
-  badge?: "pendingTickets"
+  badge?: keyof NavCounts
 }
 
 const under = (base: string) => (pathname: string) =>
@@ -89,12 +90,14 @@ export const adminNav: Array<NavItem> = [
     to: "/admin/database-connections",
     icon: DatabaseIcon,
     isActive: under("/admin/database-connections"),
+    badge: "databaseConnectionsNeedingSecret",
   },
   {
     label: "Log Connections",
     to: "/admin/log-connections",
     icon: ScrollTextIcon,
     isActive: under("/admin/log-connections"),
+    badge: "logConnectionsNeedingSecret",
   },
   {
     label: "Settings",
@@ -103,3 +106,13 @@ export const adminNav: Array<NavItem> = [
     isActive: under("/admin/settings"),
   },
 ]
+
+/** What a nav count means, for screen readers and tooltips. */
+export const countMeaning: Record<keyof NavCounts, (count: number) => string> =
+  {
+    pendingTickets: (count) => `${count} waiting for review`,
+    databaseConnectionsNeedingSecret: (count) =>
+      `${count} ${count === 1 ? "needs" : "need"} a secret`,
+    logConnectionsNeedingSecret: (count) =>
+      `${count} ${count === 1 ? "needs" : "need"} a secret`,
+  }

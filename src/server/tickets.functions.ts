@@ -43,10 +43,6 @@ export const getTicket = createServerFn({ method: "GET" })
     )
   )
 
-export const countPendingTickets = createServerFn({ method: "GET" }).handler(
-  () => createTicketManagement().pendingCount(getRequestHeaders())
-)
-
 export const acceptTicket = createServerFn({ method: "POST" })
   .validator(ticketEdits.extend({ ticketId: z.string() }))
   .handler(async ({ data }): Promise<TicketResult> => {

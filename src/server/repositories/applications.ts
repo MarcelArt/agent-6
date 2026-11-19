@@ -43,6 +43,14 @@ export function createApplicationsRepository(db: Db = getDb()) {
   }
   return {
     findById,
+    /** Every Application, oldest first. */
+    all(): Array<Application> {
+      return db
+        .select(columns)
+        .from(application)
+        .orderBy(asc(application.createdAt), asc(application.id))
+        .all()
+    },
     count(search?: string) {
       return (
         db
@@ -109,8 +117,15 @@ export function createApplicationsRepository(db: Db = getDb()) {
         )
         .run()
     },
-    /** Explicit Attachments alone determine scope; this query never matches Tags. */
-    scope(applicationId: string): ApplicationScope | null {
+    /**
+     * Explicit Attachments alone determine scope; this query never matches
+     * Tags. Needs Secret connections are left out unless the caller is the
+     * Admin's view of the Application, which shows them with a badge.
+     */
+    scope(
+      applicationId: string,
+      options: { includeNeedsSecret?: boolean } = {}
+    ): ApplicationScope | null {
       const found = findById(applicationId)
       if (!found) return null
       const ids = db
@@ -139,7 +154,12 @@ export function createApplicationsRepository(db: Db = getDb()) {
           ...createLogConnectionsRepository(db)
             .attached(applicationId)
             .map((item) => ({ kind: "log-connection" as const, ...item })),
-        ],
+        ].filter(
+          (item) =>
+            options.includeNeedsSecret ||
+            item.kind === "repository" ||
+            !item.resource.needsSecret
+        ),
       }
     },
     availableRepositories(

@@ -216,6 +216,8 @@ docker compose up -d --wait
 
 Restore with the image version that created the backup, then upgrade separately. Log in, check connections, open a saved Conversation and picture, and sync a Repository. A new volume can use a distinct Compose project name, for example `docker compose -p agent-6-restore ...`; change the host port before starting it alongside another installation.
 
+A Setup File (**Applications → Export**) fits a different job: seeding a new instance, or sharing chosen Applications with their Repositories, connections and Attachments with another instance that has its own users and keys. It holds no secrets, users, settings, Conversations or Tickets, so it is not a backup. Imported connections that had a password or token wait for an Admin to enter it; see Setup File in [usage.md](usage.md).
+
 ## Upgrades and releases
 
 Read release notes and make a stopped backup with the current image **before** pulling an update:

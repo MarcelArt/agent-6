@@ -72,13 +72,11 @@ beforeEach(async () => {
   client = await headers("client")
   connections = createDatabaseConnectionsRepository(db)
   applications = createApplicationsRepository(db)
-  probe
-    .mockReset()
-    .mockResolvedValue({
-      ok: true,
-      writable: true,
-      message: "Connection successful.",
-    })
+  probe.mockReset().mockResolvedValue({
+    ok: true,
+    writable: true,
+    message: "Connection successful.",
+  })
   management = createDatabaseConnectionManagement({
     auth,
     connections,
@@ -99,7 +97,7 @@ describe("Database Connections", () => {
     expect(connections.credentials(saved.id)?.encryptedPassword).not.toContain(
       INPUT.password
     )
-    expect(decrypt(connections.credentials(saved.id)!.encryptedPassword)).toBe(
+    expect(decrypt(connections.credentials(saved.id)!.encryptedPassword!)).toBe(
       INPUT.password
     )
     const edited = await management.save(
@@ -107,7 +105,7 @@ describe("Database Connections", () => {
       { ...INPUT, password: "", name: "Renamed" },
       saved.id
     )
-    expect(decrypt(connections.credentials(saved.id)!.encryptedPassword)).toBe(
+    expect(decrypt(connections.credentials(saved.id)!.encryptedPassword!)).toBe(
       INPUT.password
     )
     for (const result of [
@@ -124,7 +122,7 @@ describe("Database Connections", () => {
       { ...INPUT, password: "replacement-password" },
       saved.id
     )
-    expect(decrypt(connections.credentials(saved.id)!.encryptedPassword)).toBe(
+    expect(decrypt(connections.credentials(saved.id)!.encryptedPassword!)).toBe(
       "replacement-password"
     )
     expect(readFileSync(file).includes(Buffer.from(INPUT.password))).toBe(false)

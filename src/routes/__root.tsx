@@ -16,19 +16,20 @@ import { buttonVariants } from "@/components/ui/button"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { themeScript } from "@/lib/theme"
 import { getCurrentUser } from "@/server/session.functions"
-import { countPendingTickets } from "@/server/tickets.functions"
+import { getNavCounts } from "@/server/nav.functions"
 
 export const Route = createRootRoute({
   // Runs before every page, on the server for the first one. Routes read
   // `context.user` to decide who may see them; server functions check the
-  // session again themselves. The pending Ticket count (null for anyone but
-  // an Admin) feeds the nav badge and refreshes with every navigation.
+  // session again themselves. The nav counts (pending Tickets, connections
+  // that need a secret; null for anyone but an Admin) feed the nav badges and
+  // refresh with every navigation.
   beforeLoad: async () => {
-    const [user, pendingTickets] = await Promise.all([
+    const [user, navCounts] = await Promise.all([
       getCurrentUser(),
-      countPendingTickets(),
+      getNavCounts(),
     ])
-    return { user, pendingTickets }
+    return { user, navCounts }
   },
   head: () => ({
     meta: [

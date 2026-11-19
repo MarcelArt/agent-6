@@ -166,6 +166,24 @@ Attach a Log Connection under **Attachments → Add Log Connection** on an Appli
 
 The agent can list labels and read log lines only through an Attachment of the Conversation's Application. Its tools take label matchers, a text or regex line filter, a time range and a limit, never a LogQL string. Agent 6 builds the query itself with the Base Selector's matchers first, and refuses a matcher on a Base Selector label. A query covers the last hour by default and at most 24 hours, returns at most 200 lines of at most 2000 characters and 48 KB in total, times out after 10 seconds, and tells the model when output was cut.
 
+## Setup File
+
+A Setup File copies chosen Applications, with the Repositories, Database Connections and Log Connections attached to them, from one Agent 6 instance to another, or adds them to an instance that already has setup. It is a JSON file, `agent6-setup-YYYY-MM-DD.json`, and never holds a connection password or token ([ADR 0005](adr/0005-setup-file-without-secrets.md)). It also leaves out users, settings, Conversations, Tickets and Filed Issues. It is not a backup: see Backup and restore in [setup.md](setup.md).
+
+**Export.** On **Applications**, use the export (download) action in the list header. Choose Applications, or **Select all**, and **Export**. The file holds the chosen Applications, every Repository and connection attached to at least one of them, and their Attachments and Base Selectors. The dialog says how many resources are left out because no chosen Application uses them. Agent 6 refuses to export two chosen Applications with the same name, or two included connections to the same database or Loki, because the file could not be imported; it names the records to fix.
+
+**Import.** Use the import (upload) action in the same header and choose the file. Agent 6 shows a preview and writes nothing yet:
+
+- Each record is **New** or **Existing, reused**. Records are matched by their identity, not by name: a Repository by `owner/name` as GitHub spells it now (a renamed repository matches its new name), a Database Connection by host (ignoring case), port, database and user, a Log Connection by base URL and tenant ID, and an Application by name, ignoring case.
+- An existing record is reused unchanged. Its name, Tracked Branch, Tags, description, notes and connection settings stay as they are; the preview lists the fields where the file differs. An existing Log Attachment keeps its Base Selector, and the preview shows both.
+- Each Application lists the Attachments it will gain. New Attachments on an existing Application are called out, because they widen what the agent can read for it.
+
+Every record is validated as if an Admin entered it: field rules, Base Selector syntax, a `GITHUB_TOKEN` that can read each new Repository, and its Tracked Branch on GitHub. Two existing Applications with the file's Application name, or two records in the file with the same identity, are problems too. **Any problem blocks the whole import**: the preview lists each one with what to do, and **Confirm import** stays disabled. Fix the instance or the file, then upload it again. Confirming checks everything again and writes all new records and Attachments in one transaction; if something changed meanwhile, nothing is written and the new preview is shown. The uploaded file is not kept, so reloading the page starts over.
+
+After the import, new Repositories start syncing and new connections that need no secret are tested. The Applications list shows what was created, reused and attached. Importing the same file again creates nothing.
+
+**Needs Secret.** An imported Database Connection that had a password, and an imported Log Connection with Basic or Bearer auth, arrive **Needs secret**. They show that badge in the connection lists, on their page and on the Application's Attachment rows, and the Database Connections and Log Connections nav items count them. Until an Admin enters the secret, the agent and Decision AI cannot use the connection for any Application, and **Test connection** asks for the secret without trying to connect. Open the connection, enter the password or token and save: Agent 6 tests it and the badge disappears. Saving with the field blank saves the other fields and keeps it Needs Secret. This differs from a failing test: a connection whose test fails stays in scope.
+
 ## Scripts
 
 | Script | What it does |

@@ -23,16 +23,18 @@ export function createDatabaseTools(
         "That Database Connection is not available in this Application."
       )
     const saved = available.credentials(input.databaseConnectionId)
-    if (!saved)
+    // A Needs Secret connection is out of scope, like a detached one.
+    if (!saved || saved.encryptedPassword === null)
       throw new DatabaseQueryError(
         "That Database Connection is not available in this Application."
       )
+    const encryptedPassword = saved.encryptedPassword
     try {
       return await queryPostgres(
         {
           ...saved,
           sslMode: saved.sslMode as "disable" | "require" | "verify-full",
-          password: decrypt(saved.encryptedPassword),
+          password: decrypt(encryptedPassword),
         },
         input.sql,
         signal

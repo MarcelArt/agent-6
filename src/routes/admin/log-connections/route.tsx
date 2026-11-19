@@ -8,6 +8,7 @@ import {
 } from "@tanstack/react-router"
 import {
   ScrollTextIcon,
+  KeyRoundIcon,
   PlusIcon,
   CircleCheckIcon,
   CircleAlertIcon,
@@ -22,6 +23,7 @@ import {
   RecordRow,
   RecordSearch,
 } from "@/components/records/record-list"
+import { NeedsSecretBadge } from "@/components/connections/needs-secret"
 import { DetailPane, ListPane } from "@/components/shell/panes"
 import { buttonVariants } from "@/components/ui/button"
 import { listLogConnections } from "@/server/log-connections.functions"
@@ -89,14 +91,23 @@ function Layout() {
                 }
                 selected={selectedId === connection.id}
                 icon={
-                  connection.test.ok ? (
+                  connection.needsSecret ? (
+                    <KeyRoundIcon className="text-muted-foreground" />
+                  ) : connection.test.ok ? (
                     <CircleCheckIcon className="text-muted-foreground" />
                   ) : (
                     <CircleAlertIcon className="text-destructive" />
                   )
                 }
                 name={connection.name}
-                detail={connection.test.ok ? "Ready" : connection.test.message}
+                property={connection.needsSecret && <NeedsSecretBadge />}
+                detail={
+                  connection.needsSecret
+                    ? `Enter the ${connection.authType === "basic" ? "password" : "token"} so the agent can use it`
+                    : connection.test.ok
+                      ? "Ready"
+                      : connection.test.message
+                }
                 secondary={connection.tags.join(", ")}
               />
             ))}
