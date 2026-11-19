@@ -18,7 +18,6 @@ import { railScript } from "@/lib/rail"
 import { themeScript } from "@/lib/theme"
 import { getCurrentUser } from "@/server/session.functions"
 import { getNavCounts } from "@/server/nav.functions"
-import ImpeccableLiveRoot from '../impeccable/ImpeccableLiveRoot';
 
 export const Route = createRootRoute({
   // Runs before every page, on the server for the first one. Routes read
@@ -103,9 +102,6 @@ function RootDocument({ children }: { children: React.ReactNode }) {
             },
           ]}
         />
-        {/* impeccable-live-tanstack-start */}
-        <ImpeccableLiveRoot />
-        {/* impeccable-live-tanstack-end */}
         <Scripts />
       </body>
     </html>
