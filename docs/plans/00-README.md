@@ -31,6 +31,7 @@ Give the agent one step file and say "implement this step". Do not start a step 
 | 19 | [Decision AI](19-decision-ai.md) | Optional provider-backed investigation and fault advice |
 | 20 | [Tickets](20-tickets.md) | Admin accepts or declines reports before GitHub filing |
 | 21 | [Setup File](21-setup-file.md) | Export chosen Applications and their resources; import them elsewhere without secrets |
+| 22 | [API and webhooks](22-api-and-webhooks.md) | Scoped Service Accounts, resource API, signed Ticket webhooks and public reference pages |
 
 ## Decisions that apply to every step
 

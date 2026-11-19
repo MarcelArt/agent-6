@@ -73,11 +73,11 @@ A change to what an Application can do that a person asks for and that only deve
 _Avoid_: Enhancement, wish
 
 **Ticket**:
-A Code Fix, Data Fix or Feature Request report the agent prepares from a Conversation for an Admin to accept or decline. An accepted Ticket becomes a Filed Issue; a declined Ticket carries the Admin's reason for the Conversation's owner.
+A Code Fix, Data Fix or Feature Request report the agent prepares from a Conversation for review. Accepting a Ticket records a Filed Issue. Declining it gives the Conversation's owner a reason.
 _Avoid_: Draft, request, bug report
 
 **Filed Issue**:
-The GitHub issue, or new occurrence on an existing one, created when an Admin accepts a Ticket, recorded on the Conversation that led to it.
+The GitHub issue or occurrence comment that results from accepting a Ticket. It is recorded on the Conversation that led to the Ticket.
 _Avoid_: Bug report
 
 ### Settings
@@ -99,3 +99,19 @@ _Avoid_: Backup, config export, configuration dump, bundle
 **Needs Secret**:
 The state of an imported Database Connection or Log Connection whose password or auth secret an Admin has not entered yet. The agent cannot use it for any Application until the secret is entered.
 _Avoid_: Incomplete, unconfigured, missing credentials
+
+### Integrations
+
+**Service Account**:
+An identity an Admin creates so an external integration can use the Agent 6 API.
+_Avoid_: Bot user, Client
+
+**API Key**:
+A credential issued to a Service Account. An Admin grants and revokes access for each API Key independently.
+_Avoid_: Session token, signing secret
+
+**Webhook Subscription**:
+An Admin's configuration for sending selected Agent 6 events to an external destination as signed HTTP requests.
+
+**Webhook Delivery**:
+The sending of one event to one Webhook Subscription, which can take several attempts.
