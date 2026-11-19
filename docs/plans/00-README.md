@@ -30,6 +30,7 @@ Give the agent one step file and say "implement this step". Do not start a step 
 | 18 | [Postgres for own data](18-postgres-for-own-data.md) | Optional alternative to SQLite |
 | 19 | [Decision AI](19-decision-ai.md) | Optional provider-backed investigation and fault advice |
 | 20 | [Tickets](20-tickets.md) | Admin accepts or declines reports before GitHub filing |
+| 21 | [Setup File](21-setup-file.md) | Export chosen Applications and their resources; import them elsewhere without secrets |
 
 ## Decisions that apply to every step
 

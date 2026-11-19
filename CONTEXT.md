@@ -89,3 +89,13 @@ _Avoid_: Locale, user language
 **Decision AI**:
 An optional separate model that recommends which Repositories, Database Connections and Log Connections to inspect, a fault's Code Fix or Data Fix classification, and the Repository for a Ticket. The agent remains responsible for investigating the evidence and deciding what to do.
 _Avoid_: Router, planner
+
+### Administration
+
+**Setup File**:
+A file of chosen Applications, the Repositories, Database Connections and Log Connections attached to them and their Attachments, which an Admin exports from one Agent 6 instance and imports into another. It never holds connection secrets, users, Conversations or Tickets.
+_Avoid_: Backup, config export, configuration dump, bundle
+
+**Needs Secret**:
+The state of an imported Database Connection or Log Connection whose password or auth secret an Admin has not entered yet. The agent cannot use it for any Application until the secret is entered.
+_Avoid_: Incomplete, unconfigured, missing credentials
