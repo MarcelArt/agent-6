@@ -1,6 +1,7 @@
 import { useState } from "react"
 import { useRouter } from "@tanstack/react-router"
 import { CircleCheckIcon } from "lucide-react"
+import { DEFAULT_OIDC_SCOPES } from "@/lib/oauth"
 import type { OAuthInput, OAuthResult, OAuthSettings } from "@/lib/oauth"
 import { FormActions, FormError } from "@/components/records/record-detail"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
@@ -16,19 +17,27 @@ import {
   FieldSet,
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { Spinner } from "@/components/ui/spinner"
 import { saveOAuthSettings, testOAuthDiscovery } from "@/server/oauth.functions"
 
 export function OAuthForm({ saved }: { saved: OAuthSettings }) {
   const router = useRouter()
-  const initial = (): OAuthInput => ({
-    enabled: saved.enabled,
-    displayName: saved.displayName,
-    discoveryUrl: saved.discoveryUrl,
-    clientId: saved.clientId,
-    clientSecret: "",
-    scopes: saved.scopes,
-  })
+  const initial = (): OAuthInput => {
+    const {
+      hasClientSecret: _hasSecret,
+      defaultRedirectUrl: _defaultUrl,
+      ...input
+    } = saved
+    return { ...input, clientSecret: "" }
+  }
   const [values, setValues] = useState(initial)
   const [replace, setReplace] = useState(false)
   const [pending, setPending] = useState<"save" | "test">()
@@ -77,40 +86,40 @@ export function OAuthForm({ saved }: { saved: OAuthSettings }) {
   }
   const fieldError = (key: keyof OAuthInput) =>
     result?.ok === false && result.field === key
+  const manual = values.mode === "manual"
   const textField = (
-    key: "displayName" | "discoveryUrl" | "clientId" | "scopes",
+    key: Exclude<keyof OAuthInput, "enabled" | "mode" | "clientSecret">,
     label: string,
-    help?: string
+    options: { help?: string; optional?: boolean; maxLength?: number } = {}
   ) => (
     <Field data-invalid={fieldError(key) || undefined}>
-      <FieldLabel htmlFor={`oauth-${key}`}>{label}</FieldLabel>
+      <FieldLabel htmlFor={`oauth-${key}`}>
+        {label}
+        {options.optional && (
+          <span className="font-normal text-muted-foreground">(optional)</span>
+        )}
+      </FieldLabel>
       <Input
         id={`oauth-${key}`}
         value={values[key]}
         onChange={(event) => change(key, event.target.value)}
-        required={values.enabled}
-        maxLength={
-          key === "displayName"
-            ? 80
-            : key === "clientId"
-              ? 512
-              : key === "scopes"
-                ? 1024
-                : 2048
-        }
+        required={values.enabled && !options.optional && key !== "redirectUrl"}
+        maxLength={options.maxLength ?? 2048}
         autoComplete="off"
         aria-invalid={fieldError(key) || undefined}
         aria-describedby={
           [
-            help ? `oauth-${key}-hint` : undefined,
+            options.help ? `oauth-${key}-hint` : undefined,
             fieldError(key) ? `oauth-${key}-error` : undefined,
           ]
             .filter(Boolean)
             .join(" ") || undefined
         }
       />
-      {help && (
-        <FieldDescription id={`oauth-${key}-hint`}>{help}</FieldDescription>
+      {options.help && (
+        <FieldDescription id={`oauth-${key}-hint`} className="wrap-anywhere">
+          {options.help}
+        </FieldDescription>
       )}
       {fieldError(key) && result?.ok === false && (
         <FieldError id={`oauth-${key}-error`}>{result.message}</FieldError>
@@ -156,27 +165,80 @@ export function OAuthForm({ saved }: { saved: OAuthSettings }) {
               Enable provider sign-in
             </FieldLabel>
           </Field>
-          {textField(
-            "displayName",
-            "Display name",
-            "Shown on the sign-in button, for example Keycloak."
-          )}
-          {textField(
-            "discoveryUrl",
-            "Issuer or discovery URL",
-            "Enter the issuer address or the full .well-known/openid-configuration URL."
-          )}
-          <div>
-            <Button
-              type="button"
-              variant="outline"
-              disabled={!!pending || !values.discoveryUrl}
-              onClick={() => void run("test")}
+          {textField("displayName", "Display name", {
+            help: "Shown on the sign-in button, for example Keycloak.",
+            maxLength: 80,
+          })}
+          <Field>
+            <FieldLabel htmlFor="oauth-mode">Provider setup</FieldLabel>
+            <Select
+              value={values.mode}
+              disabled={!!pending}
+              onValueChange={(mode) => {
+                if (!mode || mode === values.mode) return
+                setValues((current) => ({
+                  ...current,
+                  mode,
+                  scopes:
+                    mode === "manual" && current.scopes === DEFAULT_OIDC_SCOPES
+                      ? ""
+                      : mode === "discovery" && !current.scopes
+                        ? DEFAULT_OIDC_SCOPES
+                        : current.scopes,
+                }))
+                setResult(undefined)
+                setNotice(undefined)
+              }}
             >
-              {pending === "test" && <Spinner />}Test discovery
-            </Button>
-          </div>
-          {textField("clientId", "Client ID")}
+              <SelectTrigger id="oauth-mode">
+                <SelectValue>
+                  {manual ? "Manual endpoints" : "OpenID Connect discovery"}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectItem value="discovery">
+                    OpenID Connect discovery
+                  </SelectItem>
+                  <SelectItem value="manual">Manual endpoints</SelectItem>
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          </Field>
+          {manual ? (
+            <>
+              {textField("authorizationUrl", "Authorization URL")}
+              {textField("tokenUrl", "Access token URL")}
+              {textField("resourceUrl", "Resource URL", {
+                help: "The profile endpoint must return JSON with the user's email and email_verified set to true.",
+              })}
+              {textField("userIdentifier", "User identifier", {
+                help: "The JSON field containing the user's stable ID, such as id or data.user_id.",
+                maxLength: 256,
+              })}
+              {textField("logoutUrl", "Logout URL", {
+                optional: true,
+                help: "Opens in the browser after signing out of an OAuth session.",
+              })}
+            </>
+          ) : (
+            <>
+              {textField("discoveryUrl", "Issuer or discovery URL", {
+                help: "Enter the issuer address or the full .well-known/openid-configuration URL.",
+              })}
+              <div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={!!pending || !values.discoveryUrl}
+                  onClick={() => void run("test")}
+                >
+                  {pending === "test" && <Spinner />}Test discovery
+                </Button>
+              </div>
+            </>
+          )}
+          {textField("clientId", "Client ID", { maxLength: 512 })}
           <Field data-invalid={fieldError("clientSecret") || undefined}>
             <FieldLabel htmlFor="oauth-clientSecret">Client secret</FieldLabel>
             {saved.hasClientSecret && !replace ? (
@@ -210,18 +272,31 @@ export function OAuthForm({ saved }: { saved: OAuthSettings }) {
               <FieldError>{result.message}</FieldError>
             )}
           </Field>
-          {textField(
-            "scopes",
-            "Scopes",
-            "Separate scopes with spaces. Include openid, email and profile for OpenID Connect."
+          {textField("scopes", "Scopes", {
+            help: manual
+              ? "Enter the scopes your provider requires to read the user's profile. Separate scopes with spaces."
+              : "Separate scopes with spaces. Include openid, email and profile for OpenID Connect.",
+            optional: manual,
+            maxLength: 1024,
+          })}
+          {manual ? (
+            textField("redirectUrl", "Redirect URL", {
+              help: `Register this URL with your provider. The default is ${saved.defaultRedirectUrl}`,
+            })
+          ) : (
+            <Field>
+              <FieldLabel htmlFor="oauth-redirect">Redirect URL</FieldLabel>
+              <Input
+                id="oauth-redirect"
+                value={saved.defaultRedirectUrl}
+                readOnly
+                aria-describedby="oauth-redirect-hint"
+              />
+              <FieldDescription id="oauth-redirect-hint">
+                Register this exact redirect URL with your provider.
+              </FieldDescription>
+            </Field>
           )}
-          <Field>
-            <FieldLabel htmlFor="oauth-redirect">Redirect URL</FieldLabel>
-            <Input id="oauth-redirect" value={saved.redirectUrl} readOnly />
-            <FieldDescription>
-              Register this exact redirect URL with your provider.
-            </FieldDescription>
-          </Field>
         </FieldGroup>
       </FieldSet>
       <FormActions>

@@ -189,7 +189,14 @@ server {
 
 Set `BETTER_AUTH_URL` to the public HTTPS origin; Agent 6 uses that fixed origin rather than trusting forwarded headers. Do not expose its backend port to untrusted traffic. Buffering, caching or compression at any other proxy or CDN must also be disabled for `/api/chat/`; keep its idle/read timeout at least 120 seconds. A reply can run for 90 seconds. Test that words appear progressively rather than arriving in one block. The image permits up to 110 seconds for shutdown, and Compose gives it two minutes; use `docker compose stop` to allow this grace period.
 
-For OAuth, register a confidential OAuth/OIDC client with your provider. In Agent 6's **Settings → OAuth**, enter the discovery URL, client ID and client secret and use the displayed **Redirect URL** exactly, normally `https://support.example.com/api/auth/callback/organization`. Use the scopes required to return a verified email, usually `openid email profile`. Test discovery and enable the provider. The provider login's verified email must match an existing, enabled user created by an Admin; OAuth does not provision new users. Test both provider login and password login after deploying behind HTTPS. If you change the public address, update both `BETTER_AUTH_URL` and the provider's registered callback, and recreate the container.
+Register a confidential OAuth client with your provider. In Agent 6, open **Settings → Organization sign-in** and enter the client ID and client secret. Choose a setup method.
+
+- **OpenID Connect discovery** accepts the issuer address or the full discovery URL. Use the scopes required to return a verified email, usually `openid email profile`. Select **Test discovery** to check the URL.
+- **Manual endpoints** accepts the **Authorization URL**, **Access token URL**, and **Resource URL**. Agent 6 calls the Resource URL with the access token and expects a JSON profile with top-level `email` and `email_verified: true`. Enter a stable string or numeric ID field under **User identifier**, such as `id` or `data.user_id`. Enter any scopes your provider requires to read the profile. If you set a **Logout URL**, the browser opens it after ending a session started through manual OAuth. Use the provider's browser logout URL, including any required query parameters.
+
+Register the **Redirect URL** exactly with the provider. The default is `https://support.example.com/api/auth/callback/organization`. In manual setup you can edit the final path segment under `/api/auth/callback/` on your Agent 6 address.
+
+Enable provider sign-in and save. The provider's verified email must match an existing, enabled user created by an Admin. Test both provider and password sign-in after deploying behind HTTPS. If the public address changes, update `BETTER_AUTH_URL`, update any custom Redirect URL and its registration with the provider, and recreate the container.
 
 ## Backup and restore
 

@@ -48,8 +48,11 @@ export function UserMenuContent({
   const router = useRouter()
 
   async function logOut() {
-    await authClient.signOut()
-    // Loads the login page with the session gone.
+    const { data } = await authClient.signOut({ disableRedirect: true })
+    if (data?.url) {
+      window.location.assign(data.url)
+      return
+    }
     await router.navigate({ to: "/login" })
   }
 

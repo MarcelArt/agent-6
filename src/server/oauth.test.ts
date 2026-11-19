@@ -22,10 +22,28 @@ const KEY = Buffer.alloc(32, 7).toString("base64")
 const INPUT: OAuthInput = {
   enabled: true,
   displayName: "Company",
+  mode: "discovery",
   discoveryUrl: ISSUER,
+  authorizationUrl: "",
+  tokenUrl: "",
+  resourceUrl: "",
+  redirectUrl: "",
+  logoutUrl: "",
+  userIdentifier: "",
   clientId: "agent6",
   clientSecret: "very-private-provider-secret",
   scopes: "openid email profile",
+}
+const MANUAL: OAuthInput = {
+  ...INPUT,
+  mode: "manual",
+  discoveryUrl: "",
+  authorizationUrl: `${ISSUER}/authorize`,
+  tokenUrl: `${ISSUER}/token`,
+  resourceUrl: `${ISSUER}/userinfo`,
+  redirectUrl: `${BASE}/api/auth/callback/company`,
+  userIdentifier: "data.employee_id",
+  scopes: "read_profile",
 }
 const { privateKey, publicKey } = generateKeyPairSync("rsa", {
   modulusLength: 2048,
@@ -145,11 +163,12 @@ async function oauth(extra: Record<string, unknown> = {}, expectsNonce = true) {
   nonce = authUrl.searchParams.get("nonce")!
   if (expectsNonce) expect(nonce).toBeTruthy()
   expect(authUrl.searchParams.get("code_challenge_method")).toBe("S256")
+  const callback = new URL(authUrl.searchParams.get("redirect_uri")!)
+  callback.searchParams.set("code", "valid-code")
+  callback.searchParams.set("state", authUrl.searchParams.get("state")!)
+  callback.searchParams.set("iss", ISSUER)
   return f.handle(
-    new Request(
-      `${BASE}/api/auth/callback/organization?code=valid-code&state=${authUrl.searchParams.get("state")}&iss=${ISSUER}`,
-      { headers: { cookie: cookie(start.headers) } }
-    )
+    new Request(callback, { headers: { cookie: cookie(start.headers) } })
   )
 }
 
@@ -212,6 +231,140 @@ describe("OAuth settings", () => {
     vi.mocked(fetch).mockResolvedValueOnce(Response.json({ issuer: ISSUER }))
     await expect(testDiscovery(ISSUER)).rejects.toThrow()
     expect(f.settings.get(OAUTH_SETTINGS_KEY)).toBeUndefined()
+  })
+
+  it("loads older stored provider settings in discovery mode", async () => {
+    f.settings.set(
+      OAUTH_SETTINGS_KEY,
+      JSON.stringify({
+        enabled: true,
+        displayName: INPUT.displayName,
+        discoveryUrl: ISSUER,
+        clientId: INPUT.clientId,
+        scopes: INPUT.scopes,
+        encryptedClientSecret: "encrypted",
+      })
+    )
+    expect(await f.management.get(admin)).toMatchObject({
+      mode: "discovery",
+      discoveryUrl: ISSUER,
+      redirectUrl: `${BASE}/api/auth/callback/organization`,
+    })
+  })
+
+  it("validates manual endpoints and defaults the redirect URL", async () => {
+    for (const field of [
+      "authorizationUrl",
+      "tokenUrl",
+      "resourceUrl",
+      "userIdentifier",
+    ] as const) {
+      expect(
+        await f.management.save(admin, { ...MANUAL, [field]: "" })
+      ).toMatchObject({ ok: false, field })
+    }
+    expect(
+      await f.management.save(admin, {
+        ...MANUAL,
+        logoutUrl: "javascript:void(0)",
+      })
+    ).toMatchObject({ ok: false, field: "logoutUrl" })
+    expect(
+      await f.management.save(admin, {
+        ...MANUAL,
+        redirectUrl: `${ISSUER}/api/auth/callback/company`,
+      })
+    ).toMatchObject({ ok: false, field: "redirectUrl" })
+    expect(
+      await f.management.save(admin, { ...MANUAL, redirectUrl: "" })
+    ).toEqual({ ok: true })
+    expect(await f.management.get(admin)).toMatchObject({
+      mode: "manual",
+      redirectUrl: `${BASE}/api/auth/callback/organization`,
+    })
+    expect(fetch).not.toHaveBeenCalled()
+  })
+})
+
+describe("Manual OAuth", () => {
+  it("uses the configured callback and a stable identity from the authenticated resource", async () => {
+    expect(await f.management.save(admin, MANUAL)).toEqual({ ok: true })
+    const profile = {
+      email: claims.email,
+      email_verified: true,
+      data: { employee_id: 42 },
+    }
+    vi.mocked(fetch).mockImplementation(async (input, init) => {
+      const request = new Request(input, init)
+      if (request.url === MANUAL.tokenUrl) {
+        const body = new URLSearchParams(await request.text())
+        expect(body.get("redirect_uri")).toBe(MANUAL.redirectUrl)
+        return Response.json({
+          access_token: "test-access-token",
+          token_type: "Bearer",
+          id_token: "untrusted.garbage.token",
+        })
+      }
+      expect(request.url).toBe(MANUAL.resourceUrl)
+      expect(request.headers.get("Authorization")).toBe(
+        "Bearer test-access-token"
+      )
+      return Response.json(profile)
+    })
+    expect((await oauth({}, false)).headers.get("location")).toBe("/chat")
+    expect(fetch).toHaveBeenCalledTimes(2)
+    profile.data.employee_id = 7
+    expect((await oauth({}, false)).headers.get("location")).toBe("/chat")
+    expect(
+      (await f.db.query.account.findMany()).filter(
+        (item) => item.providerId === "organization"
+      )
+    ).toHaveLength(2)
+    profile.email_verified = false
+    const denied = await oauth({}, false)
+    expect(new URL(denied.headers.get("location")!, BASE).pathname).toBe(
+      "/login"
+    )
+  })
+
+  it("returns the provider logout URL only for a session started through manual OAuth", async () => {
+    const logoutUrl = `${ISSUER}/logout?return_to=support`
+    await f.management.save(admin, { ...MANUAL, logoutUrl })
+    claims.data = { employee_id: "support-client" }
+    const signedIn = await oauth({}, false)
+    expect(signedIn.headers.get("location")).toBe("/chat")
+    const sessionCookie = cookie(signedIn.headers)
+    async function logOut(cookies: string) {
+      return f.handle(
+        new Request(`${BASE}/api/auth/sign-out`, {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            origin: BASE,
+            cookie: cookies,
+          },
+          body: JSON.stringify({ disableRedirect: true }),
+        })
+      )
+    }
+    const marker = sessionCookie
+      .split("; ")
+      .find((value) => value.startsWith("better-auth.organization_oauth="))
+    expect(marker).toBeTruthy()
+    const passwordLogout = await logOut(`${client.get("cookie")}; ${marker}`)
+    expect(await passwordLogout.json()).toEqual({ success: true })
+    const providerLogout = await logOut(sessionCookie)
+    expect(await providerLogout.json()).toEqual({
+      success: true,
+      url: logoutUrl,
+      redirect: false,
+    })
+    expect(
+      await getSessionUser({
+        auth: f.auth,
+        headers: new Headers({ cookie: sessionCookie }),
+      })
+    ).toBeNull()
   })
 })
 

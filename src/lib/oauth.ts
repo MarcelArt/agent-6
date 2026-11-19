@@ -2,10 +2,19 @@ export const OAUTH_PROVIDER_ID = "organization"
 export const OAUTH_ACCOUNT_MESSAGE =
   "Your account has not been set up. Ask your administrator."
 
+export const DEFAULT_OIDC_SCOPES = "openid email profile"
+
 export type OAuthInput = {
   enabled: boolean
   displayName: string
+  mode: "discovery" | "manual"
   discoveryUrl: string
+  authorizationUrl: string
+  tokenUrl: string
+  resourceUrl: string
+  redirectUrl: string
+  logoutUrl: string
+  userIdentifier: string
   clientId: string
   /** Empty keeps the saved secret. */
   clientSecret: string
@@ -15,7 +24,7 @@ export type OAuthInput = {
 /** Safe for the Admin browser. The saved secret is never included. */
 export type OAuthSettings = Omit<OAuthInput, "clientSecret"> & {
   hasClientSecret: boolean
-  redirectUrl: string
+  defaultRedirectUrl: string
 }
 
 export type OAuthResult =

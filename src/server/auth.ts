@@ -1,6 +1,7 @@
 import "@tanstack/react-start/server-only"
 
 import { betterAuth } from "better-auth"
+import { createAuthMiddleware } from "better-auth/api"
 import { createHash } from "node:crypto"
 import { genericOAuth } from "better-auth/plugins/generic-oauth"
 import { drizzleAdapter } from "better-auth/adapters/drizzle"
@@ -16,8 +17,10 @@ import { createSettingsRepository } from "./repositories/settings"
 import {
   decryptOAuthProvider,
   fetchOAuthUserInfo,
+  isOAuthRedirectUrl,
   loadDiscovery,
   OAUTH_SETTINGS_KEY,
+  oauthRedirectUrl,
   readOAuthSettings,
 } from "./oauth-settings"
 import type { OAuthProvider } from "./oauth-settings"
@@ -30,6 +33,67 @@ const ac = createAccessControl(defaultStatements)
 const roles = {
   admin: ac.newRole(adminAc.statements),
   client: ac.newRole({ user: [], session: [] }),
+}
+
+function providerNamespace(provider: OAuthProvider): Array<string> {
+  return provider.mode === "manual"
+    ? [
+        "manual",
+        provider.authorizationUrl,
+        provider.tokenUrl,
+        provider.resourceUrl,
+        provider.userIdentifier,
+        provider.clientId,
+      ]
+    : [provider.discoveryUrl, provider.clientId]
+}
+
+function manualOAuthLogout(provider: OAuthProvider) {
+  const namespace = providerNamespace(provider)
+  const sessionMarker = (token: string) =>
+    createHash("sha256")
+      .update(JSON.stringify([...namespace, token]))
+      .digest("hex")
+
+  return createAuthMiddleware(async (ctx) => {
+    if (ctx.path !== "/callback/:id" && ctx.path !== "/sign-out") return
+    const { context } = ctx
+    const marker = context.createAuthCookie("organization_oauth", {
+      maxAge: context.sessionConfig.expiresIn,
+    })
+    if (ctx.path === "/callback/:id") {
+      const newSession = context.newSession?.session
+      if (ctx.params?.id === OAUTH_PROVIDER_ID && newSession)
+        await ctx.setSignedCookie(
+          marker.name,
+          sessionMarker(newSession.token),
+          context.secret,
+          marker.attributes
+        )
+      return
+    }
+    const signedMarker = await ctx.getSignedCookie(marker.name, context.secret)
+    if (!signedMarker) return
+    ctx.setCookie(marker.name, "", { ...marker.attributes, maxAge: 0 })
+    const token = await ctx.getSignedCookie(
+      context.authCookies.sessionToken.name,
+      context.secret
+    )
+    const response = context.returned
+    if (
+      token &&
+      signedMarker === sessionMarker(token) &&
+      response &&
+      typeof response === "object" &&
+      "success" in response &&
+      response.success === true
+    )
+      return ctx.json({
+        success: true,
+        url: provider.logoutUrl,
+        redirect: !ctx.body?.disableRedirect,
+      })
+  })
 }
 
 /**
@@ -46,6 +110,8 @@ export function createAuth(
 ) {
   const users = createUsersRepository(db)
   const provider = options.oauth
+  const manual = provider?.mode === "manual" ? provider : undefined
+  const userInfoUrl = manual?.resourceUrl ?? provider?.userInfoUrl
   return betterAuth({
     secret: options.secret,
     baseURL: options.baseUrl,
@@ -55,6 +121,7 @@ export function createAuth(
     }),
     emailAndPassword: { enabled: true, disableSignUp: true },
     onAPIError: { errorURL: `${options.baseUrl.replace(/\/$/, "")}/login` },
+    hooks: manual?.logoutUrl ? { after: manualOAuthLogout(manual) } : undefined,
     account: {
       encryptOAuthTokens: true,
       accountLinking: {
@@ -92,23 +159,27 @@ export function createAuth(
               {
                 providerId: OAUTH_PROVIDER_ID,
                 name: provider.displayName,
-                discoveryUrl: provider.discoveryUrl,
+                discoveryUrl: manual ? undefined : provider.discoveryUrl,
+                authorizationUrl: manual?.authorizationUrl,
+                tokenUrl: manual?.tokenUrl,
+                redirectURI: manual?.redirectUrl || undefined,
                 clientId: provider.clientId,
                 clientSecret: provider.clientSecret,
                 scopes: provider.scopes.split(/\s+/).filter(Boolean),
                 disableSignUp: true,
                 disableImplicitSignUp: true,
-                requireIdTokenVerification: !provider.userInfoUrl,
-                getUserInfo: provider.userInfoUrl
+                requireIdTokenVerification: !userInfoUrl,
+                getUserInfo: userInfoUrl
                   ? (tokens) =>
                       fetchOAuthUserInfo(
-                        provider.userInfoUrl!,
-                        tokens.accessToken
+                        userInfoUrl,
+                        tokens.accessToken,
+                        manual?.userIdentifier
                       )
                   : undefined,
                 disableProviderLogout: true,
                 overrideUserInfo: false,
-                // A subject from a replacement issuer must never reuse an old binding.
+                // A subject from a replacement provider must never reuse an old binding.
                 accountSubject: ({ profile }) => {
                   const subject = profile.sub ?? profile.id
                   if (
@@ -119,11 +190,7 @@ export function createAuth(
                     throw new Error("Missing provider subject")
                   return createHash("sha256")
                     .update(
-                      JSON.stringify([
-                        provider.discoveryUrl,
-                        provider.clientId,
-                        subject,
-                      ])
+                      JSON.stringify([...providerNamespace(provider), subject])
                     )
                     .digest("hex")
                 },
@@ -166,13 +233,24 @@ export function createAuthHandler(
   let oauthCache: { revision: string; auth: Promise<Auth> } | undefined
   return async (request: Request): Promise<Response> => {
     const path = new URL(request.url).pathname
-    const oauthPath =
-      /\/api\/auth\/(sign-in\/social|callback\/|link-social)/.test(path)
-    if (!oauthPath) return passwordAuth.handler(request)
+    const callback = path.startsWith("/api/auth/callback/")
+    const signOut = path === "/api/auth/sign-out"
+    if (
+      !callback &&
+      !signOut &&
+      path !== "/api/auth/sign-in/social" &&
+      path !== "/api/auth/link-social"
+    )
+      return passwordAuth.handler(request)
     const saved = readOAuthSettings(settings)
+    if (
+      signOut &&
+      (!saved.enabled || saved.mode !== "manual" || !saved.logoutUrl)
+    )
+      return passwordAuth.handler(request)
     if (!saved.enabled) {
       oauthCache = undefined
-      if (path.includes("/callback/"))
+      if (callback)
         return Response.redirect(
           `${options.baseUrl}/login?error=provider_disabled`,
           302
@@ -187,21 +265,36 @@ export function createAuthHandler(
       if (oauthCache?.revision !== revision)
         oauthCache = {
           revision,
-          auth: loadDiscovery(saved.discoveryUrl).then((document) =>
-            createAuth(db, {
-              ...options,
-              oauth: {
-                ...decryptOAuthProvider(saved, options.encryptionKey),
-                userInfoUrl: document.userinfo_endpoint,
-              },
-            })
-          ),
+          auth: (async () => {
+            const oauth = decryptOAuthProvider(saved, options.encryptionKey)
+            if (oauth.mode === "discovery")
+              oauth.userInfoUrl = (
+                await loadDiscovery(oauth.discoveryUrl)
+              ).userinfo_endpoint
+            else if (
+              oauth.redirectUrl &&
+              !isOAuthRedirectUrl(oauth.redirectUrl, options.baseUrl)
+            )
+              throw new Error("Invalid OAuth callback address")
+            return createAuth(db, { ...options, oauth })
+          })(),
         }
+      if (
+        callback &&
+        saved.mode === "manual" &&
+        saved.redirectUrl &&
+        path === new URL(saved.redirectUrl).pathname
+      ) {
+        const callbackUrl = new URL(oauthRedirectUrl(options.baseUrl))
+        callbackUrl.search = new URL(request.url).search
+        request = new Request(callbackUrl, request)
+      }
       return await (await oauthCache.auth).handler(request)
     } catch {
       if (oauthCache?.revision === revision) oauthCache = undefined
       // Never surface provider responses or configuration (including secrets).
-      if (path.includes("/callback/"))
+      if (signOut) return passwordAuth.handler(request)
+      if (callback)
         return Response.redirect(
           `${options.baseUrl}/login?error=provider_unavailable`,
           302

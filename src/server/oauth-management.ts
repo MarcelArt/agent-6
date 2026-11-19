@@ -5,6 +5,8 @@ import { createSettingsRepository } from "./repositories/settings"
 import { requireAdmin } from "./session"
 import {
   discoveryUrl,
+  isOAuthRedirectUrl,
+  oauthEndpointUrl,
   oauthInputSchema,
   OAUTH_SETTINGS_KEY,
   publicOAuthSettings,
@@ -41,11 +43,21 @@ export function createOAuthManagement(
         }
       const values = parsed.data
       const previous = readOAuthSettings(settings)
+      const { baseUrl, encryptionKey } = config()
       if (values.enabled) {
+        const providerFields =
+          values.mode === "manual"
+            ? ([
+                "authorizationUrl",
+                "tokenUrl",
+                "resourceUrl",
+                "userIdentifier",
+              ] as const)
+            : (["discoveryUrl"] as const)
         for (const field of [
           "displayName",
-          "discoveryUrl",
           "clientId",
+          ...providerFields,
         ] as const) {
           if (!values[field])
             return {
@@ -60,27 +72,69 @@ export function createOAuthManagement(
             field: "clientSecret",
             message: "Enter the provider's client secret.",
           }
-        if (!values.scopes.split(/\s+/).includes("email"))
+        if (
+          values.mode === "discovery" &&
+          !values.scopes.split(/\s+/).includes("email")
+        )
           return {
             ok: false,
             field: "scopes",
             message: "Include the email scope so Agent 6 can match users.",
           }
       }
-      try {
-        if (values.discoveryUrl) discoveryUrl(values.discoveryUrl)
-      } catch {
-        return {
-          ok: false,
-          field: "discoveryUrl",
-          message:
-            "Enter an http or https issuer or discovery URL without credentials, query parameters or a fragment.",
+      if (values.mode === "manual") {
+        for (const field of [
+          "authorizationUrl",
+          "tokenUrl",
+          "resourceUrl",
+          "logoutUrl",
+        ] as const) {
+          if (
+            values[field] &&
+            !oauthEndpointUrl.safeParse(values[field]).success
+          )
+            return {
+              ok: false,
+              field,
+              message:
+                "Enter an HTTP or HTTPS URL without credentials or a fragment.",
+            }
+        }
+        if (
+          values.redirectUrl &&
+          !isOAuthRedirectUrl(values.redirectUrl, baseUrl)
+        )
+          return {
+            ok: false,
+            field: "redirectUrl",
+            message:
+              "Use the default URL or a callback URL on this Agent 6 address under /api/auth/callback/.",
+          }
+        if (
+          values.userIdentifier &&
+          !/^[^.\s]+(?:\.[^.\s]+)*$/u.test(values.userIdentifier)
+        )
+          return {
+            ok: false,
+            field: "userIdentifier",
+            message: "Enter a JSON field name or a path such as data.user_id.",
+          }
+      } else {
+        try {
+          if (values.discoveryUrl) discoveryUrl(values.discoveryUrl)
+        } catch {
+          return {
+            ok: false,
+            field: "discoveryUrl",
+            message:
+              "Enter an http or https issuer or discovery URL without credentials, query parameters or a fragment.",
+          }
         }
       }
       settings.set(
         OAUTH_SETTINGS_KEY,
         JSON.stringify(
-          storeOAuthSettings(values, previous, config().encryptionKey)
+          storeOAuthSettings(values, previous, { baseUrl, encryptionKey })
         )
       )
       return { ok: true }
