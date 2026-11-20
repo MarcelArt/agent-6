@@ -21,7 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Textarea } from "@/components/ui/textarea"
+import { TicketBodyEditor } from "./ticket-body-editor"
 import { ISSUE_KINDS, issueKindLabels } from "@/lib/chat"
 import type { IssueKind } from "@/lib/chat"
 import type {
@@ -143,6 +143,7 @@ export function AcceptForm({
 
   return (
     <RecordForm
+      className="max-w-4xl"
       method="post"
       aria-label="Accept the Ticket"
       onSubmit={(event) => {
@@ -290,16 +291,12 @@ export function AcceptForm({
         </Field>
         <Field data-invalid={invalid("body")}>
           <FieldLabel htmlFor="ticket-body">Description</FieldLabel>
-          <Textarea
-            id="ticket-body"
-            name="body"
+          <TicketBodyEditor
             defaultValue={ticket.body}
-            required
             maxLength={MAX_TICKET_BODY}
             disabled={blocked}
-            className="max-h-[60svh] min-h-48 resize-y font-mono"
-            aria-invalid={invalid("body")}
-            aria-describedby={describedBy("body", "ticket-body-hint")}
+            invalid={invalid("body")}
+            describedBy={describedBy("body", "ticket-body-hint")}
           />
           <FieldDescription id="ticket-body-hint">
             Markdown for developers. Secrets and personal data are blanked again

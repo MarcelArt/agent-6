@@ -135,3 +135,147 @@
     font-size: 112.5%;
     }
 }
+
+/* Markdown rendered by src/components/chat/markdown.tsx: agent answers and the
+   Ticket body preview. */
+@layer components {
+  [data-slot="markdown"] > * {
+    margin: 0;
+  }
+  [data-slot="markdown"] > * + * {
+    margin-top: 0.875em;
+  }
+  [data-slot="markdown"] > * + :is(h1, h2, h3, h4, h5, h6) {
+    margin-top: 1.25em;
+  }
+  [data-slot="markdown"] p {
+    white-space: pre-line;
+  }
+  [data-slot="markdown"] :is(h1, h2, h3, h4, h5, h6) {
+    font-weight: 600;
+    line-height: 1.4;
+    text-wrap: balance;
+  }
+  [data-slot="markdown"] :is(h1, h2) {
+    font-size: 1.125rem;
+  }
+  [data-slot="markdown"] :is(h3, h4, h5, h6) {
+    font-size: 1em;
+  }
+  [data-slot="markdown"] :is(ul, ol) {
+    padding-left: 1.375em;
+  }
+  [data-slot="markdown"] ul {
+    list-style: disc;
+  }
+  [data-slot="markdown"] ol {
+    list-style: decimal;
+  }
+  [data-slot="markdown"] li + li,
+  [data-slot="markdown"] li > :is(ul, ol, p + p) {
+    margin-top: 0.25em;
+  }
+  [data-slot="markdown"] li::marker {
+    color: var(--muted-foreground);
+  }
+  [data-slot="markdown"] .contains-task-list {
+    list-style: none;
+    padding-left: 0;
+  }
+  [data-slot="markdown"] .task-list-item input {
+    margin-right: 0.5em;
+    vertical-align: -0.125em;
+    accent-color: var(--primary);
+  }
+  [data-slot="markdown"] strong {
+    font-weight: 600;
+  }
+  [data-slot="markdown"] a {
+    text-decoration: underline;
+    text-decoration-color: color-mix(in oklch, currentColor 45%, transparent);
+    text-underline-offset: 0.2em;
+  }
+  [data-slot="markdown"] a:hover {
+    text-decoration-color: currentColor;
+  }
+  [data-slot="markdown"][data-variant="document"] :is(h1, h2, h3) {
+    padding-bottom: 0.375em;
+    border-bottom: 1px solid var(--border);
+  }
+  [data-slot="markdown"][data-variant="document"]
+    > *
+    + :is(h1, h2, h3, h4, h5, h6) {
+    margin-top: 1.75em;
+  }
+  [data-slot="markdown"] hr {
+    border: 0;
+    border-top: 1px solid var(--border);
+    margin-block: 1.25em;
+  }
+  [data-slot="markdown"] code {
+    font-family:
+      ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono",
+      monospace;
+    font-size: 0.875em;
+  }
+  [data-slot="markdown"] :not(pre) > code {
+    padding: 0.0625em 0.3125em;
+    border: 1px solid var(--border);
+    border-radius: calc(var(--radius) * 0.6);
+    background: var(--muted);
+  }
+  [data-slot="markdown"] pre {
+    overflow-x: auto;
+    padding: 0.75em 1em;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: color-mix(in oklch, var(--muted) 50%, var(--background));
+    line-height: 1.6;
+  }
+  [data-slot="markdown"] blockquote {
+    padding: 0.625em 0.875em;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--card);
+    color: var(--card-foreground);
+  }
+  [data-slot="markdown"] blockquote > * + * {
+    margin-top: 0.5em;
+  }
+  [data-slot="markdown-table"] {
+    width: fit-content;
+    max-width: 100%;
+    overflow-x: auto;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+  }
+  [data-slot="markdown"] table {
+    min-width: 100%;
+    border-collapse: collapse;
+    font-variant-numeric: tabular-nums;
+  }
+  [data-slot="markdown"] :is(th, td) {
+    padding: 0.5em 0.875em;
+    text-align: left;
+    vertical-align: top;
+  }
+  [data-slot="markdown"] :is(th, td) + :is(th, td) {
+    border-left: 1px solid var(--border);
+  }
+  [data-slot="markdown"] th {
+    border-bottom: 1px solid var(--border);
+    background: var(--muted);
+    font-weight: 500;
+    white-space: nowrap;
+  }
+  [data-slot="markdown"] td {
+    border-top: 1px solid var(--border);
+  }
+  [data-slot="markdown"] tbody tr:first-child td {
+    border-top: 0;
+  }
+  /* A row that opens with bold text is a summary row, such as a total. */
+  [data-slot="markdown"] tbody tr:has(> td:first-child > strong) {
+    background: color-mix(in oklch, var(--muted) 60%, transparent);
+  }
+}

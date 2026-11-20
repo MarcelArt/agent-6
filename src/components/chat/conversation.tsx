@@ -13,6 +13,7 @@ import {
 import { ChatSidebar } from "./chat-sidebar"
 import { Composer } from "./composer"
 import { InteractiveQuestionCard, NO_PICKS } from "./interactive-question"
+import { Markdown } from "./markdown"
 import { DetailPane, PaneTitle } from "@/components/shell/panes"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
@@ -476,19 +477,20 @@ export function ConversationView({
                               }}
                             />
                           ) : (
-                            message.content && (
-                              <Bubble
-                                variant={
-                                  message.role === "user"
-                                    ? "secondary"
-                                    : "ghost"
-                                }
-                              >
+                            message.content &&
+                            (message.role === "user" ? (
+                              <Bubble variant="secondary">
                                 <BubbleContent className="text-sm/relaxed whitespace-pre-wrap">
                                   {message.content}
                                 </BubbleContent>
                               </Bubble>
-                            )
+                            ) : (
+                              <Bubble variant="ghost">
+                                <BubbleContent className="text-sm/relaxed">
+                                  <Markdown>{message.content}</Markdown>
+                                </BubbleContent>
+                              </Bubble>
+                            ))
                           )}
                           {message.images.map((image) => (
                             <Link

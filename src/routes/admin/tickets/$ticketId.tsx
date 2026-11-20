@@ -7,6 +7,7 @@ import {
 } from "@tanstack/react-router"
 import { CircleAlertIcon, CircleXIcon, TicketsIcon } from "lucide-react"
 import { z } from "zod"
+import { Markdown } from "@/components/chat/markdown"
 import { DetailHeader, DetailHint } from "@/components/records/record-detail"
 import { AcceptForm, targetChoice } from "@/components/tickets/accept-form"
 import { DeclineDialog } from "@/components/tickets/decline-dialog"
@@ -241,7 +242,7 @@ function TicketDetail({ ticket }: { ticket: AdminTicket }) {
         </AcceptForm>
       ) : (
         <div className="min-h-0 flex-1 overflow-y-auto">
-          <div className="mx-auto flex w-full max-w-xl flex-col gap-6 px-4 py-6 md:px-8 md:py-10">
+          <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-4 py-6 md:px-8 md:py-10">
             {facts}
             {ticket.declineReason !== null && (
               <section className="flex flex-col gap-2">
@@ -259,9 +260,9 @@ function TicketDetail({ ticket }: { ticket: AdminTicket }) {
                   ? `Filed in ${ticket.repository}`
                   : `Proposed for ${ticket.repository}`}
               </h2>
-              <pre className="overflow-x-auto rounded-md bg-muted/40 p-3 font-mono text-xs break-words whitespace-pre-wrap">
-                {ticket.body}
-              </pre>
+              <div className="text-sm/relaxed md:text-xs/relaxed">
+                <Markdown variant="document">{ticket.body}</Markdown>
+              </div>
             </section>
           </div>
         </div>
