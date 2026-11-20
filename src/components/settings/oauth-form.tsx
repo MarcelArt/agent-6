@@ -1,8 +1,13 @@
 import { useState } from "react"
 import { useRouter } from "@tanstack/react-router"
 import { CircleCheckIcon } from "lucide-react"
-import { DEFAULT_OIDC_SCOPES } from "@/lib/oauth"
-import type { OAuthInput, OAuthResult, OAuthSettings } from "@/lib/oauth"
+import { DEFAULT_OIDC_SCOPES, TOKEN_ENDPOINT_AUTH_METHODS } from "@/lib/oauth"
+import type {
+  OAuthInput,
+  OAuthResult,
+  OAuthSettings,
+  TokenEndpointAuthMethod,
+} from "@/lib/oauth"
 import { FormActions, FormError } from "@/components/records/record-detail"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
@@ -27,6 +32,11 @@ import {
 } from "@/components/ui/select"
 import { Spinner } from "@/components/ui/spinner"
 import { saveOAuthSettings, testOAuthDiscovery } from "@/server/oauth.functions"
+
+const tokenEndpointAuthLabels: Record<TokenEndpointAuthMethod, string> = {
+  client_secret_basic: "HTTP Basic header (client_secret_basic)",
+  client_secret_post: "Request body (client_secret_post)",
+}
 
 export function OAuthForm({ saved }: { saved: OAuthSettings }) {
   const router = useRouter()
@@ -88,7 +98,10 @@ export function OAuthForm({ saved }: { saved: OAuthSettings }) {
     result?.ok === false && result.field === key
   const manual = values.mode === "manual"
   const textField = (
-    key: Exclude<keyof OAuthInput, "enabled" | "mode" | "clientSecret">,
+    key: Exclude<
+      keyof OAuthInput,
+      "enabled" | "mode" | "clientSecret" | "tokenEndpointAuthMethod"
+    >,
     label: string,
     options: { help?: string; optional?: boolean; maxLength?: number } = {}
   ) => (
@@ -209,6 +222,40 @@ export function OAuthForm({ saved }: { saved: OAuthSettings }) {
             <>
               {textField("authorizationUrl", "Authorization URL")}
               {textField("tokenUrl", "Access token URL")}
+              <Field>
+                <FieldLabel htmlFor="oauth-tokenEndpointAuthMethod">
+                  Client authentication
+                </FieldLabel>
+                <Select
+                  value={values.tokenEndpointAuthMethod}
+                  disabled={!!pending}
+                  onValueChange={(method) => {
+                    if (method) change("tokenEndpointAuthMethod", method)
+                  }}
+                >
+                  <SelectTrigger
+                    id="oauth-tokenEndpointAuthMethod"
+                    aria-describedby="oauth-tokenEndpointAuthMethod-hint"
+                  >
+                    <SelectValue>
+                      {tokenEndpointAuthLabels[values.tokenEndpointAuthMethod]}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      {TOKEN_ENDPOINT_AUTH_METHODS.map((method) => (
+                        <SelectItem key={method} value={method}>
+                          {tokenEndpointAuthLabels[method]}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+                <FieldDescription id="oauth-tokenEndpointAuthMethod-hint">
+                  How Agent 6 sends the client ID and secret to the access token
+                  URL. Use the method your provider accepts.
+                </FieldDescription>
+              </Field>
               {textField("resourceUrl", "Resource URL", {
                 help: "The profile endpoint must return JSON with the user's email and email_verified set to true.",
               })}

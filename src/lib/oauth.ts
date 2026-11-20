@@ -4,6 +4,14 @@ export const OAUTH_ACCOUNT_MESSAGE =
 
 export const DEFAULT_OIDC_SCOPES = "openid email profile"
 
+/** How Agent 6 sends the client ID and secret to the token endpoint. */
+export const TOKEN_ENDPOINT_AUTH_METHODS = [
+  "client_secret_basic",
+  "client_secret_post",
+] as const
+export type TokenEndpointAuthMethod =
+  (typeof TOKEN_ENDPOINT_AUTH_METHODS)[number]
+
 export type OAuthInput = {
   enabled: boolean
   displayName: string
@@ -15,6 +23,8 @@ export type OAuthInput = {
   redirectUrl: string
   logoutUrl: string
   userIdentifier: string
+  /** Manual mode only; discovery mode reads the provider's supported methods. */
+  tokenEndpointAuthMethod: TokenEndpointAuthMethod
   clientId: string
   /** Empty keeps the saved secret. */
   clientSecret: string

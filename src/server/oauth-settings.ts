@@ -4,8 +4,16 @@ import { z } from "zod"
 import { createSettingsRepository } from "./repositories/settings"
 import { decrypt, encrypt } from "./secrets"
 import type { SettingsRepository } from "./repositories/settings"
-import type { OAuthInput, OAuthSettings } from "@/lib/oauth"
-import { DEFAULT_OIDC_SCOPES, OAUTH_PROVIDER_ID } from "@/lib/oauth"
+import type {
+  OAuthInput,
+  OAuthSettings,
+  TokenEndpointAuthMethod,
+} from "@/lib/oauth"
+import {
+  DEFAULT_OIDC_SCOPES,
+  OAUTH_PROVIDER_ID,
+  TOKEN_ENDPOINT_AUTH_METHODS,
+} from "@/lib/oauth"
 
 export const OAUTH_SETTINGS_KEY = "oauthProvider"
 
@@ -18,6 +26,7 @@ export const oauthEndpointUrl = z
 
 const httpUrl = oauthEndpointUrl.refine((value) => !new URL(value).search)
 const optionalEndpoint = z.string().trim().max(2048).default("")
+const tokenEndpointAuthMethod = z.enum(TOKEN_ENDPOINT_AUTH_METHODS)
 const manualDefaults = {
   authorizationUrl: "",
   tokenUrl: "",
@@ -25,6 +34,8 @@ const manualDefaults = {
   redirectUrl: "",
   logoutUrl: "",
   userIdentifier: "",
+  // RFC 6749 requires authorization servers to support HTTP Basic.
+  tokenEndpointAuthMethod: "client_secret_basic" as TokenEndpointAuthMethod,
 }
 
 export const oauthInputSchema = z.object({
@@ -38,6 +49,9 @@ export const oauthInputSchema = z.object({
   redirectUrl: optionalEndpoint,
   logoutUrl: optionalEndpoint,
   userIdentifier: z.string().trim().max(256).default(""),
+  tokenEndpointAuthMethod: tokenEndpointAuthMethod.default(
+    manualDefaults.tokenEndpointAuthMethod
+  ),
   clientId: z.string().trim().max(512),
   clientSecret: z.string().max(8192),
   scopes: z.string().trim().max(1024),
@@ -45,6 +59,9 @@ export const oauthInputSchema = z.object({
 
 const storedSchema = oauthInputSchema.omit({ clientSecret: true }).extend({
   encryptedClientSecret: z.string(),
+  // Providers saved before this setting existed keep sending credentials in the body.
+  tokenEndpointAuthMethod:
+    tokenEndpointAuthMethod.default("client_secret_post"),
 })
 export type StoredOAuthSettings = z.infer<typeof storedSchema>
 export type OAuthProvider = Omit<
@@ -155,16 +172,25 @@ export async function loadDiscovery(value: string) {
     headers: { Accept: "application/json" },
   })
   if (!response.ok) throw new Error("Discovery unavailable")
-  return z
+  const document = z
     .object({
       issuer: httpUrl,
       authorization_endpoint: z.url({ protocol: /^https?$/ }),
       token_endpoint: z.url({ protocol: /^https?$/ }),
       jwks_uri: z.url({ protocol: /^https?$/ }).optional(),
       userinfo_endpoint: z.url({ protocol: /^https?$/ }).optional(),
+      token_endpoint_auth_methods_supported: z.array(z.string()).optional(),
     })
-    .refine((document) => !!document.jwks_uri || !!document.userinfo_endpoint)
+    .refine((parsed) => !!parsed.jwks_uri || !!parsed.userinfo_endpoint)
     .parse(await response.json())
+  const supported = document.token_endpoint_auth_methods_supported
+  // OIDC Discovery and RFC 8414 make client_secret_basic the default when the
+  // list is absent. A list without it keeps sending credentials in the body.
+  const method: TokenEndpointAuthMethod =
+    !supported || supported.includes("client_secret_basic")
+      ? "client_secret_basic"
+      : "client_secret_post"
+  return { ...document, tokenEndpointAuthMethod: method }
 }
 
 export async function testDiscovery(value: string): Promise<void> {

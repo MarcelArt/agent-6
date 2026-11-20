@@ -3,6 +3,7 @@ import { getRequestHeaders } from "@tanstack/react-start/server"
 import { z } from "zod"
 import { createOAuthManagement } from "./oauth-management"
 import { readOAuthSettings } from "./oauth-settings"
+import { TOKEN_ENDPOINT_AUTH_METHODS } from "@/lib/oauth"
 
 /** The only provider information exposed before sign-in. */
 export const getLoginProvider = createServerFn({ method: "GET" }).handler(
@@ -29,6 +30,9 @@ export const saveOAuthSettings = createServerFn({ method: "POST" })
       redirectUrl: z.string().default(""),
       logoutUrl: z.string().default(""),
       userIdentifier: z.string().default(""),
+      tokenEndpointAuthMethod: z
+        .enum(TOKEN_ENDPOINT_AUTH_METHODS)
+        .default("client_secret_basic"),
       clientId: z.string(),
       clientSecret: z.string(),
       scopes: z.string(),

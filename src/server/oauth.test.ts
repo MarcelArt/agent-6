@@ -14,7 +14,11 @@ import { decrypt } from "./secrets"
 import { getSessionUser } from "./session"
 import { createUserManagement } from "./user-management"
 import type { OAuthInput } from "@/lib/oauth"
-import { OAUTH_ACCOUNT_MESSAGE, oauthLoginError } from "@/lib/oauth"
+import {
+  OAUTH_ACCOUNT_MESSAGE,
+  oauthLoginError,
+  TOKEN_ENDPOINT_AUTH_METHODS,
+} from "@/lib/oauth"
 
 const BASE = "http://localhost:3000"
 const ISSUER = "https://identity.example.com"
@@ -30,6 +34,7 @@ const INPUT: OAuthInput = {
   redirectUrl: "",
   logoutUrl: "",
   userIdentifier: "",
+  tokenEndpointAuthMethod: "client_secret_basic",
   clientId: "agent6",
   clientSecret: "very-private-provider-secret",
   scopes: "openid email profile",
@@ -365,6 +370,100 @@ describe("Manual OAuth", () => {
         headers: new Headers({ cookie: sessionCookie }),
       })
     ).toBeNull()
+  })
+})
+
+describe("Token endpoint client authentication", () => {
+  const SENT = {
+    client_secret_basic: {
+      authorization: `Basic ${Buffer.from(`${INPUT.clientId}:${INPUT.clientSecret}`).toString("base64")}`,
+      clientId: null,
+      clientSecret: null,
+    },
+    client_secret_post: {
+      authorization: null,
+      clientId: INPUT.clientId,
+      clientSecret: INPUT.clientSecret,
+    },
+  }
+  let tokenRequests: Array<Record<string, string | null>>
+
+  /** Records where each token request put the client credentials. */
+  function recordTokenRequests(document: Record<string, unknown> = metadata) {
+    tokenRequests = []
+    const original = vi.mocked(fetch).getMockImplementation()!
+    vi.mocked(fetch).mockImplementation(async (input, init) => {
+      const request = new Request(input, init)
+      if (request.url.endsWith("/.well-known/openid-configuration"))
+        return Response.json(document)
+      if (request.url.endsWith("/token")) {
+        const body = new URLSearchParams(await request.text())
+        tokenRequests.push({
+          authorization: request.headers.get("authorization"),
+          clientId: body.get("client_id"),
+          clientSecret: body.get("client_secret"),
+        })
+      }
+      return original(input, init)
+    })
+  }
+
+  it.each([
+    { methods: undefined, expected: "client_secret_basic" },
+    { methods: ["client_secret_basic"], expected: "client_secret_basic" },
+    {
+      methods: ["client_secret_post", "client_secret_basic"],
+      expected: "client_secret_basic",
+    },
+    { methods: ["client_secret_post"], expected: "client_secret_post" },
+    { methods: ["private_key_jwt"], expected: "client_secret_post" },
+  ] as const)(
+    "discovery listing $methods sends $expected",
+    async ({ methods, expected }) => {
+      recordTokenRequests({
+        ...metadata,
+        token_endpoint_auth_methods_supported: methods,
+      })
+      await f.management.save(admin, INPUT)
+      expect((await oauth()).headers.get("location")).toBe("/chat")
+      expect(tokenRequests).toEqual([SENT[expected]])
+    }
+  )
+
+  it("manual setup sends the method the Admin selected", async () => {
+    claims.data = { employee_id: 42 }
+    recordTokenRequests()
+    for (const method of TOKEN_ENDPOINT_AUTH_METHODS) {
+      expect(
+        await f.management.save(admin, {
+          ...MANUAL,
+          tokenEndpointAuthMethod: method,
+        })
+      ).toEqual({ ok: true })
+      expect((await oauth({}, false)).headers.get("location")).toBe("/chat")
+    }
+    expect(tokenRequests).toEqual([
+      SENT.client_secret_basic,
+      SENT.client_secret_post,
+    ])
+  })
+
+  it("defaults new setups to HTTP Basic and keeps saved manual providers on the request body", async () => {
+    expect(await f.management.get(admin)).toMatchObject({
+      tokenEndpointAuthMethod: "client_secret_basic",
+    })
+    await f.management.save(admin, MANUAL)
+    const { tokenEndpointAuthMethod: _method, ...saved } = readOAuthSettings(
+      f.settings
+    )
+    f.settings.set(OAUTH_SETTINGS_KEY, JSON.stringify(saved))
+    expect(await f.management.get(admin)).toMatchObject({
+      tokenEndpointAuthMethod: "client_secret_post",
+    })
+    claims.data = { employee_id: 42 }
+    recordTokenRequests()
+    expect((await oauth({}, false)).headers.get("location")).toBe("/chat")
+    expect(tokenRequests).toEqual([SENT.client_secret_post])
   })
 })
 

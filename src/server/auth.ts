@@ -165,6 +165,7 @@ export function createAuth(
                 redirectURI: manual?.redirectUrl || undefined,
                 clientId: provider.clientId,
                 clientSecret: provider.clientSecret,
+                tokenEndpointAuth: { method: provider.tokenEndpointAuthMethod },
                 scopes: provider.scopes.split(/\s+/).filter(Boolean),
                 disableSignUp: true,
                 disableImplicitSignUp: true,
@@ -267,11 +268,11 @@ export function createAuthHandler(
           revision,
           auth: (async () => {
             const oauth = decryptOAuthProvider(saved, options.encryptionKey)
-            if (oauth.mode === "discovery")
-              oauth.userInfoUrl = (
-                await loadDiscovery(oauth.discoveryUrl)
-              ).userinfo_endpoint
-            else if (
+            if (oauth.mode === "discovery") {
+              const discovery = await loadDiscovery(oauth.discoveryUrl)
+              oauth.userInfoUrl = discovery.userinfo_endpoint
+              oauth.tokenEndpointAuthMethod = discovery.tokenEndpointAuthMethod
+            } else if (
               oauth.redirectUrl &&
               !isOAuthRedirectUrl(oauth.redirectUrl, options.baseUrl)
             )
