@@ -2,6 +2,7 @@ import handler, { createServerEntry } from "@tanstack/react-start/server-entry"
 import { startServer } from "./server/startup"
 import { replies } from "./server/reply-lifecycle"
 import { getRepositorySync } from "./server/repository-sync"
+import { getWebhookDispatcher } from "./server/webhook-dispatcher"
 import { closeDb } from "./server/repositories/db"
 import { getConfig } from "./server/config"
 import { publicRequest } from "./server/public-request"
@@ -16,6 +17,8 @@ if (import.meta.env.PROD) {
     // A reply can be waiting for a sync; stop syncs after replies have settled.
     await replies.drain()
     await getRepositorySync().shutdown()
+    // Requests already sent finish; queued deliveries resume after restart.
+    await getWebhookDispatcher().stop()
     closeDb()
   })
 }

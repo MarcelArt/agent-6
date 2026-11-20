@@ -13,23 +13,21 @@ import type { SettingsRepository } from "./repositories/settings"
 import type { LanguageResult } from "@/lib/preferred-language"
 import { MAX_LANGUAGE_LENGTH } from "@/lib/preferred-language"
 
-export function createSettingsManagement(
-  deps: {
-    auth?: Auth
-    settings?: SettingsRepository
-    translate?: (language: string) => ReturnType<typeof translateAgentMessages>
-  } = {}
-) {
+type SettingsDeps = {
+  settings?: SettingsRepository
+  translate?: (language: string) => ReturnType<typeof translateAgentMessages>
+}
+
+/** The Preferred Language, shared by Admin Settings and the API. Callers authorize first. */
+export function createSettingsActions(deps: SettingsDeps = {}) {
   const settings = deps.settings ?? createSettingsRepository()
   return {
-    async get(headers: Headers) {
-      await requireAdmin({ auth: deps.auth, headers })
+    get() {
       return {
         preferredLanguage: readLanguageSettings(settings).preferredLanguage,
       }
     },
-    async save(headers: Headers, input: string): Promise<LanguageResult> {
-      await requireAdmin({ auth: deps.auth, headers })
+    async save(input: string): Promise<LanguageResult> {
       const language = input.trim()
       if (
         !language ||
@@ -64,6 +62,22 @@ export function createSettingsManagement(
       }
       settings.set("preferredLanguage", language)
       return { ok: true, preferredLanguage: language }
+    },
+  }
+}
+
+export function createSettingsManagement(
+  deps: SettingsDeps & { auth?: Auth } = {}
+) {
+  const actions = createSettingsActions(deps)
+  return {
+    async get(headers: Headers) {
+      await requireAdmin({ auth: deps.auth, headers })
+      return actions.get()
+    },
+    async save(headers: Headers, input: string): Promise<LanguageResult> {
+      await requireAdmin({ auth: deps.auth, headers })
+      return actions.save(input)
     },
   }
 }

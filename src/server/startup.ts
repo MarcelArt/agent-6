@@ -7,6 +7,7 @@ import { getDb } from "./repositories/db"
 import { createUsersRepository } from "./repositories/users"
 import { getRepositorySync } from "./repository-sync"
 import { createUploads } from "./uploads"
+import { getWebhookDispatcher } from "./webhook-dispatcher"
 import { TOKEN_MISSING_MESSAGE } from "@/lib/repositories"
 
 /** A configuration problem stops the process with a readable message. */
@@ -31,7 +32,8 @@ export function startup(): void {
 
 /**
  * Runs once when the server starts: `startup`, then creates the first Admin
- * if no user exists yet, and picks up Repository syncs a restart cut off.
+ * if no user exists yet, picks up Repository syncs a restart cut off and
+ * starts sending Webhook Deliveries, including those a restart cut off.
  */
 export async function startServer(): Promise<void> {
   startup()
@@ -50,6 +52,7 @@ export async function startServer(): Promise<void> {
   if (!getConfig().githubToken)
     console.warn(`\nWarning: ${TOKEN_MISSING_MESSAGE}\n`)
   getRepositorySync().resume()
+  getWebhookDispatcher().start()
   void createUploads()
     .sweep()
     .catch(() => {})

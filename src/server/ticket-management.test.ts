@@ -10,6 +10,7 @@ import { AuthorizationError } from "./session"
 import { TicketError, createTicketManagement } from "./ticket-management"
 import { openDb } from "./repositories/db"
 import { createApplicationsRepository } from "./repositories/applications"
+import { createAuditRepository } from "./repositories/audit"
 import { createConversationsRepository } from "./repositories/conversations"
 import { createRepositoriesRepository } from "./repositories/repositories"
 import { createTicketsRepository } from "./repositories/tickets"
@@ -26,6 +27,7 @@ let applications: ReturnType<typeof createApplicationsRepository>
 let tickets: ReturnType<typeof createTicketsRepository>
 let github: FakeGitHub
 let management: ReturnType<typeof createTicketManagement>
+let audit: ReturnType<typeof createAuditRepository>
 
 beforeEach(async () => {
   dir = mkdtempSync(join(tmpdir(), "agent6-ticket-management-"))
@@ -81,10 +83,12 @@ beforeEach(async () => {
   applications.attachRepository(appId, portalId)
   applications.attachRepository(appId, billingId)
   github = createFakeGitHub()
+  audit = createAuditRepository(db)
   management = createTicketManagement({
     auth,
     tickets,
     applications,
+    audit,
     github: createGitHubIssues("token", github.fetcher),
     baseUrl: "http://localhost:3000",
   })
@@ -319,6 +323,7 @@ describe("Ticket review", () => {
       auth,
       tickets,
       applications,
+      audit,
       github: null,
     })
     const second = ticket()
@@ -375,14 +380,15 @@ describe("Ticket review", () => {
       ...edits(),
       repository: "halden/portal",
     }
-    expect(tickets.claim(id, changes)).toBe(true)
+    const claim = tickets.claim(id, changes)
+    expect(claim).toEqual(expect.any(String))
     await expect(management.decline(admin, id, "No")).rejects.toEqual(refusal())
     expect((await management.get(admin, id)).filing).toBe(true)
     // A hold taken long ago has expired, as after a crash.
-    tickets.release(id, null)
-    expect(tickets.claim(id, changes, new Date(Date.now() - 3 * 60_000))).toBe(
-      true
-    )
+    tickets.release(id, claim!, null)
+    expect(
+      tickets.claim(id, changes, new Date(Date.now() - 3 * 60_000))
+    ).toEqual(expect.any(String))
     await management.decline(admin, id, "Works as intended.")
     expect((await management.get(admin, id)).status).toBe("declined")
   })

@@ -5,6 +5,7 @@ A self-hosted support agent for one organization. It answers questions about you
 - [Administrator setup guide](docs/setup.md): Docker deployment, connections, HTTPS, backups and upgrades.
 - [Usage and development notes](docs/usage.md).
 - [Domain model](CONTEXT.md).
+- API and webhook references: `/docs/api` and `/docs/webhooks` on a running instance.
 - [Implementation plans](docs/plans/00-README.md).
 
 With `compose.yaml` and a completed `.env` copied from `.env.example`:

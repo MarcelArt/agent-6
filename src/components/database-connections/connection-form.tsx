@@ -155,7 +155,7 @@ export function ConnectionForm({
                 {connection?.needsSecret
                   ? "Not entered yet. Type it so the agent can use this connection; left blank, the connection keeps needing it."
                   : connection
-                    ? "Saved password unchanged. Type a new password to replace it."
+                    ? "Saved password unchanged. Type a new password to replace it. Changing the host, port, database, user or SSL mode needs the password again."
                     : "Encrypted when saved. Use a dedicated read-only Postgres role."}
               </FieldDescription>
             )}

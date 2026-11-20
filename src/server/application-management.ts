@@ -18,7 +18,9 @@ import {
 export class ApplicationError extends Error {
   constructor(
     message: string,
-    public readonly field?: ApplicationField
+    public readonly field?: ApplicationField,
+    /** For the API: 404 missing, 409 conflict; 400 otherwise. */
+    public readonly status = 400
   ) {
     super(message)
     this.name = "ApplicationError"
@@ -49,24 +51,72 @@ export function validApplicationInput(
   return value
 }
 
-export function createApplicationManagement(
-  deps: {
-    auth?: Auth
-    applications?: ApplicationsRepository
-    repositories?: RepositoriesRepository
-  } = {}
-) {
-  const auth = deps.auth ?? getAuth()
+type ApplicationDeps = {
+  applications?: ApplicationsRepository
+  repositories?: RepositoriesRepository
+}
+
+/**
+ * The changes to Applications and their Repository Attachments, shared by the
+ * Admin screens and the API. Callers authorize first.
+ */
+export function createApplicationActions(deps: ApplicationDeps = {}) {
   const applications = deps.applications ?? createApplicationsRepository()
   const repositories = deps.repositories ?? createRepositoriesRepository()
   function existing(id: string) {
     const found = applications.findById(id)
     if (!found)
       throw new ApplicationError(
-        "This Application no longer exists. Go back to the list of Applications."
+        "This Application no longer exists. Go back to the list of Applications.",
+        undefined,
+        404
       )
     return found
   }
+  return {
+    existing,
+    create(input: ApplicationInput) {
+      return applications.create(validApplicationInput(input))
+    },
+    update(applicationId: string, input: ApplicationInput) {
+      existing(applicationId)
+      applications.update(applicationId, validApplicationInput(input))
+      return existing(applicationId)
+    },
+    /** Saved Conversations protect an Application from removal. */
+    remove(applicationId: string) {
+      if (applications.hasConversations(applicationId))
+        throw new ApplicationError(
+          "This Application has saved Conversations and cannot be removed.",
+          undefined,
+          409
+        )
+      applications.delete(applicationId)
+    },
+    attachRepository(applicationId: string, repositoryId: string) {
+      existing(applicationId)
+      if (!repositories.findById(repositoryId))
+        throw new ApplicationError(
+          "This Repository no longer exists. Choose another Repository.",
+          undefined,
+          404
+        )
+      applications.attachRepository(applicationId, repositoryId)
+    },
+    detachRepository(applicationId: string, repositoryId: string) {
+      existing(applicationId)
+      applications.detachRepository(applicationId, repositoryId)
+    },
+  }
+}
+
+export function createApplicationManagement(
+  deps: ApplicationDeps & { auth?: Auth } = {}
+) {
+  const auth = deps.auth ?? getAuth()
+  const applications = deps.applications ?? createApplicationsRepository()
+  const actions = createApplicationActions({ ...deps, applications })
+  const { existing } = actions
   return {
     async list(
       headers: Headers,
@@ -102,7 +152,7 @@ export function createApplicationManagement(
     },
     async create(headers: Headers, input: ApplicationInput) {
       await requireAdmin({ auth, headers })
-      return applications.create(validApplicationInput(input))
+      return actions.create(input)
     },
     async update(
       headers: Headers,
@@ -110,17 +160,11 @@ export function createApplicationManagement(
       input: ApplicationInput
     ) {
       await requireAdmin({ auth, headers })
-      existing(applicationId)
-      applications.update(applicationId, validApplicationInput(input))
-      return existing(applicationId)
+      return actions.update(applicationId, input)
     },
     async remove(headers: Headers, applicationId: string) {
       await requireAdmin({ auth, headers })
-      if (applications.hasConversations(applicationId))
-        throw new ApplicationError(
-          "This Application has saved Conversations and cannot be removed."
-        )
-      applications.delete(applicationId)
+      actions.remove(applicationId)
     },
     async availableRepositories(
       headers: Headers,
@@ -137,12 +181,7 @@ export function createApplicationManagement(
       repositoryId: string
     ) {
       await requireAdmin({ auth, headers })
-      existing(applicationId)
-      if (!repositories.findById(repositoryId))
-        throw new ApplicationError(
-          "This Repository no longer exists. Choose another Repository."
-        )
-      applications.attachRepository(applicationId, repositoryId)
+      actions.attachRepository(applicationId, repositoryId)
     },
     async detachRepository(
       headers: Headers,
@@ -150,8 +189,7 @@ export function createApplicationManagement(
       repositoryId: string
     ) {
       await requireAdmin({ auth, headers })
-      existing(applicationId)
-      applications.detachRepository(applicationId, repositoryId)
+      actions.detachRepository(applicationId, repositoryId)
     },
   }
 }

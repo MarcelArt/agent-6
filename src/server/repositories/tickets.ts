@@ -3,7 +3,17 @@ import "@tanstack/react-start/server-only"
 import { randomUUID } from "node:crypto"
 import { and, asc, desc, eq, isNull, lt, ne, or, sql } from "drizzle-orm"
 import { getDb } from "./db"
-import { application, conversation, filedIssue, ticket, user } from "./schema"
+import {
+  apiKey,
+  application,
+  conversation,
+  filedIssue,
+  serviceAccount,
+  ticket,
+  user,
+} from "./schema"
+import { createWebhooksRepository } from "./webhooks"
+import type { Actor } from "./audit"
 import type { Db } from "./db"
 import type { IssueKind } from "@/lib/chat"
 import type {
@@ -73,7 +83,23 @@ const filedColumns = {
   outcome: filedIssue.outcome,
 }
 
+/** The decision columns for an Admin or a Service Account's API Key. */
+function decidedByColumns(actor: Actor) {
+  return actor.type === "admin"
+    ? {
+        decidedBy: actor.userId,
+        decidedByServiceAccountId: null,
+        decidedByApiKeyId: null,
+      }
+    : {
+        decidedBy: null,
+        decidedByServiceAccountId: actor.serviceAccountId,
+        decidedByApiKeyId: actor.apiKeyId,
+      }
+}
+
 export function createTicketsRepository(db: Db = getDb()) {
+  const events = createWebhooksRepository(db)
   return {
     /**
      * Counts and inserts in one synchronous transaction, so tool calls the
@@ -117,6 +143,7 @@ export function createTicketsRepository(db: Db = getDb()) {
           db.insert(ticket)
             .values({ ...input, id, createdAt: now, updatedAt: now })
             .run()
+          events.recordTicketEvent("ticket.created", id, now)
           return { id }
         },
         { behavior: "immediate" }
@@ -279,6 +306,19 @@ export function createTicketsRepository(db: Db = getDb()) {
             .where(eq(user.id, row.ticket.decidedBy))
             .get() ?? null)
         : null
+      const decidedByServiceAccount = row.ticket.decidedByServiceAccountId
+        ? (db
+            .select({
+              id: serviceAccount.id,
+              name: serviceAccount.name,
+              keyId: apiKey.id,
+              keyName: apiKey.name,
+            })
+            .from(serviceAccount)
+            .leftJoin(apiKey, eq(apiKey.id, row.ticket.decidedByApiKeyId ?? ""))
+            .where(eq(serviceAccount.id, row.ticket.decidedByServiceAccountId))
+            .get() ?? null)
+        : null
       const duplicate = row.ticket.possibleDuplicateOf
         ? db
             .select({
@@ -301,6 +341,17 @@ export function createTicketsRepository(db: Db = getDb()) {
         user: row.user,
         issue: issueLink(row.issue),
         decidedBy,
+        decidedByServiceAccount: decidedByServiceAccount && {
+          id: decidedByServiceAccount.id,
+          name: decidedByServiceAccount.name,
+          apiKey:
+            decidedByServiceAccount.keyId && decidedByServiceAccount.keyName
+              ? {
+                  id: decidedByServiceAccount.keyId,
+                  name: decidedByServiceAccount.keyName,
+                }
+              : null,
+        },
         possibleDuplicate: duplicate
           ? {
               id: duplicate.id,
@@ -313,16 +364,19 @@ export function createTicketsRepository(db: Db = getDb()) {
     },
 
     /**
-     * Saves the Admin's version and holds the Ticket while its issue is filed.
-     * False when it is decided or another acceptance holds it.
+     * Saves the final version and holds the Ticket while its issue is filed.
+     * Answers the claim that alone may complete or release the hold; null
+     * when the Ticket is decided or another acceptance holds it.
      */
     claim(id: string, changes: TicketChanges, now = new Date()) {
-      return (
+      const claim = randomUUID()
+      const held =
         db
           .update(ticket)
           .set({
             ...changes,
             filingUntil: new Date(now.getTime() + FILING_LEASE_MS),
+            filingClaim: claim,
             updatedAt: now,
           })
           .where(
@@ -333,21 +387,40 @@ export function createTicketsRepository(db: Db = getDb()) {
             )
           )
           .run().changes > 0
-      )
+      return held ? claim : null
     },
 
-    /** Filing failed: the Ticket stays pending, with the reason for Admins. */
-    release(id: string, lastError: string | null) {
+    /**
+     * Filing failed: the Ticket stays pending, with the reason for Admins.
+     * Only the acceptance holding `claim` may release it.
+     */
+    release(id: string, claim: string, lastError: string | null) {
       db.update(ticket)
-        .set({ filingUntil: null, lastError, updatedAt: new Date() })
-        .where(and(eq(ticket.id, id), eq(ticket.status, "pending")))
+        .set({
+          filingUntil: null,
+          filingClaim: null,
+          lastError,
+          updatedAt: new Date(),
+        })
+        .where(
+          and(
+            eq(ticket.id, id),
+            eq(ticket.status, "pending"),
+            eq(ticket.filingClaim, claim)
+          )
+        )
         .run()
     },
 
-    /** Records the Filed Issue on the Conversation and decides the Ticket. */
+    /**
+     * Records the Filed Issue on the Conversation, decides the Ticket and
+     * saves its webhook events, in one transaction. False when `claim` no
+     * longer holds the Ticket: another decision came first.
+     */
     accept(
       id: string,
-      adminId: string,
+      claim: string,
+      actor: Actor,
       filed: {
         outcome: "new" | "comment"
         number: number
@@ -355,11 +428,21 @@ export function createTicketsRepository(db: Db = getDb()) {
         title: string
       },
       now = new Date()
-    ) {
-      db.transaction(
+    ): boolean {
+      return db.transaction(
         () => {
-          const found = db.select().from(ticket).where(eq(ticket.id, id)).get()
-          if (!found) return
+          const found = db
+            .select()
+            .from(ticket)
+            .where(
+              and(
+                eq(ticket.id, id),
+                eq(ticket.status, "pending"),
+                eq(ticket.filingClaim, claim)
+              )
+            )
+            .get()
+          if (!found) return false
           const filedIssueId = randomUUID()
           db.insert(filedIssue)
             .values({
@@ -379,40 +462,56 @@ export function createTicketsRepository(db: Db = getDb()) {
           db.update(ticket)
             .set({
               status: "accepted",
-              decidedBy: adminId,
+              ...decidedByColumns(actor),
               decidedAt: now,
               filingUntil: null,
+              filingClaim: null,
               lastError: null,
               filedIssueId,
               updatedAt: now,
             })
             .where(eq(ticket.id, id))
             .run()
+          events.recordTicketEvent("ticket.accepted", id, now)
+          if (filed.outcome === "new")
+            events.recordTicketEvent("github.issue.created", id, now)
+          return true
         },
         { behavior: "immediate" }
       )
     },
 
-    /** False when the Ticket is decided or an acceptance is filing it. */
-    decline(id: string, adminId: string, reason: string, now = new Date()) {
-      return (
-        db
-          .update(ticket)
-          .set({
-            status: "declined",
-            declineReason: reason,
-            decidedBy: adminId,
-            decidedAt: now,
-            updatedAt: now,
-          })
-          .where(
-            and(
-              eq(ticket.id, id),
-              eq(ticket.status, "pending"),
-              or(isNull(ticket.filingUntil), lt(ticket.filingUntil, now))
-            )
-          )
-          .run().changes > 0
+    /**
+     * Declines with the reason and saves the webhook event, in one
+     * transaction. False when the Ticket is decided or an acceptance is
+     * filing it.
+     */
+    decline(id: string, actor: Actor, reason: string, now = new Date()) {
+      return db.transaction(
+        () => {
+          const changed =
+            db
+              .update(ticket)
+              .set({
+                status: "declined",
+                declineReason: reason,
+                ...decidedByColumns(actor),
+                decidedAt: now,
+                filingClaim: null,
+                updatedAt: now,
+              })
+              .where(
+                and(
+                  eq(ticket.id, id),
+                  eq(ticket.status, "pending"),
+                  or(isNull(ticket.filingUntil), lt(ticket.filingUntil, now))
+                )
+              )
+              .run().changes > 0
+          if (changed) events.recordTicketEvent("ticket.declined", id, now)
+          return changed
+        },
+        { behavior: "immediate" }
       )
     },
 

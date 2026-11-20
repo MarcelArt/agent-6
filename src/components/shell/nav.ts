@@ -3,12 +3,14 @@ import {
   DatabaseIcon,
   FolderGit2Icon,
   HistoryIcon,
+  KeyRoundIcon,
   MessageSquareIcon,
   ScrollTextIcon,
   SettingsIcon,
   TicketIcon,
   TicketsIcon,
   UsersIcon,
+  WebhookIcon,
 } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 import type { LinkProps } from "@tanstack/react-router"
@@ -98,6 +100,18 @@ export const adminNav: Array<NavItem> = [
     icon: ScrollTextIcon,
     isActive: under("/admin/log-connections"),
     badge: "logConnectionsNeedingSecret",
+  },
+  {
+    label: "Service Accounts",
+    to: "/admin/service-accounts",
+    icon: KeyRoundIcon,
+    isActive: under("/admin/service-accounts"),
+  },
+  {
+    label: "Webhooks",
+    to: "/admin/webhooks",
+    icon: WebhookIcon,
+    isActive: under("/admin/webhooks"),
   },
   {
     label: "Settings",

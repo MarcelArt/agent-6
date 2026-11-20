@@ -115,3 +115,7 @@ An Admin's configuration for sending selected Agent 6 events to an external dest
 
 **Webhook Delivery**:
 The sending of one event to one Webhook Subscription, which can take several attempts.
+
+**Signing Secret**:
+The secret of one Webhook Subscription that signs each Webhook Delivery, so its receiver can verify the request came from Agent 6 unchanged.
+_Avoid_: API Key, webhook password

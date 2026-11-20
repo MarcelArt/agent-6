@@ -16,10 +16,36 @@ import { tidyTags } from "@/lib/repositories"
 export class DatabaseConnectionError extends Error {
   constructor(
     message: string,
-    public readonly field?: keyof DatabaseConnectionInput
+    public readonly field?: keyof DatabaseConnectionInput,
+    /** For the API: 404 missing; 400 otherwise. */
+    public readonly status = 400
   ) {
     super(message)
   }
+}
+
+/**
+ * A saved password is only reused for the destination and account it was
+ * entered for. Changing either needs it again, so a password never reaches a
+ * server it was not meant for.
+ */
+function retargeted(
+  saved: {
+    host: string
+    port: number
+    database: string
+    user: string
+    sslMode: string
+  },
+  next: DatabaseConnectionInput
+) {
+  return (
+    saved.host.toLowerCase() !== next.host.toLowerCase() ||
+    saved.port !== next.port ||
+    saved.database !== next.database ||
+    saved.user !== next.user ||
+    saved.sslMode !== next.sslMode
+  )
 }
 /** The rules every saved Database Connection follows, also applied to imported ones. */
 export function validDatabaseConnectionInput(
@@ -68,24 +94,41 @@ export function validDatabaseConnectionInput(
     )
   return value
 }
-export function createDatabaseConnectionManagement(
-  deps: {
-    auth?: Auth
-    connections?: DatabaseConnectionsRepository
-    applications?: ApplicationsRepository
-    test?: typeof testPostgres
-  } = {}
+type DatabaseConnectionDeps = {
+  connections?: DatabaseConnectionsRepository
+  applications?: ApplicationsRepository
+  test?: typeof testPostgres
+}
+
+/**
+ * The changes to Database Connections and their Attachments, shared by the
+ * Admin screens and the API. Callers authorize first.
+ */
+export function createDatabaseConnectionActions(
+  deps: DatabaseConnectionDeps = {}
 ) {
-  const auth = deps.auth ?? getAuth(),
-    connections = deps.connections ?? createDatabaseConnectionsRepository()
-  const admin = (headers: Headers) => requireAdmin({ auth, headers })
+  const connections = deps.connections ?? createDatabaseConnectionsRepository()
   function existing(id: string) {
     const found = connections.findById(id)
     if (!found)
       throw new DatabaseConnectionError(
-        "This Database Connection no longer exists. Choose another connection."
+        "This Database Connection no longer exists. Choose another connection.",
+        undefined,
+        404
       )
     return found
+  }
+  function application(applicationId: string) {
+    if (
+      !(deps.applications ?? createApplicationsRepository()).findById(
+        applicationId
+      )
+    )
+      throw new DatabaseConnectionError(
+        "This Application no longer exists.",
+        undefined,
+        404
+      )
   }
   async function probe(input: Parameters<typeof testPostgres>[0]) {
     try {
@@ -120,6 +163,76 @@ export function createDatabaseConnectionManagement(
     }
   }
   return {
+    existing,
+    application,
+    /**
+     * A blank password keeps the saved one, and keeps a Needs Secret
+     * connection Needs Secret without testing it. A new connection's blank
+     * password is an empty password. Changing the destination or account
+     * needs the password again.
+     */
+    async save(input: DatabaseConnectionInput, id?: string) {
+      const before = id ? (existing(id), connections.credentials(id)!) : null
+      const value = validDatabaseConnectionInput(input)
+      if (
+        before &&
+        !value.password &&
+        before.encryptedPassword !== null &&
+        retargeted(before, value)
+      )
+        throw new DatabaseConnectionError(
+          "Enter the password again. Changing the host, port, database, user or SSL mode needs fresh credentials.",
+          "password"
+        )
+      const password =
+        value.password ||
+        (!before
+          ? ""
+          : before.encryptedPassword === null
+            ? null
+            : credentials(before.id).password)
+      const test =
+        password === null
+          ? NEEDS_PASSWORD_TEST
+          : await probe({ ...value, password })
+      const { password: _password, ...publicValues } = value
+      const saved = {
+        ...publicValues,
+        encryptedPassword: password === null ? null : encrypt(password),
+      }
+      return id
+        ? connections.update(id, saved, test)
+        : connections.create(saved, test)
+    },
+    async test(id: string) {
+      existing(id)
+      const test = await probe(credentials(id))
+      connections.recordTest(id, test)
+      return test
+    },
+    remove(id: string) {
+      existing(id)
+      connections.delete(id)
+    },
+    attach(applicationId: string, id: string) {
+      existing(id)
+      application(applicationId)
+      connections.attach(applicationId, id)
+    },
+    detach(applicationId: string, id: string) {
+      connections.detach(applicationId, id)
+    },
+  }
+}
+
+export function createDatabaseConnectionManagement(
+  deps: DatabaseConnectionDeps & { auth?: Auth } = {}
+) {
+  const auth = deps.auth ?? getAuth(),
+    connections = deps.connections ?? createDatabaseConnectionsRepository()
+  const actions = createDatabaseConnectionActions({ ...deps, connections })
+  const admin = (headers: Headers) => requireAdmin({ auth, headers })
+  return {
     async list(
       headers: Headers,
       options: { search?: string; page?: number } = {}
@@ -134,46 +247,17 @@ export function createDatabaseConnectionManagement(
         ? { connection: found, applications: connections.applicationsOf(id) }
         : null
     },
-    /**
-     * A blank password keeps the saved one, and keeps a Needs Secret
-     * connection Needs Secret without testing it. A new connection's blank
-     * password is an empty password.
-     */
     async save(headers: Headers, input: DatabaseConnectionInput, id?: string) {
       await admin(headers)
-      if (id) existing(id)
-      const value = validDatabaseConnectionInput(input)
-      const password =
-        value.password ||
-        (!id
-          ? ""
-          : connections.credentials(id)!.encryptedPassword === null
-            ? null
-            : credentials(id).password)
-      const test =
-        password === null
-          ? NEEDS_PASSWORD_TEST
-          : await probe({ ...value, password })
-      const { password: _password, ...publicValues } = value
-      const saved = {
-        ...publicValues,
-        encryptedPassword: password === null ? null : encrypt(password),
-      }
-      return id
-        ? connections.update(id, saved, test)
-        : connections.create(saved, test)
+      return actions.save(input, id)
     },
     async test(headers: Headers, id: string) {
       await admin(headers)
-      existing(id)
-      const test = await probe(credentials(id))
-      connections.recordTest(id, test)
-      return test
+      return actions.test(id)
     },
     async remove(headers: Headers, id: string) {
       await admin(headers)
-      existing(id)
-      connections.delete(id)
+      actions.remove(id)
     },
     async available(
       headers: Headers,
@@ -181,28 +265,16 @@ export function createDatabaseConnectionManagement(
       options: { search?: string; page?: number }
     ) {
       await admin(headers)
-      if (
-        !(deps.applications ?? createApplicationsRepository()).findById(
-          applicationId
-        )
-      )
-        throw new DatabaseConnectionError("This Application no longer exists.")
+      actions.application(applicationId)
       return connections.list({ ...options, availableFor: applicationId })
     },
     async attach(headers: Headers, applicationId: string, id: string) {
       await admin(headers)
-      existing(id)
-      if (
-        !(deps.applications ?? createApplicationsRepository()).findById(
-          applicationId
-        )
-      )
-        throw new DatabaseConnectionError("This Application no longer exists.")
-      connections.attach(applicationId, id)
+      actions.attach(applicationId, id)
     },
     async detach(headers: Headers, applicationId: string, id: string) {
       await admin(headers)
-      connections.detach(applicationId, id)
+      actions.detach(applicationId, id)
     },
   }
 }

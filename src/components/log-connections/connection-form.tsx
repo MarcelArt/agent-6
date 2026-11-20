@@ -220,7 +220,7 @@ export function ConnectionForm({
             />
             <FieldDescription id="log-connection-authSecret-hint">
               {secretSaved
-                ? "Saved value unchanged. Type a new one to replace it."
+                ? "Saved value unchanged. Type a new one to replace it. Changing the base URL, tenant ID or username needs it again."
                 : secretMissing
                   ? "Not entered yet. Type it so the agent can use this connection; left blank, the connection keeps needing it."
                   : "Encrypted when saved and never shown again."}

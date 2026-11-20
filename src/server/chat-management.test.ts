@@ -609,7 +609,11 @@ describe("Conversations", () => {
     expect(JSON.stringify([done, saved])).not.toContain("src/invoice.ts")
     expect(run.mock.calls[0][0].tickets).toEqual([])
 
-    tickets.decline(ticketId, otherId, "This works as intended.")
+    tickets.decline(
+      ticketId,
+      { type: "admin", userId: otherId },
+      "This works as intended."
+    )
     await events(
       await management.reply(client, conversation.id, {
         message: "Why was it declined?",

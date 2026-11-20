@@ -111,8 +111,26 @@ function TicketDetail({ ticket }: { ticket: AdminTicket }) {
             <dt className="text-muted-foreground">
               {ticketStatusLabels[ticket.status]} by
             </dt>
-            <dd>
-              {ticket.decidedBy?.name ?? "A removed user"}
+            <dd className="break-words">
+              {ticket.decidedByServiceAccount ? (
+                <>
+                  <Link
+                    to="/admin/service-accounts/$serviceAccountId"
+                    params={{
+                      serviceAccountId: ticket.decidedByServiceAccount.id,
+                    }}
+                    className={link}
+                  >
+                    {ticket.decidedByServiceAccount.name}
+                  </Link>{" "}
+                  (Service Account
+                  {ticket.decidedByServiceAccount.apiKey &&
+                    `, API Key ${ticket.decidedByServiceAccount.apiKey.name}`}
+                  )
+                </>
+              ) : (
+                (ticket.decidedBy?.name ?? "A removed user")
+              )}
               {ticket.decidedAt !== null && (
                 <>
                   {" · "}

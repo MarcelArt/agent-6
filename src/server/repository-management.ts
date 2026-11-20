@@ -35,7 +35,9 @@ export class RepositoryError extends Error {
   constructor(
     message: string,
     /** The form field the problem belongs to, if any. */
-    public readonly field?: RepositoryField
+    public readonly field?: RepositoryField,
+    /** For the API: 404 missing, 409 conflict, 502/503 GitHub; 400 otherwise. */
+    public readonly status = 400
   ) {
     super(message)
     this.name = "RepositoryError"
@@ -114,16 +116,22 @@ function fromGitHubError(error: unknown, fullName: string): unknown {
       )
     case "bad-token":
       return new RepositoryError(
-        "GitHub refused the configured token: it is wrong or has expired. Set GITHUB_TOKEN to a working token and restart Agent 6."
+        "GitHub refused the configured token: it is wrong or has expired. Set GITHUB_TOKEN to a working token and restart Agent 6.",
+        undefined,
+        503
       )
     case "rate-limited":
       return new RepositoryError(
-        "GitHub is limiting requests from this token right now. Wait a few minutes, then try again."
+        "GitHub is limiting requests from this token right now. Wait a few minutes, then try again.",
+        undefined,
+        503
       )
     case "rejected":
     case "unreachable":
       return new RepositoryError(
-        "GitHub could not be reached from the server. Check its network connection, then try again."
+        "GitHub could not be reached from the server. Check its network connection, then try again.",
+        undefined,
+        502
       )
   }
 }
@@ -135,7 +143,8 @@ function fromGitHubError(error: unknown, fullName: string): unknown {
  */
 export function createGitHubChecks(github: GitHub | undefined) {
   function requireGitHub(): GitHub {
-    if (!github) throw new RepositoryError(TOKEN_MISSING_MESSAGE)
+    if (!github)
+      throw new RepositoryError(TOKEN_MISSING_MESSAGE, undefined, 503)
     return github
   }
 
@@ -185,29 +194,31 @@ export function configuredGitHub(): GitHub | undefined {
   return githubToken ? createGitHub(githubToken) : undefined
 }
 
-export function createRepositoryManagement(
-  deps: {
-    auth?: Auth
-    repositories?: RepositoriesRepository
-    sync?: RepositorySync
-    /** Undefined when `GITHUB_TOKEN` is not set. */
-    github?: GitHub
-    /** Names of the Applications a Repository is attached to. */
-    applicationsOf?: (repositoryId: string) => Array<string>
-  } = {}
-) {
-  const auth = deps.auth ?? getAuth()
+type RepositoryDeps = {
+  repositories?: RepositoriesRepository
+  sync?: RepositorySync
+  /** Undefined when `GITHUB_TOKEN` is not set. */
+  github?: GitHub
+}
+
+/**
+ * The changes to Repositories, shared by the Admin screens and the API.
+ * Callers authorize first.
+ */
+export function createRepositoryActions(deps: RepositoryDeps = {}) {
   const repositories = deps.repositories ?? createRepositoriesRepository()
   const sync = deps.sync ?? getRepositorySync()
   const github = "github" in deps ? deps.github : configuredGitHub()
-  const applicationsOf = deps.applicationsOf ?? repositories.applicationsOf
-  const { requireGitHub, lookUp, requireBranch } = createGitHubChecks(github)
+  const checks = createGitHubChecks(github)
+  const { lookUp, requireBranch } = checks
 
   function existing(repositoryId: string): Repository {
     const repository = repositories.findById(repositoryId)
     if (!repository) {
       throw new RepositoryError(
-        "This Repository no longer exists. Go back to the list of Repositories."
+        "This Repository no longer exists. Go back to the list of Repositories.",
+        undefined,
+        404
       )
     }
     return repository
@@ -217,10 +228,82 @@ export function createRepositoryManagement(
     if (repositories.findByFullName(fullName)) {
       throw new RepositoryError(
         `${fullName} is already connected. Open it from the list instead.`,
-        "repository"
+        "repository",
+        409
       )
     }
   }
+
+  return {
+    github,
+    checks,
+    existing,
+    refuseConnected,
+
+    /**
+     * Saves a new Repository and starts its first clone in the background.
+     * Saves nothing unless the token can read the repository and the branch
+     * exists.
+     */
+    async connect(
+      input: RepositoryInput & { reference: string }
+    ): Promise<Repository> {
+      const found = await lookUp(input.reference)
+      const valid = validRepositoryInput(input)
+      await requireBranch(found.fullName, valid.trackedBranch)
+      // Checked last, with nothing awaited before the insert.
+      refuseConnected(found.fullName)
+      const created = repositories.create({
+        fullName: found.fullName,
+        ...valid,
+      })
+      void sync.sync(created.id)
+      return existing(created.id)
+    },
+
+    /** Saves Tracked Branch, Tags and description. A new branch syncs again. */
+    async update(
+      repositoryId: string,
+      input: RepositoryInput
+    ): Promise<Repository> {
+      const valid = validRepositoryInput(input)
+      const before = existing(repositoryId)
+      const branchChanged = valid.trackedBranch !== before.trackedBranch
+      if (branchChanged) {
+        await requireBranch(before.fullName, valid.trackedBranch)
+        existing(repositoryId)
+      }
+      repositories.update(repositoryId, valid)
+      // A sync that is running notices the new branch and syncs once more.
+      if (branchChanged) void sync.sync(repositoryId)
+      return existing(repositoryId)
+    },
+
+    /** Deletes the Repository and its clone. False when it did not exist. */
+    async remove(repositoryId: string): Promise<boolean> {
+      if (!repositories.findById(repositoryId)) return false
+      // Foreign keys cascade to its Attachments in the same statement.
+      repositories.delete(repositoryId)
+      await sync.remove(repositoryId)
+      return true
+    },
+  }
+}
+
+export function createRepositoryManagement(
+  deps: RepositoryDeps & {
+    auth?: Auth
+    /** Names of the Applications a Repository is attached to. */
+    applicationsOf?: (repositoryId: string) => Array<string>
+  } = {}
+) {
+  const auth = deps.auth ?? getAuth()
+  const repositories = deps.repositories ?? createRepositoriesRepository()
+  const sync = deps.sync ?? getRepositorySync()
+  const actions = createRepositoryActions({ ...deps, repositories, sync })
+  const { github, existing, refuseConnected } = actions
+  const applicationsOf = deps.applicationsOf ?? repositories.applicationsOf
+  const { requireGitHub, lookUp } = actions.checks
 
   return {
     /** One page of Repositories whose name or Tags contain `search`. */
@@ -321,47 +404,21 @@ export function createRepositoryManagement(
       }
     },
 
-    /**
-     * Saves a new Repository and starts its first clone in the background.
-     * Saves nothing unless the token can read the repository and the branch
-     * exists.
-     */
     async connect(
       headers: Headers,
       input: RepositoryInput & { reference: string }
     ): Promise<Repository> {
       await requireAdmin({ auth, headers })
-      const found = await lookUp(input.reference)
-      const valid = validRepositoryInput(input)
-      await requireBranch(found.fullName, valid.trackedBranch)
-      // Checked last, with nothing awaited before the insert.
-      refuseConnected(found.fullName)
-      const created = repositories.create({
-        fullName: found.fullName,
-        ...valid,
-      })
-      void sync.sync(created.id)
-      return existing(created.id)
+      return actions.connect(input)
     },
 
-    /** Saves Tracked Branch, Tags and description. A new branch syncs again. */
     async update(
       headers: Headers,
       repositoryId: string,
       input: RepositoryInput
     ): Promise<Repository> {
       await requireAdmin({ auth, headers })
-      const valid = validRepositoryInput(input)
-      const before = existing(repositoryId)
-      const branchChanged = valid.trackedBranch !== before.trackedBranch
-      if (branchChanged) {
-        await requireBranch(before.fullName, valid.trackedBranch)
-        existing(repositoryId)
-      }
-      repositories.update(repositoryId, valid)
-      // A sync that is running notices the new branch and syncs once more.
-      if (branchChanged) void sync.sync(repositoryId)
-      return existing(repositoryId)
+      return actions.update(repositoryId, input)
     },
 
     /** "Sync now": starts a sync unless one is already running. */
@@ -375,10 +432,7 @@ export function createRepositoryManagement(
     /** Deletes the Repository and its clone. */
     async remove(headers: Headers, repositoryId: string): Promise<void> {
       await requireAdmin({ auth, headers })
-      if (!repositories.findById(repositoryId)) return
-      // Foreign keys cascade to its Attachments in the same statement.
-      repositories.delete(repositoryId)
-      await sync.remove(repositoryId)
+      await actions.remove(repositoryId)
     },
   }
 }

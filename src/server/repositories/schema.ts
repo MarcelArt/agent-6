@@ -382,14 +382,31 @@ export const ticket = sqliteTable(
     status: text("status").notNull().default("pending"),
     /** Written by the Admin for the owner, shown exactly as written. */
     declineReason: text("decline_reason"),
+    /** The Admin who decided; null for a Service Account's decision. */
     decidedBy: text("decided_by").references(() => user.id, {
       onDelete: "set null",
     }),
+    /** Set when a Service Account decided through the API, with its API Key. */
+    decidedByServiceAccountId: text("decided_by_service_account_id").references(
+      (): AnySQLiteColumn => serviceAccount.id,
+      {
+        onDelete: "set null",
+      }
+    ),
+    decidedByApiKeyId: text("decided_by_api_key_id").references(
+      (): AnySQLiteColumn => apiKey.id,
+      { onDelete: "set null" }
+    ),
     decidedAt: timestamp("decided_at"),
     /** Why the last acceptance could not file the issue, for Admins. */
     lastError: text("last_error"),
-    /** Set while an Admin's acceptance is filing the issue. */
+    /** Set while an acceptance is filing the issue. */
     filingUntil: timestamp("filing_until"),
+    /**
+     * Identifies the acceptance holding `filingUntil`. Only that acceptance
+     * may complete or release it.
+     */
+    filingClaim: text("filing_claim"),
     filedIssueId: text("filed_issue_id").references(() => filedIssue.id, {
       onDelete: "set null",
     }),
@@ -400,5 +417,193 @@ export const ticket = sqliteTable(
     index("ticket_status_idx").on(table.status, table.createdAt),
     index("ticket_conversation_idx").on(table.conversationId),
     index("ticket_repository_idx").on(table.repositoryId, table.status),
+  ]
+)
+
+/** An identity an Admin creates so an external integration can use the API. */
+export const serviceAccount = sqliteTable("service_account", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description").notNull().default(""),
+  /** A disabled Service Account's API Keys stop working until it is enabled. */
+  disabledAt: timestamp("disabled_at"),
+  createdAt: timestamp("created_at").notNull(),
+  updatedAt: timestamp("updated_at").notNull(),
+})
+
+/**
+ * A credential of a Service Account. The key itself is shown once and never
+ * stored: `lookupId` finds the record, `digest` checks the secret part.
+ * Keys are revoked, not deleted, so decisions and audit events keep them.
+ */
+export const apiKey = sqliteTable(
+  "api_key",
+  {
+    id: text("id").primaryKey(),
+    serviceAccountId: text("service_account_id")
+      .notNull()
+      .references(() => serviceAccount.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    /** Public part of the key, also its visible prefix. */
+    lookupId: text("lookup_id").notNull().unique(),
+    /** SHA-256 of the secret part, as hex. */
+    digest: text("digest").notNull(),
+    /** JSON array of permission names. A new key has none. */
+    permissions: text("permissions").notNull().default("[]"),
+    /** Every Application, including future ones, instead of `api_key_application`. */
+    allApplications: integer("all_applications", { mode: "boolean" })
+      .notNull()
+      .default(false),
+    expiresAt: timestamp("expires_at"),
+    revokedAt: timestamp("revoked_at"),
+    lastUsedAt: timestamp("last_used_at"),
+    createdAt: timestamp("created_at").notNull(),
+    updatedAt: timestamp("updated_at").notNull(),
+  },
+  (table) => [index("api_key_service_account_idx").on(table.serviceAccountId)]
+)
+
+/** The Applications an API Key may reach when it lacks all-Applications access. */
+export const apiKeyApplication = sqliteTable(
+  "api_key_application",
+  {
+    apiKeyId: text("api_key_id")
+      .notNull()
+      .references(() => apiKey.id, { onDelete: "cascade" }),
+    applicationId: text("application_id")
+      .notNull()
+      .references(() => application.id, { onDelete: "cascade" }),
+  },
+  (table) => [
+    primaryKey({ columns: [table.apiKeyId, table.applicationId] }),
+    index("api_key_application_application_idx").on(table.applicationId),
+  ]
+)
+
+/**
+ * A protected change and who made it. Holds ids only, never key material or
+ * request bodies. Plain text ids so the record outlives what it names.
+ */
+export const auditEvent = sqliteTable(
+  "audit_event",
+  {
+    id: text("id").primaryKey(),
+    /** "admin" or "service-account". */
+    actorType: text("actor_type").notNull(),
+    userId: text("user_id"),
+    serviceAccountId: text("service_account_id"),
+    apiKeyId: text("api_key_id"),
+    /** For example "tickets.accept". */
+    operation: text("operation").notNull(),
+    /** For example "ticket". */
+    targetType: text("target_type").notNull(),
+    targetId: text("target_id"),
+    createdAt: timestamp("created_at").notNull(),
+  },
+  (table) => [
+    index("audit_event_service_account_idx").on(
+      table.serviceAccountId,
+      table.createdAt
+    ),
+    index("audit_event_created_idx").on(table.createdAt),
+  ]
+)
+
+/** Sends selected events to an external HTTPS destination, signed. */
+export const webhookSubscription = sqliteTable("webhook_subscription", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  /** A public HTTPS address. */
+  url: text("url").notNull(),
+  enabled: integer("enabled", { mode: "boolean" }).notNull().default(true),
+  /** JSON array of event types. */
+  eventTypes: text("event_types").notNull().default("[]"),
+  allApplications: integer("all_applications", { mode: "boolean" })
+    .notNull()
+    .default(false),
+  /** The signing secret, encrypted with `secrets.ts`. */
+  encryptedSecret: text("encrypted_secret").notNull(),
+  /** The secret a rotation with overlap replaced; it also signs until it expires. */
+  encryptedPreviousSecret: text("encrypted_previous_secret"),
+  previousSecretExpiresAt: timestamp("previous_secret_expires_at"),
+  createdAt: timestamp("created_at").notNull(),
+  updatedAt: timestamp("updated_at").notNull(),
+})
+
+export const webhookSubscriptionApplication = sqliteTable(
+  "webhook_subscription_application",
+  {
+    subscriptionId: text("subscription_id")
+      .notNull()
+      .references(() => webhookSubscription.id, { onDelete: "cascade" }),
+    applicationId: text("application_id")
+      .notNull()
+      .references(() => application.id, { onDelete: "cascade" }),
+  },
+  (table) => [
+    primaryKey({ columns: [table.subscriptionId, table.applicationId] }),
+    index("webhook_subscription_application_application_idx").on(
+      table.applicationId
+    ),
+  ]
+)
+
+/**
+ * An event, saved in the transaction of the change it describes. `payload` is
+ * the exact body every attempt sends. Plain text references so the event
+ * outlives what it names.
+ */
+export const webhookEvent = sqliteTable(
+  "webhook_event",
+  {
+    id: text("id").primaryKey(),
+    type: text("type").notNull(),
+    applicationId: text("application_id"),
+    ticketId: text("ticket_id"),
+    payload: text("payload").notNull(),
+    createdAt: timestamp("created_at").notNull(),
+  },
+  (table) => [index("webhook_event_created_idx").on(table.createdAt)]
+)
+
+/** The sending of one event to one Webhook Subscription. */
+export const webhookDelivery = sqliteTable(
+  "webhook_delivery",
+  {
+    id: text("id").primaryKey(),
+    eventId: text("event_id")
+      .notNull()
+      .references(() => webhookEvent.id, { onDelete: "cascade" }),
+    subscriptionId: text("subscription_id")
+      .notNull()
+      .references(() => webhookSubscription.id, { onDelete: "cascade" }),
+    /** The destination when the delivery was queued. */
+    url: text("url").notNull(),
+    /** "pending", "succeeded", "failed" or "cancelled". */
+    status: text("status").notNull().default("pending"),
+    attempts: integer("attempts").notNull().default(0),
+    /** When a pending delivery is due. */
+    nextAttemptAt: timestamp("next_attempt_at"),
+    /** Automatic retries stop after this. */
+    retryUntil: timestamp("retry_until").notNull(),
+    /** Held while a dispatcher sends it; recovered when it passes. */
+    leaseUntil: timestamp("lease_until"),
+    leaseToken: text("lease_token"),
+    lastAttemptAt: timestamp("last_attempt_at"),
+    /** HTTP status of the last answer, if there was one. */
+    lastStatus: integer("last_status"),
+    /** What happened on the last attempt, without response content. */
+    lastResult: text("last_result"),
+    completedAt: timestamp("completed_at"),
+    createdAt: timestamp("created_at").notNull(),
+    updatedAt: timestamp("updated_at").notNull(),
+  },
+  (table) => [
+    index("webhook_delivery_due_idx").on(table.status, table.nextAttemptAt),
+    index("webhook_delivery_subscription_idx").on(
+      table.subscriptionId,
+      table.createdAt
+    ),
+    index("webhook_delivery_event_idx").on(table.eventId),
   ]
 )

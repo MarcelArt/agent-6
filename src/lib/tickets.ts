@@ -100,7 +100,14 @@ export type AdminTicket = {
     issue: FiledIssueLink | null
   } | null
   declineReason: string | null
+  /** The Admin who decided in Agent 6. */
   decidedBy: { id: string; name: string } | null
+  /** Set instead when a Service Account decided through the API. */
+  decidedByServiceAccount: {
+    id: string
+    name: string
+    apiKey: { id: string; name: string } | null
+  } | null
   decidedAt: number | null
   lastError: string | null
   /** An acceptance is filing the issue right now. */

@@ -4,7 +4,7 @@ Agent 6 runs as one container for one organization. Its own database is SQLite; 
 
 ## Requirements and startup
 
-Use a Linux x86-64 server with Docker Engine and Docker Compose v2 installed, disk space for your Repository clones and pictures, and outbound HTTPS access to Docker Hub, GitHub and your model provider. The published image currently targets `linux/amd64`. Allow network access from the container to any Postgres and Loki servers you connect. You also need OpenSSL to generate secrets, and a reverse proxy with a domain and TLS certificate for production.
+Use a Linux x86-64 server with Docker Engine and Docker Compose v2 installed, disk space for your Repository clones and pictures, and outbound HTTPS access to Docker Hub, GitHub and your model provider, plus any webhook receivers you configure. The published image currently targets `linux/amd64`. Allow network access from the container to any Postgres and Loki servers you connect. You also need OpenSSL to generate secrets, and a reverse proxy with a domain and TLS certificate for production.
 
 Copy `compose.yaml` and `.env.example` from the same Agent 6 release into a dedicated directory. All Compose commands in this guide run from that directory:
 
@@ -187,7 +187,7 @@ server {
 }
 ```
 
-Set `BETTER_AUTH_URL` to the public HTTPS origin; Agent 6 uses that fixed origin rather than trusting forwarded headers. Do not expose its backend port to untrusted traffic. Buffering, caching or compression at any other proxy or CDN must also be disabled for `/api/chat/`; keep its idle/read timeout at least 120 seconds. A reply can run for 90 seconds. Test that words appear progressively rather than arriving in one block. The image permits up to 110 seconds for shutdown, and Compose gives it two minutes; use `docker compose stop` to allow this grace period.
+Set `BETTER_AUTH_URL` to the public HTTPS origin; Agent 6 uses that fixed origin rather than trusting forwarded headers. The same origin serves the integration API at `/api/v1` and its public reference at `/docs/api` and `/docs/webhooks`. API Keys are bearer credentials, so expose the API only over HTTPS; the proxy must pass the `Authorization` header through unchanged, which Nginx does by default. Do not expose its backend port to untrusted traffic. Buffering, caching or compression at any other proxy or CDN must also be disabled for `/api/chat/`; keep its idle/read timeout at least 120 seconds. A reply can run for 90 seconds. Test that words appear progressively rather than arriving in one block. The image permits up to 110 seconds for shutdown, and Compose gives it two minutes; use `docker compose stop` to allow this grace period.
 
 Register a confidential OAuth client with your provider. In Agent 6, open **Settings → Organization sign-in** and enter the client ID and client secret. Choose a setup method.
 
@@ -198,9 +198,19 @@ Register the **Redirect URL** exactly with the provider. The default is `https:/
 
 Enable provider sign-in and save. The provider's verified email must match an existing, enabled user created by an Admin. Test both provider and password sign-in after deploying behind HTTPS. If the public address changes, update `BETTER_AUTH_URL`, update any custom Redirect URL and its registration with the provider, and recreate the container.
 
+## API, Service Accounts and webhooks
+
+External integrations use the API with an API Key instead of a user account. In **Service Accounts** (`/admin/service-accounts`), create one Service Account per integration, then **Issue API Key**. A new key has no access: choose its permissions per resource and operation, and either selected Applications or All Applications. Changes to Repositories, Applications, Attachments, connections or the Preferred Language need All Applications. `tickets:accept` lets the integration file issues on GitHub with `GITHUB_TOKEN`, so grant it only to an integration you trust with that. Agent 6 shows the full key once; it stores only a digest, so a lost key cannot be recovered, only replaced. Choose an expiry where your policy needs one.
+
+To rotate a key, issue a new key on the same Service Account, deploy it to the integration, check its **Last used** time, then revoke the old key. Revoking a key or disabling the Service Account stops it on the next request; grant changes apply the same way. Each change an integration makes is recorded with its Service Account and API Key, and a Ticket it decided shows them. Requests are limited per key (a burst of 120, then 2 per second) and to 64 KB of body; repeated failed authentication answers `429`. The API answers with `401`, `403` and `404` without revealing records outside a key's Applications. Share the API reference at `https://support.example.com/docs/api` with integration developers; it needs no login and links the OpenAPI document at `/api/v1/openapi.json`.
+
+In **Webhooks** (`/admin/webhooks`), create a Webhook Subscription with the receiver's public HTTPS address, the events (`ticket.created`, `ticket.accepted`, `ticket.declined`, `github.issue.created`) and the Applications to send. Production events carry Ticket descriptions and evidence for developers, so send them only to systems allowed to hold that. Agent 6 shows the signing secret once; give it to the receiver, use **Send test** to check the signature and network path, then watch **Deliveries** for failures. The receiver should verify each request as described at `/docs/webhooks`.
+
+Agent 6 connects to receivers directly over HTTPS from the container, so allow outbound connections to them in your firewall; it does not use an HTTP proxy. It refuses plain HTTP, redirects and receivers that resolve to private, loopback or link-local addresses, also when the address is checked again before each attempt. Each attempt times out after 10 seconds. Failed attempts are retried with backoff for 24 hours; after that the delivery is **Failed** and an Admin can retry it with the same event ID. Ticket decisions never wait for a receiver. Disabling a subscription or changing its address cancels deliveries still waiting. Rotate a signing secret with a 24-hour overlap for routine changes, so the receiver can accept both while it switches, or replace it immediately if it leaked.
+
 ## Backup and restore
 
-The named volume contains `agent6.db` (users, sessions, settings, encrypted connections, Applications, Attachments, Conversations, Tickets and Filed Issues), SQLite WAL/SHM files while running, `repos/` clones, and `uploads/` pictures. Back up the whole directory, plus `.env` separately in secure storage. Losing `ENCRYPTION_KEY` means every encrypted connection password, log auth header and OAuth client secret must be re-entered. Keep `BETTER_AUTH_SECRET` with the backup too.
+The named volume contains `agent6.db` (users, sessions, settings, encrypted connections, Applications, Attachments, Conversations, Tickets and Filed Issues, Service Accounts with API Key digests, Webhook Subscriptions with encrypted signing secrets, and queued Webhook Deliveries), SQLite WAL/SHM files while running, `repos/` clones, and `uploads/` pictures. Back up the whole directory, plus `.env` separately in secure storage. Losing `ENCRYPTION_KEY` means every encrypted connection password, log auth header, OAuth client secret and webhook signing secret must be re-entered or rotated. Keep `BETTER_AUTH_SECRET` with the backup too.
 
 For a consistent backup, stop the service and copy the volume through a one-off container. This avoids copying a live SQLite database or a half-written clone. These commands use the service's mounted volume rather than assuming its Docker volume name:
 
@@ -221,7 +231,7 @@ docker compose run --rm --no-deps -T --entrypoint tar agent-6 -C /data -xzf - < 
 docker compose up -d --wait
 ```
 
-Restore with the image version that created the backup, then upgrade separately. Log in, check connections, open a saved Conversation and picture, and sync a Repository. A new volume can use a distinct Compose project name, for example `docker compose -p agent-6-restore ...`; change the host port before starting it alongside another installation.
+Restore with the image version that created the backup, then upgrade separately. Log in, check connections, open a saved Conversation and picture, and sync a Repository. A restore brings back the backup's integration state: revoke again any API Key revoked after the backup was taken, and check each Webhook Subscription's address. Deliveries that were waiting at backup time are sent again with their original event IDs, so receivers that deduplicate ignore events they already processed. A new volume can use a distinct Compose project name, for example `docker compose -p agent-6-restore ...`; change the host port before starting it alongside another installation.
 
 A Setup File (**Applications → Export**) fits a different job: seeding a new instance, or sharing chosen Applications with their Repositories, connections and Attachments with another instance that has its own users and keys. It holds no secrets, users, settings, Conversations or Tickets, so it is not a backup. Imported connections that had a password or token wait for an Admin to enter it; see Setup File in [usage.md](usage.md).
 

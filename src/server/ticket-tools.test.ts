@@ -296,7 +296,9 @@ describe("Ticket tools", () => {
     await reports.findExisting({ repositoryId })
     await reports.createTicket({ ...input, title: "Fault 1" })
     const [first] = conversations.tickets(target.id)
-    expect(tickets.decline(first.id, userId, "Not a fault")).toBe(true)
+    expect(
+      tickets.decline(first.id, { type: "admin", userId }, "Not a fault")
+    ).toBe(true)
     // Calls the model makes in parallel cannot pass the limit together.
     const results = await Promise.allSettled(
       ["Fault 2", "Fault 3", "Fault 4"].map((title) =>

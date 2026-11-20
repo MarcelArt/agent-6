@@ -9,7 +9,7 @@ web
 ## Users
 
 - **Client:** a non-technical user of one of the organization's Applications who needs help using it or resolving a problem.
-- **Admin:** a user who configures Agent 6's users, Repositories, Applications, connections and settings, reviews Conversations, and accepts or declines Tickets.
+- **Admin:** a user who configures Agent 6's users, Repositories, Applications, connections and settings, reviews Conversations, accepts or declines Tickets, and manages integration access through Service Accounts and Webhook Subscriptions.
 - Developers receive evidence and proposed fixes through GitHub issues filed when an Admin accepts a Ticket; they decide and perform code and data changes.
 
 ## Product Purpose
@@ -28,6 +28,7 @@ Support is grounded in how the selected Application actually works and, when rel
 - A Client selects one Application before the first message. That Application remains fixed for the Conversation.
 - Clients can provide screenshots or other supported pictures, answer Interactive Questions, return to saved Conversations through History and follow the Tickets created from their Conversations.
 - Admins connect resources, attach them to Applications, monitor connection status, manage accounts, decide on Tickets and review Conversations through a separate read-only audit view.
+- External integrations use a versioned API with scoped API Keys of Service Accounts, and receive signed webhooks for the Ticket lifecycle. An Admin can delegate Ticket acceptance or decline to an integration; the decision follows the same rules and records which Service Account and API Key made it.
 - Accounts are created by Admins. Email/password sign-in is available; an organization may configure an optional OAuth provider for existing accounts.
 - The web interface supports desktop and phone use. Screens, selected records, list filters and pagination have URLs that preserve their location on reload.
 - The existing application uses TypeScript, React and TanStack Start, with server functions/routes, Better Auth and Drizzle with SQLite for its own records. Self-hosted deployment and local development are described in `docs/setup.md` and `docs/usage.md`.
